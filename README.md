@@ -1,4 +1,4 @@
 olive
 =====
 
-SQL utilities for externalizing queries to files and named prepared statements
+SQL utilities such as loading queries from files and named prepared statements.
