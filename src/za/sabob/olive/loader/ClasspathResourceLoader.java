@@ -6,19 +6,14 @@
 package za.sabob.olive.loader;
 
 import java.io.*;
+import za.sabob.olive.util.*;
 
 /**
  *
  */
 public class ClasspathResourceLoader implements ResourceLoader {
 
-    private Class classLoader;
-
     public ClasspathResourceLoader() {
-    }
-
-    public ClasspathResourceLoader(Class classLoader) {
-        this.classLoader = classLoader;
     }
 
     @Override
@@ -27,35 +22,25 @@ public class ClasspathResourceLoader implements ResourceLoader {
             throw new IllegalArgumentException("source cannot be null!");
         }
 
-        //String fullname = normalizeName(source, getRelativeLoader());
-        Class loader = getClassLoader();
+        if (!source.startsWith("/")) {
+            throw new IllegalArgumentException(
+                "source must be absolute (start with a '/'). Use OliveUtils.normalize(cls, source) to create absolute names for resources which are relative to classes.");
+        }
 
-        InputStream is = loader.getResourceAsStream(source);
+        InputStream is = OliveUtils.getResourceAsStream(this.getClass(), source);
 
         if (is == null) {
-            if (source.startsWith("/")) {
-                String pkg = getPackage(source);
+            //if (source.startsWith("/")) {
+            String pkg = getPackage(source);
+            throw new IllegalStateException("The absolute source '" + source + "' cannot be found in the package '" + pkg + "'!");
+            /*} else {
+             String pkg = getPackage(source);
+             pkg = cls.getPackage().getName().replace(".", "/") + "/" + pkg;
 
-                throw new IllegalStateException("The absolute source '" + source + "' cannot be found in the package '" + pkg + "'!");
-            } else {
-                String pkg = getPackage(source);
-                pkg = getClassLoader().getPackage().getName().replace(".", "/") + "/" + pkg;
-
-                throw new IllegalStateException("The relative source '" + source + "' cannot be found in the package '" + pkg + "'!");
-            }
+             throw new IllegalStateException("The relative source '" + source + "' cannot be found in the package '" + pkg + "'!");
+             }*/
         }
         return is;
-    }
-    
-    public static String normalizeName(String filename, Class relative) {
-        if (filename.startsWith("/")) {
-            return filename;
-        }
-
-        String classPackage = relative.getPackage().getName();
-        classPackage = classPackage.replace(".", "/");
-        String fullname = "/" + classPackage + "/" + filename;
-        return fullname;
     }
 
     protected String getPackage(String filename) {
@@ -66,23 +51,4 @@ public class ClasspathResourceLoader implements ResourceLoader {
         }
         return pkg;
     }
-
-    /**
-     * @return the classLoader
-     */
-    public Class getClassLoader() {
-        if (classLoader == null) {
-            classLoader = this.getClass();
-        }
-        return classLoader;
-    }
-
-    /**
-     * @param classLoader the classLoader to set
-     */
-    public void setClassLoader(Class classLoader) {
-        this.classLoader = classLoader;
-    }
-
-    
 }

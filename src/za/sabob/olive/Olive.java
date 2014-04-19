@@ -31,21 +31,25 @@ public class Olive {
     }
 
     public Olive(Mode mode) {
-        this(mode, null);
-    }
-
-    public Olive(Class classLoader) {
-        this(Mode.PRODUCTION, classLoader);
-    }
-
-    public Olive(Mode mode, Class classLoader) {
-        this.mode = mode;
-        ClasspathResourceLoader loader = new ClasspathResourceLoader(classLoader);
-        runtime = new OliveRuntime(mode, loader);
+        this(mode, (ResourceLoader) null);
     }
 
     public Olive(ResourceLoader resourceLoader) {
         runtime = new OliveRuntime(mode, resourceLoader);
+    }
+
+    public Olive(Mode mode, ResourceLoader loader) {
+        Olive.mode = mode;
+        runtime = new OliveRuntime(mode, loader);
+    }
+
+    public Olive(OliveRuntime runtime) {
+        this.runtime = runtime;
+    }
+
+    public Olive(Mode mode, OliveRuntime runtime) {
+        Olive.mode = mode;
+        this.runtime = runtime;
     }
 
     public ResourceLoader getResourceLoader() {
@@ -88,79 +92,11 @@ public class Olive {
         getRuntime().setMode(mode);
     }
 
-    /**
-     * @return the mode
-     */
-    public Class getClassLoader() {
-        ClasspathResourceLoader classpathLoader = getClasspathResourceLoader();
-        if (classpathLoader != null) {
-            return classpathLoader.getClassLoader();
-        }
-        return null;
-    }
-
-    /**
-     *
-     */
-    public void setClassLoader(Class classLoader) {
-        ClasspathResourceLoader classpathLoader = getClasspathResourceLoader();
-        if (classpathLoader != null) {
-            classpathLoader.setClassLoader(classLoader);
-        }
-    }
-
-    private ClasspathResourceLoader getClasspathResourceLoader() {
-        ResourceLoader loader = getRuntime().getResourceLoader();
-        if (loader instanceof ClasspathResourceLoader) {
-            ClasspathResourceLoader classPathLoader = (ClasspathResourceLoader) loader;
-            return classPathLoader;
-        }
-        return null;
-    }
-    
     public ParsedSql loadParsedSql(String filename) {
         return getRuntime().loadParsedSql(filename);
-    }
-        
-    public ParsedSql loadParsedSql(String filename, Class classLoader) {
-        ClasspathResourceLoader classpathLoader = getClasspathResourceLoader();
-        
-        Class origClassLoader = null;
-        if (classpathLoader != null) {
-            origClassLoader = classpathLoader.getClassLoader();
-            classpathLoader.setClassLoader(classLoader);
-        }
-
-        ParsedSql parsedSql = getRuntime().loadParsedSql(filename);
-        
-        // Restore original class loader
-        if (classLoader != null) {
-            classpathLoader.setClassLoader(origClassLoader);
-        }
-        
-        return parsedSql;
     }
 
     public String loadFile(String filename) {
         return getRuntime().loadFile(filename);
-    }
-
-    public String loadFile(String filename, Class classLoader) {
-        ClasspathResourceLoader classpathLoader = getClasspathResourceLoader();
-        
-        Class origClassLoader = null;
-        if (classpathLoader != null) {
-            origClassLoader = classpathLoader.getClassLoader();
-            classpathLoader.setClassLoader(classLoader);
-        }
-
-        String file = getRuntime().loadFile(filename);
-        
-        // Restore original class loader
-        if (classLoader != null) {
-            classpathLoader.setClassLoader(origClassLoader);
-        }
-        
-        return file;
     }
 }

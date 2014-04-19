@@ -21,6 +21,7 @@ import za.sabob.olive.ps.ParsedSql;
 import za.sabob.olive.ps.NamedParameterUtils;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 import za.sabob.olive.util.*;
 
 /**
@@ -28,9 +29,9 @@ import za.sabob.olive.util.*;
  */
 public class OliveRuntime {
 
-    private static Map<String, String> fileMap = new HashMap<String, String>();
-    
-    private static Map<String, ParsedSql> parsedMap = new HashMap<String, ParsedSql>();
+    private static Map<String, String> fileMap = new ConcurrentHashMap<String, String>();
+
+    private static Map<String, ParsedSql> parsedMap = new ConcurrentHashMap<String, ParsedSql>();
 
     private Mode mode = Mode.PRODUCTION;
 
@@ -55,6 +56,7 @@ public class OliveRuntime {
 
     public void clearCache() {
         fileMap.clear();
+        parsedMap.clear();
     }
 
     public ParsedSql loadParsedSql(String filename) {
@@ -63,53 +65,46 @@ public class OliveRuntime {
         }
 
         if (getMode() == Mode.PRODUCTION) {
+            ParsedSql parsedSql = parsedMap.get(filename);
 
-                ParsedSql parsedSql = parsedMap.get(filename);
-
-                if (parsedSql != null) {
-                    System.out.println("returning cached parsed value");
-                    return parsedSql;
-                }
+            if (parsedSql != null) {
+                System.out.println("returning cached parsed value");
+                return parsedSql;
             }
+        }
 
         String sql = loadFile(filename);
-
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
-        
+
         if (getMode() == Mode.PRODUCTION) {
-                parsedMap.put(filename, parsedSql);
-            }
-        
+            parsedMap.put(filename, parsedSql);
+        }
+
         return parsedSql;
     }
 
+    // TODO dtop this method and use solely loadParsedSql?
     public String loadFile(String filename) {
-
         if (filename == null) {
             throw new IllegalArgumentException("filename cannot be null!");
         }
 
-        try {
-            if (getMode() == Mode.PRODUCTION) {
-                String file = fileMap.get(filename);
-                if (file != null) {
-                    System.out.println("returning cached value");
-                    return file;
-                }
+        if (getMode() == Mode.PRODUCTION) {
+            String file = fileMap.get(filename);
+            if (file != null) {
+                System.out.println("returning cached value");
+                return file;
             }
-
-            InputStream is = getResourceLoader().getResourceStream(filename);
-            String file = OliveUtils.toString(is);
-
-            if (getMode() == Mode.PRODUCTION) {
-                fileMap.put(filename, file);
-            }
-            return file;
-
-        } catch (IOException e) {
-
-            throw new RuntimeException(e);
         }
+
+        InputStream is = getResourceLoader().getResourceStream(filename);
+
+        String file = OliveUtils.toString(is);
+
+        if (getMode() == Mode.PRODUCTION) {
+            fileMap.put(filename, file);
+        }
+        return file;
     }
 
     /**
@@ -143,5 +138,74 @@ public class OliveRuntime {
         this.resourceLoader = resourceLoader;
     }
 
-    
+    private static class CacheKey {
+
+        /**
+         * Base class name to encapsulate in cache key.
+         */
+        private final String baseClass;
+
+        /**
+         * Filename to encapsulate in cache key.
+         */
+        private final String filename;
+
+        /**
+         * Constructs a new CacheKey for the given baseClass and filename.
+         *
+         * @param baseClass the base class name to build the cache key for
+         * @param filename the filename to build the cache key for
+         */
+        public CacheKey(Class baseClass, String filename) {
+            if (filename == null) {
+                throw new IllegalArgumentException("Null filename");
+            }
+            if (baseClass == null) {
+                this.baseClass = "";
+            } else {
+                this.baseClass = baseClass.getName();
+            }
+            this.filename = filename;
+        }
+
+        /**
+         * @see Object#equals(Object)
+         *
+         * @param o the object with which to compare this instance with
+         * @return true if the specified object is the same as this object
+         */
+        @Override
+        public final boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof CacheKey)) {
+                return false;
+            }
+
+            CacheKey that = (CacheKey) o;
+
+            if (!baseClass.equals(that.baseClass)) {
+                return false;
+            }
+
+            if (!filename.equals(that.filename)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * @see Object#hashCode()
+         *
+         * @return a hash code value for this object.
+         */
+        @Override
+        public final int hashCode() {
+            return baseClass.hashCode()
+                * 31 + filename.hashCode();
+        }
+    }
+
 }

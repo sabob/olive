@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package za.sabob.olive;
 
 import za.sabob.olive.loader.*;
+import za.sabob.olive.util.*;
 
 /**
  *
@@ -17,16 +17,16 @@ public class OliveRuntimeTest {
         ClasspathResourceLoader loader = new ClasspathResourceLoader();
 
         OliveRuntime runtime = new OliveRuntime(Mode.DEVELOPMENT, loader);
-        System.out.println(runtime.loadFile("../loader/test.sql"));
+        String source = OliveUtils.normalize(LoadTest.class, "../loader/test.sql");
+        System.out.println(runtime.loadFile(source));
 
-        loader.setClassLoader(LoadTest.class);
-        System.out.println(runtime.loadFile("test.sql"));
+        //loader.setClassLoader(LoadTest.class);
+        source = OliveUtils.normalize(LoadTest.class, "test.sql");
+        System.out.println(source);
+        System.out.println(runtime.loadFile(OliveUtils.normalize(LoadTest.class, "test.sql")));
 
-        try {
-            Thread.sleep(5000);
-            System.out.println(runtime.loadFile("test.sql"));
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
+        source = OliveUtils.normalize(LoadTest.class, "../loader/test.sql");
+        System.out.println(runtime.loadFile(source));
+
     }
 }
