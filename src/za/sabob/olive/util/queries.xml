@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<queries>
+
+    <query name="get-form">
+        /* form GET */
+        select * from form
+    </query>
+    
+    <query name="insert-form">
+        /* form INSERT */
+        insert into form (id, name) values (:id, :name)
+    </query>
+    
+    <query name="delete-form">
+        /* form DELETE */
+        delete from form f where f.id = :id
+    </query>
+</queries>

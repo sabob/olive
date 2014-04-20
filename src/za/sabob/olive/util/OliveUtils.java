@@ -22,9 +22,12 @@ import za.sabob.olive.ps.NamedParameterUtils;
 import za.sabob.olive.ps.SqlParams;
 
 import java.sql.*;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import za.sabob.olive.*;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
+import org.xml.sax.*;
 
 public class OliveUtils {
 
@@ -604,8 +607,102 @@ public class OliveUtils {
         return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR;
     }
 
+    /**
+     * Return a new XML Document for the given input stream.
+     *
+     * @param inputStream the input stream
+     * @return new XML Document
+     * @throws RuntimeException if a parsing error occurs
+     */
+    public static Document buildDocument(InputStream inputStream) {
+        return buildDocument(inputStream, null);
+    }
+
+    /**
+     * Return a new XML Document for the given input stream and XML entity
+     * resolver.
+     *
+     * @param inputStream the input stream
+     * @param entityResolver the XML entity resolver
+     * @return new XML Document
+     * @throws RuntimeException if a parsing error occurs
+     */
+    public static Document buildDocument(InputStream inputStream,
+        EntityResolver entityResolver) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            if (entityResolver != null) {
+                builder.setEntityResolver(entityResolver);
+            }
+
+            return builder.parse(inputStream);
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error parsing XML", ex);
+        }
+    }
+
+    /**
+     * Return the first XML child Element for the given parent Element and child
+     * Element name.
+     *
+     * @param parent the parent element to get the child from
+     * @param name the name of the child element
+     * @return the first child element for the given name and parent
+     */
+    public static Element getChild(Element parent, String name) {
+        NodeList nodeList = parent.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node instanceof Element) {
+                if (node.getNodeName().equals(name)) {
+                    return (Element) node;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Return the list of XML child Element elements with the given name from
+     * the given parent Element.
+     *
+     * @param parent the parent element to get the child from
+     * @param name the name of the child element
+     * @return the list of XML child elements for the given name
+     */
+    public static List<Element> getChildren(Element parent, String name) {
+        List<Element> list = new ArrayList<Element>();
+        NodeList nodeList = parent.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node instanceof Element) {
+                if (node.getNodeName().equals(name)) {
+                    list.add((Element) node);
+                }
+            }
+        }
+        return list;
+    }
+
     public static void main(String[] args) {
-        System.out.println(OliveUtils.normalize(Mode.class, "../../../../ps"));
+        String source = normalize(OliveUtils.class, "queries.xml");
+        InputStream is = getResourceAsStream(OliveUtils.class, source);
+        System.out.println("is" + is);
+        Document document = buildDocument(is);
+        Element rootElm = document.getDocumentElement();
+        System.out.println("root nodename: " + rootElm.getNodeName());
+        List< Element> queries = getChildren(rootElm, "query");
+        for (Element query : queries) {
+            System.out.println("name: " +query.getAttribute("name"));
+            String sql = query.getTextContent();
+            //sql = sql.replaceAll("[\n\r]", "");
+            System.out.println("sql: " + sql);
+        }
+        
 
     }
 }
