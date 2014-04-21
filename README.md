@@ -10,6 +10,8 @@ SQL utilities such as loading queries from files and named prepared statements.
 [Web] (#web)   
 [Mode] (#mode)   
 [Build] (#build)   
+<a href="http://sabob.github.io/olive/javadocs/api/index.html" target="_blank">Javadocs</a>
+
 
 ## Intro
 <a id="#intro"></a>
