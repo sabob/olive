@@ -9,6 +9,7 @@ SQL utilities such as loading queries from files and named prepared statements.
 [Standalone] (#standalone)   
 [Web] (#web)   
 [Mode] (#mode)   
+[Build] (#build)   
 
 ## Intro
 <a id="#intro"></a>
@@ -69,3 +70,6 @@ try {
 
 ## Mode
 <a id="#mode"></a>
+
+## Build
+<a id="#build"></a>
