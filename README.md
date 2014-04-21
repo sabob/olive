@@ -3,11 +3,12 @@ olive
 
 SQL utilities such as loading queries from files and named prepared statements.
 
-*  [Intro] (#intro)
-* Usage
-* ##Standalone
-* #3Web
-* ##Mode
+##### Table of Contents  
+[Intro] (#intro)   
+[Usage] (#usage)   
+[Standalone] (#standalone)   
+[Web] (#web)   
+[Mode] (#mode)   
 
 ## Intro
 <a id="#intro"></a>
@@ -21,7 +22,7 @@ INSERT INTO PERSON (name, age) VALUES (:name, :age);
 
 Note the named parameters _:name_ and _:age_.
 
-Below we use Olive to load this SQL file and create a PreparedStatement giving the named parameters we want to use.
+Below we use Olive to load this SQL file and create a PreparedStatement passing the named parameters we want to use.
 
 `test.java`:
 ```java
@@ -56,3 +57,15 @@ try {
     OliveUtils.close(rs, pstmt, conn);
 }
 ```
+
+## Usage
+<a id="#usage"></a>
+
+## Standalone
+<a id="#standalone"></a>
+
+## Web
+<a id="#web"></a>
+
+## Mode
+<a id="#mode"></a>
