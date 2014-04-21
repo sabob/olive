@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+
+<project name="disc" default="dist" basedir="..">
+    
+    <property file="ant/build.properties"/>
+    <xmlproperty file="ant/javascript-syntax-highlighter.xml"/>
+    <property name="jar.junit" value="junit-${junit.version}.jar"/>
+    <property name="javac.source" value="1.5"/>
+    <property name="repository" value="http://repo1.maven.org"/>
+    <property name="maven-bundle" value="../maven-upload"/>
+
+    <!--
+    Macro Definitions
+    -->
+
+    <macrodef name="downloadMacro">
+        <attribute name="name"/>
+        <attribute name="path"/>
+        <sequential>
+            <get src="${repository}/maven2/@{path}/@{name}"
+                 dest="lib/@{name}"
+                 verbose="true"
+                 usetimestamp="true"/>
+        </sequential>
+    </macrodef>
+    
+    <!--
+    Javadoc macro
+    -->
+
+    <macrodef name="javadocMacro">
+        <attribute name="src"/>
+        <attribute name="destdir"/>
+        <attribute name="windowtitle"/>
+        <attribute name="doctitle"/>
+        <attribute name="classpath"/>
+        <attribute name="overview"/>
+        <attribute name="excludes"/>
+        <sequential>
+            <javadoc sourcepath="@{src}"
+                     destdir="@{destdir}"
+                     author="true"
+                     version="true"
+                     verbose="false"
+                     windowtitle="@{windowtitle}"
+                     packagenames="za.sabob.olive.*"
+                     overview="@{overview}"
+                     doctitle="@{doctitle}"
+                     encoding="UTF-8"
+                     charset="UTF-8"
+                     excludepackagenames="@{excludes}">
+                <classpath refid="@{classpath}"/>
+                <link href="http://download.oracle.com/javase/1.6.0/docs/api/"/>
+            </javadoc>
+
+            <!-- Add syntax highlighter to each javadoc page -->
+            <replace dir="@{destdir}" value="${root.properties.highlighter}&lt;/body&gt;">
+                <include name="**/*.html"/>
+                <replacetoken>&lt;/body&gt;</replacetoken>
+            </replace>
+
+            <!-- Add IE Mark of the Web to each javadoc page -->
+            <replace dir="@{destdir}" value="&lt;!-- saved from url=(0014)about:internet --&gt;">
+                <include name="**/*.html"/>
+                <replacetoken>&lt;!--NewPage--&gt;</replacetoken>
+            </replace>
+
+            <!--
+            IE throws exception when trying to access parent frame and Mark of the Web is active.
+            Disable setting of window title, which needs to access the parent frame.
+            -->
+            <replace dir="@{destdir}" value="">
+                <include name="**/*.html"/>
+                <replacetoken> onload="windowTitle();"</replacetoken>
+            </replace>
+
+        </sequential>
+    </macrodef>
+    
+    <presetdef name="javac">
+        <javac includeantruntime="false" />
+    </presetdef>
+    
+    <path id="classpath">
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+    
+    <target name="clean" description="clean project">
+        <delete dir="dist" />
+        <delete dir="build" />
+    </target>
+    
+    <target name="init" description="Initialize folders">
+        <mkdir dir="build/classes"/>
+        <mkdir dir="dist" />
+        <mkdir dir="lib" />
+    </target>
+    
+    
+    <target name="compile" description="compile Olive source code" depends="init">
+        <javac destdir="build/classes" debug="true" srcdir="src" target="1.6" source="${javac.source}">
+            <classpath refid="classpath"/>
+        </javac>
+        
+        <copy todir="build/classes">
+            <fileset dir="src">
+                
+            </fileset>
+        </copy>
+    </target>
+    
+    <target name="jar" depends="compile" description="jar Olive">
+        <jar destfile="dist/olive-${version}.jar">
+            <fileset dir="build/classes"/>
+        </jar>
+    </target>
+          
+    <target name="dist" depends="clean, jar, javadoc" description="create Olive distribution">
+    </target>
+
+    <target name="get-deps" description="download JAR dependencies">
+        <mkdir dir="lib" />
+    </target>
+    
+    <target name="javadoc" description="create Javadoc HTML files">
+        <delete quiet="false" failonerror="false">
+            <fileset dir="docs/javadocs/javadocs" includes="**/*"/>
+        </delete>
+
+        <javadocMacro src="src"
+                      destdir="docs/javadocs/api"
+                      windowtitle="Olive API - v${version}"
+                      doctitle="Olive API - v${version}"
+                      classpath="classpath"
+                      overview="docs/core-overview.html"
+                      excludes=""/>
+    </target>
+    
+</project>

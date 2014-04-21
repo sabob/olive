@@ -49,14 +49,6 @@ import java.util.logging.*;
  * @author Thomas Risberg
  * @author Juergen Hoeller
  * @since 1.1
- * @see PreparedStatementSetter
- * @see PreparedStatementCreator
- * @see CallableStatementCreator
- * @see PreparedStatementCreatorFactory
- * @see CallableStatementCreatorFactory
- * @see SqlParameter
- * @see SqlTypeValue
- * @see org.springframework.jdbc.core.support.SqlLobValue
  */
 public class StatementUtils {
 
@@ -119,7 +111,6 @@ public class StatementUtils {
      * of the parameter and we can handle complex types like arrays and LOBs.
      * @param ps the prepared statement or callable statement
      * @param paramIndex index of the parameter we are setting
-     * @param param the parameter as it is declared including type
      * @param inValue the value to set
      * @throws SQLException if thrown by PreparedStatement methods
      */
@@ -334,8 +325,6 @@ public class StatementUtils {
      * Clean up all resources held by parameter values which were passed to an
      * execute method. This is for example important for closing LOB values.
      * @param paramValues parameter values supplied. May be {@code null}.
-     * @see DisposableSqlTypeValue#cleanup()
-     * @see org.springframework.jdbc.core.support.SqlLobValue#cleanup()
      */
     public static void cleanupParameters(Object[] paramValues) {
         if (paramValues != null) {
@@ -347,8 +336,6 @@ public class StatementUtils {
      * Clean up all resources held by parameter values which were passed to an
      * execute method. This is for example important for closing LOB values.
      * @param paramValues parameter values supplied. May be {@code null}.
-     * @see DisposableSqlTypeValue#cleanup()
-     * @see org.springframework.jdbc.core.support.SqlLobValue#cleanup()
      */
     public static void cleanupParameters(Collection<?> paramValues) {
         if (paramValues != null) {

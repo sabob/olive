@@ -221,7 +221,7 @@ public abstract class NamedParameterUtils {
      * to the required number of placeholders. Select lists may contain an array of
      * objects, and in that case the placeholders will be grouped and enclosed with
      * parentheses. This allows for the use of "expression lists" in the SQL statement
-     * like: <br /><br />
+     * like: <br><br>
      * {@code select id, name, state from table where (name, age) in (('John', 35), ('Ann', 50))}
      * <p>
      * The parameter values passed in are used to determine the number of placeholders to
@@ -298,7 +298,6 @@ public abstract class NamedParameterUtils {
      * Convert a Map of named parameter values to a corresponding array.
      * @param parsedSql the parsed SQL statement
      * @param paramSource the source for named parameters
-     * @param declaredParams the List of declared SqlParameter objects
      * (may be {@code null}). If specified, the parameter metadata will
      * be built into the value array in the form of SqlParameterValue objects.
      * @return the array of values
@@ -447,7 +446,7 @@ public abstract class NamedParameterUtils {
      * <p>
      * This is a shortcut version of
      * {@link #parseSqlStatement(String)} in combination with
-     * {@link #substituteNamedParameters(ParsedSql, SqlParameterSource)}.
+     * {@link #substituteNamedParameters(ParsedSql, SqlParams)}.
      * @param sql the SQL statement
      * @return the actual (parsed) SQL statement
      */
@@ -462,7 +461,7 @@ public abstract class NamedParameterUtils {
      * is expanded to the required number of placeholders.
      * <p>
      * This is a shortcut version of
-     * {@link #substituteNamedParameters(ParsedSql, SqlParameterSource)}.
+     * {@link #substituteNamedParameters(ParsedSql, SqlParams)}.
      * @param sql the SQL statement
      * @param paramSource the source for named parameters
      * @return the SQL statement with substituted parameters
@@ -476,7 +475,7 @@ public abstract class NamedParameterUtils {
      * Convert a Map of named parameter values to a corresponding array.
      * <p>
      * This is a shortcut version of
-     * {@link #buildValueArray(ParsedSql, SqlParameterSource, java.util.List)}.
+     * {@link #buildValueArray(ParsedSql, SqlParams)}.
      * @param sql the SQL statement
      * @param paramMap the Map of parameters
      * @return the array of values

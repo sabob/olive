@@ -29,9 +29,6 @@ import java.sql.SQLException;
  * should be needed to create any database-specific objects.
  *
  * @author Juergen Hoeller
- * @since 2.5.6
- * @see org.springframework.jdbc.core.SqlTypeValue
- * @see org.springframework.jdbc.core.DisposableSqlTypeValue
  */
 public interface SqlValue {
 
