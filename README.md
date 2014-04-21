@@ -1,4 +1,4 @@
-olive
+dbutiolive
 =====
 
 SQL utilities such as loading queries from files and named prepared statements.
@@ -63,6 +63,12 @@ try {
 
 ## Usage
 <a id="#usage"></a>
+The most common components of Olive are the classes 
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/Olive.html" target="_blank">Olive</a>,
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoader.html" target="_blank">ResourceLoader</a>,
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParams.html" target="_blank">SqlParams</a> and
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html" target="_blank">OliveUtils</a>
+
 
 ## Standalone
 <a id="#standalone"></a>
