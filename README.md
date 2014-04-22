@@ -74,7 +74,7 @@ The most common components of Olive are the classes
 
 Creating an instance of Olive is easy, simply create a new instance with one of the many constructors.
 
-_Note:_ Olive is thread safe so a single instance  can be created and shared in a multi threaded environment such as a servlet environment.
+_Note:_ Olive is thread safe so a single instance  can be created and shared in a multi threaded environment such as a servlet container.
 
 ```java
 // By default Olive starts in PRODUCTION mode and automatically caches SQL files it loads
