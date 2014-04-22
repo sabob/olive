@@ -252,8 +252,8 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns
 
 With the WebAppResourceLoader in place we can store our SQL files in the web app root folder for example:
 
-> webapp/sql/person/_person.sql
-> webapp/sql/person/insert_person.sql
+> webapp/sql/person/_person.sql  
+> webapp/sql/person/insert_person.sql  
 > webapp/sql/person/update_person.sql
 
 Olive can now be retrieved as follows in our web app:
