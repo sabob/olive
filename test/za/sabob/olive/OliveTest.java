@@ -22,16 +22,16 @@ public class OliveTest {
          Olive olive = new Olive(Mode.PRODUCTION);
          String source = OliveUtils.normalize(OliveTest.class, "../olive/loader/test.sql");
          //System.out.println(olive.loadFile("../olive/loader/test.sql"));
-         System.out.println(olive.loadFile(source));
+         System.out.println(olive.loadSql(source));
 
          //loader.setClassLoader(Pok.class);
          source = OliveUtils.normalize(LoadTest.class, "test.sql");
          //System.out.println(olive.loadFile(LoadTest.class, "test.sql"));
-         System.out.println(olive.loadFile(source));
+         System.out.println(olive.loadSql(source));
 
          try {
          Thread.sleep(10000);
-         System.out.println(olive.loadFile(OliveUtils.normalize(LoadTest.class, "test.sql")));
+         System.out.println(olive.loadSql(OliveUtils.normalize(LoadTest.class, "test.sql")));
          //System.out.println(olive.loadFile(LoadTest.class, "test.sql"));
          } catch (InterruptedException ex) {
          ex.printStackTrace();

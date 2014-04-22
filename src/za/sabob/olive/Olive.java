@@ -96,7 +96,7 @@ public class Olive {
         return getRuntime().loadParsedSql(filename);
     }
 
-    public String loadFile(String filename) {
-        return getRuntime().loadFile(filename);
+    public String loadSql(String filename) {
+        return getRuntime().loadSql(filename);
     }
 }

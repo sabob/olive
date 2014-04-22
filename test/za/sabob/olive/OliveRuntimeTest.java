@@ -18,15 +18,15 @@ public class OliveRuntimeTest {
 
         OliveRuntime runtime = new OliveRuntime(Mode.DEVELOPMENT, loader);
         String source = OliveUtils.normalize(LoadTest.class, "../loader/test.sql");
-        System.out.println(runtime.loadFile(source));
+        System.out.println(runtime.loadSql(source));
 
         //loader.setClassLoader(LoadTest.class);
         source = OliveUtils.normalize(LoadTest.class, "test.sql");
         System.out.println(source);
-        System.out.println(runtime.loadFile(OliveUtils.normalize(LoadTest.class, "test.sql")));
+        System.out.println(runtime.loadSql(OliveUtils.normalize(LoadTest.class, "test.sql")));
 
         source = OliveUtils.normalize(LoadTest.class, "../loader/test.sql");
-        System.out.println(runtime.loadFile(source));
+        System.out.println(runtime.loadSql(source));
 
     }
 }

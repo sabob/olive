@@ -73,7 +73,7 @@ public class OliveRuntime {
             }
         }
 
-        String sql = loadFile(filename);
+        String sql = loadSql(filename);
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
 
         if (getMode() == Mode.PRODUCTION) {
@@ -84,7 +84,7 @@ public class OliveRuntime {
     }
 
     // TODO dtop this method and use solely loadParsedSql?
-    public String loadFile(String filename) {
+    public String loadSql(String filename) {
         if (filename == null) {
             throw new IllegalArgumentException("filename cannot be null!");
         }
