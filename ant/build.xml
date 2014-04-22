@@ -136,6 +136,22 @@
     </target>
           
     <target name="dist" depends="clean, jar, javadoc" description="create Olive distribution">
+        
+        <copy todir="dist/docs">
+            <fileset dir="docs" casesensitive="yes">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        
+        <copy todir="../olive-site/">
+            <fileset dir="docs" casesensitive="yes">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        
+        <zip basedir="dist"
+                     destfile="dist/olive-${version}.zip"
+                     includes="**/*"/>
     </target>
 
     <target name="get-deps" description="download JAR dependencies">
