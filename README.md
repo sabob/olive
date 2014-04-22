@@ -74,6 +74,8 @@ The most common components of Olive are the classes
 
 Creating an instance of Olive is easy, simply create a new instance with one of the many constructors.
 
+_Note:_Olive is thread safe so a single instance  can be created and shared in a multi threaded environment such as a servlet environment.
+
 ```java
 // By default Olive starts in PRODUCTION mode and automatically caches SQL files it loads
 // Olive also uses the ClasspathResourceLoader by default to load SQL files on the classpath
@@ -125,7 +127,7 @@ String parsedSql = olive.loadParsedSql(fullname);
 
 ## Standalone
 <a id="#standalone"></a>
-Using Olive in a standalone application it is often desirable to access Olive as a singleon. Since Olive is thread safe this can easily be done as follows:
+Using Olive in a standalone application it is often desirable to access Olive as a singleon. Since Olive is thread safe this can easily be achieved as follows:
 
 ```java
 public class AppUtils {
