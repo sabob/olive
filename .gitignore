@@ -1,2 +1,5 @@
 /dist/
 /docs/javadocs/
+/out/
+/.idea/
+/olive.iml
