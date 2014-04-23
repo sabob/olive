@@ -22,12 +22,15 @@ import za.sabob.olive.ps.NamedParameterUtils;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 import za.sabob.olive.util.*;
 
 /**
  *
  */
 public class OliveRuntime {
+
+    private static final Logger LOGGER = Logger.getLogger(OliveRuntime.class.getName());
 
     private static Map<String, String> fileMap = new ConcurrentHashMap<String, String>();
 
@@ -68,7 +71,9 @@ public class OliveRuntime {
             ParsedSql parsedSql = parsedMap.get(filename);
 
             if (parsedSql != null) {
-                System.out.println("returning cached parsed value");
+                if (getMode() == Mode.TRACE) {
+                    LOGGER.info("return the cached ParsedSql for filename '" + filename + "'");
+                }
                 return parsedSql;
             }
         }
@@ -92,7 +97,9 @@ public class OliveRuntime {
         if (getMode() == Mode.PRODUCTION) {
             String file = fileMap.get(filename);
             if (file != null) {
-                System.out.println("returning cached value");
+                if (getMode() == Mode.TRACE) {
+                    LOGGER.info("return the cached sql for filename '" + filename + "'");
+                }
                 return file;
             }
         }

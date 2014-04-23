@@ -15,8 +15,10 @@
  */
 package za.sabob.olive;
 
+import java.sql.*;
 import za.sabob.olive.loader.*;
-import za.sabob.olive.ps.ParsedSql;
+import za.sabob.olive.ps.*;
+import za.sabob.olive.util.*;
 
 /**
  *
@@ -98,5 +100,16 @@ public class Olive {
 
     public String loadSql(String filename) {
         return getRuntime().loadSql(filename);
+    }
+    
+    public PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params) {
+        PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);
+        return ps;
+    }
+
+    public PreparedStatement prepareStatement(Connection conn, String filename, SqlParams params) {
+        ParsedSql parsedSql = getRuntime().loadParsedSql(filename);
+        PreparedStatement ps = prepareStatement(conn, parsedSql, params);
+        return ps;
     }
 }

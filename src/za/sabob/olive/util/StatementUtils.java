@@ -52,7 +52,7 @@ import java.util.logging.*;
  */
 public class StatementUtils {
 
-    private static final Logger logger = Logger.getLogger(StatementUtils.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(StatementUtils.class.getName());
 
     static final Set<String> driversWithNoSupportForGetParameterType = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(1));
 
@@ -142,7 +142,7 @@ public class StatementUtils {
 
         // override type info?
         if (Olive.getMode() == Mode.TRACE) {
-            logger.info("Overriding type info with runtime info from SqlParam: name [" + inValue.getName() + "], column index " + paramIndex + ", SQL type "
+            LOGGER.info("Overriding type info with runtime info from SqlParam: name [" + inValue.getName() + "], column index " + paramIndex + ", SQL type "
                 + inValue.getSqlType() + ", type name " + inValue.getTypeName());
         }
         if (sqlTypeToUse != OliveUtils.TYPE_UNKNOWN) {
@@ -154,7 +154,7 @@ public class StatementUtils {
          }
 
         if (Olive.getMode() == Mode.TRACE) {
-            logger.info("Setting SQL statement parameter value: name [" + inValue.getName() + "], column index " + paramIndex + ", parameter value [" + inValueToUse
+            LOGGER.info("Setting SQL statement parameter value: name [" + inValue.getName() + "], column index " + paramIndex + ", parameter value [" + inValueToUse
                 + "], value class [" + (inValueToUse != null ? inValueToUse.getClass().getName() : "null") + "], SQL type " + (sqlTypeToUse
                 == OliveUtils.TYPE_UNKNOWN ? "unknown" : Integer.toString(sqlTypeToUse)));
         }
@@ -183,7 +183,7 @@ public class StatementUtils {
                     jdbcDriverName = dbmd.getDriverName();
                     checkGetParameterType = !driversWithNoSupportForGetParameterType.contains(jdbcDriverName);
                 } catch (Throwable ex) {
-                    logger.log(Level.SEVERE, "Could not check connection metadata", ex);
+                    LOGGER.log(Level.SEVERE, "Could not check connection metadata", ex);
                 }
             }
             if (checkGetParameterType) {
@@ -191,7 +191,7 @@ public class StatementUtils {
                     sqlTypeToUse = ps.getParameterMetaData().getParameterType(paramIndex);
                 } catch (Throwable ex) {
                     if (Olive.getMode() == Mode.TRACE) {
-                        logger.log(Level.INFO, "JDBC 3.0 getParameterType call not supported - using fallback method instead: ", ex);
+                        LOGGER.log(Level.INFO, "JDBC 3.0 getParameterType call not supported - using fallback method instead: ", ex);
                     }
                 }
             }
@@ -216,7 +216,7 @@ public class StatementUtils {
                         sqlTypeToUse = Types.VARCHAR;
                     }
                 } catch (Throwable ex) {
-                    logger.log(Level.SEVERE, "Could not check connection metadata", ex);
+                    LOGGER.log(Level.SEVERE, "Could not check connection metadata", ex);
                 }
             }
             if (useSetObject) {
