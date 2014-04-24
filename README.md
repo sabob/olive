@@ -77,7 +77,7 @@ try {
 ```
 
 ## Load SQL
-<a id="#load"></a>
+<a id="load"></a>
 The primary use case for Olive is to load and cache external SQL files in order to create JDBC Statements with.
 
 While it is possible to write SQL strings in Java code, it is cumbersome, especially large queries spanning multiple lines where each line has to be concatenated. It also makes it difficult to execute the query in our favorite query tool because we need remove the Java String concatenations.
@@ -94,7 +94,7 @@ ClasspathResourceLoader is used to load SQL files from the classpath, while Weba
 In PRODUCTION mode, the default mode, Olive will cache all loaded files for fast retrieval in the future. In DEVELOPMENT mode Olive does not perform any caching, and changes to files are picked up automatically.
 
 ## Named Parameters
-<a id="#named"></a>
+<a id="named"></a>
 JDBC provides a PreparedStatement for writing queries which automatically escapes the values which also ensures SQL injection cannot occur.
 
 However PreparedStatement uses index based parameters which is cumbersome to match when working with large queries which change over time as you continuously need to adjust the index positions.
@@ -130,6 +130,9 @@ SqlParams params = new SqlParams();
 params.setString("name", "Bob");
 params.setInt("age", 18);
 ```
+
+## Utilities
+<a id="utilities"></a>
 
 ## Usage
 <a id="#usage"></a>
