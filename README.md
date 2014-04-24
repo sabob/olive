@@ -14,8 +14,8 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 ##### Table of Contents  
 [Intro] (#intro)   
-[Load SQL] (#load)  
-[Named Parameters] (#named)  
+[Load SQL] (#load-sql)  
+[Named Parameters] (#named-parameters)  
 [Utilities] (#utilis)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
