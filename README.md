@@ -132,7 +132,7 @@ params.setInt("age", 18);
 ```
 
 ## Utilities
-<a id="utilities"></a>
+<a id="utils"></a>
 
 ## Usage
 <a id="usage"></a>
