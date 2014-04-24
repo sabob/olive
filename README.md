@@ -3,8 +3,20 @@ Olive
 
 Provides SQL utilities such as loading queries from files and named prepared statements.
 
+## Features
+* Load and cache external SQL files
+* Configurable to load SQL files from classpath or web application root
+* Named parameters for prepared statements
+* Utilities to easily close Connections, Statements and ResultSets
+* Thread safe - can be used in multithreaded environments
+* No dependencies - Olive is a self-contained jar
+
+
 ##### Table of Contents  
 [Intro] (#intro)   
+[Load SQL] (#load)  
+[Named Parameters] (#named)  
+[Utilities] (#utilis)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
 [Web] (#web)   
