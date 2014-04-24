@@ -63,23 +63,50 @@ public class SqlParams {
         return this;
     }
 
+    public SqlParams set(String name, SqlParam param, Object defaultIfNull) {
+        if (param.getValue() == null) {
+            param.setValue(defaultIfNull);
+        }
+        map.put(name, param);
+        return this;
+    }
+
     public SqlParams set(String name, Object value) {
+        return set(name, value, null);
+    }
+
+    public SqlParams set(String name, Object value, Object defaultIfNull) {
         if (value instanceof SqlParam) {
             SqlParam sqlParam = (SqlParam) value;
+            if (sqlParam.getValue() == null) {
+                sqlParam.setValue(defaultIfNull);
+            }
             set(name, sqlParam);
 
         } else {
+            if (value == null) {
+                value = defaultIfNull;
+            }
             SqlParam param = new SqlParam(name, value);
             set(name, param);
         }
         return this;
+
     }
 
     public SqlParams set(String name, Object value, int sqlType) {
-        return set(name, value, sqlType, (Integer) null);
+        return set(name, value, null, (Integer) null);
+    }
+
+    public SqlParams set(String name, Object value, Object defaultIfNull, int sqlType) {
+        return set(name, value, defaultIfNull, sqlType, (Integer) null);
     }
 
     public SqlParams set(String name, Object value, int sqlType, Integer scaleOrLength) {
+        return set(name, value, null, sqlType, scaleOrLength);
+    }
+
+    public SqlParams set(String name, Object value, Object defaultIfNull, int sqlType, Integer scaleOrLength) {
         if (value instanceof SqlParam) {
             SqlParam param = (SqlParam) value;
             param.setSqlType(sqlType);
@@ -87,6 +114,9 @@ public class SqlParams {
             set(name, param);
 
         } else {
+            if (value == null) {
+                value = defaultIfNull;
+            }
             SqlParam param = new SqlParam(name, value, sqlType, scaleOrLength);
             set(name, param);
         }
@@ -133,17 +163,42 @@ public class SqlParams {
         return set(name, value);
     }
 
+    public SqlParams setObject(String name, Object value, Object defaultIfNull) {
+        return set(name, value, defaultIfNull);
+    }
+
     public SqlParams setObject(String name, Object value, int sqlType) {
         return set(name, value, sqlType);
     }
 
+    public SqlParams setObject(String name, Object value, Object defaultIfNull, int sqlType) {
+        return set(name, value, defaultIfNull, sqlType);
+    }
+
     public SqlParams setObject(String name, Object value, int sqlType, int scaleOrLength) {
-        return set(name, value, sqlType, scaleOrLength);
+        return set(name, value, sqlType, (Integer) scaleOrLength);
+    }
+
+    public SqlParams setObject(String name, Object value, Object defaultIfNull, int sqlType, int scaleOrLength) {
+        return set(name, value, defaultIfNull, sqlType, (Integer) scaleOrLength);
+    }
+    
+    public SqlParams setString(String name, String value, String defaultIfNull, int maxLength) {
+        if (value == null) {
+            value = defaultIfNull;
+        }
+        value = OliveUtils.truncate(value, maxLength);
+        return setString(name, value);
     }
 
     public SqlParams setString(String name, String value, int maxLength) {
         value = OliveUtils.truncate(value, maxLength);
         return setString(name, value);
+    }
+
+    public SqlParams setString(String name, String value, String defaultIfNull) {
+        SqlParam param = new SqlParam(name, value, Types.VARCHAR);
+        return set(name, param, defaultIfNull);
     }
 
     public SqlParams setString(String name, String value) {
