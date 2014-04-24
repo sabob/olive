@@ -16,7 +16,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 [Intro] (#intro)   
 [Load SQL] (#load-sql)  
 [Named Parameters] (#named-parameters)  
-[Utilities] (#utilis)  
+[Utilities] (#utilities)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
 [Web] (#web)   
@@ -132,7 +132,7 @@ params.setInt("age", 18);
 ```
 
 ## Utilities
-<a id="utils"></a>
+<a id="utilities"></a>
 
 ## Usage
 <a id="usage"></a>
