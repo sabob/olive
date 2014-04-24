@@ -26,7 +26,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 
 ## Intro
-<a id="#intro"></a>
+<a id="intro"></a>
 Olive provides common SQL and JDBC utilities to enhance JDBC usage. Olive doesn't replace JDBC in any way.
 
 Below is a sample SQL file we want to load into our application.
@@ -135,7 +135,7 @@ params.setInt("age", 18);
 <a id="utilities"></a>
 
 ## Usage
-<a id="#usage"></a>
+<a id="usage"></a>
 The most common components of Olive are the classes 
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/Olive.html" target="_blank">Olive</a>,
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoader.html" target="_blank">ResourceLoader</a>,
@@ -255,7 +255,7 @@ TODO
 
 
 ## Standalone
-<a id="#standalone"></a>
+<a id="standalone"></a>
 Using Olive in a standalone application it is often desirable to access Olive as a singleon. Since Olive is thread safe this can easily be achieved as follows:
 
 ```java
@@ -299,7 +299,7 @@ ParsedSql sql = olive.loadParsedSql(name);
 ```
 
 ## Web
-<a id="#web"></a>
+<a id="web"></a>
 In a web environment such as a Servlet container, we should rather use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebapResourceLoader</a>  instead of the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a>. The problem with the ClasspathResourceLoader is that when making changes
 to the SQL files it could cause the container to restart, which isn't ideal in development mode, where we often make changes to the files.
 
@@ -396,7 +396,7 @@ ParsedSql sql = olive.loadParsedSql("/sql/person/insert_peson.sql");
 Note: in a web application it doesn't make sense to use OliveUtils.normalize since the SQL files are not relative to class files, but are placed on the webapp folder instead.
 
 ## Mode
-<a id="#mode"></a>
+<a id="mode"></a>
 As seen above Olive has a PRODUCTION and DEVELOPMENT mode as well as a TRACE mode. 
 
 PRODUCTION mode is the default mode and ensures that SQL files that are loaded are cached for fast retrieval in the future. Once the SQL file is parsed the result is also cached so files do not have to be reparsed each time.
@@ -459,4 +459,4 @@ public class AppUtils {
 ```
 
 ## Build
-<a id="#build"></a>
+<a id="build"></a>
