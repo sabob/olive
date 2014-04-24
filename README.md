@@ -1,10 +1,22 @@
 Olive
 =====
 
-SQL utilities such as loading queries from files and named prepared statements.
+Provides SQL utilities such as loading queries from files and named prepared statements.
+
+## Features
+* Load and cache external SQL files
+* Configurable to load SQL files from classpath or web application root
+* Named parameters for prepared statements
+* Utilities to easily close Connections, Statements and ResultSets
+* Thread safe - can be used in multithreaded environments
+* No dependencies - Olive is a self-contained jar
+
 
 ##### Table of Contents  
 [Intro] (#intro)   
+[Load SQL] (#load)  
+[Named Parameters] (#named)  
+[Utilities] (#utilis)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
 [Web] (#web)   
@@ -15,6 +27,12 @@ SQL utilities such as loading queries from files and named prepared statements.
 
 ## Intro
 <a id="#intro"></a>
+Olive provides common SQL and JDBC utilities to enhance JDBC usage. Olive doesn't replace JDBC in any way.
+
+Olive is thread-safe and can be used in a multithreaded environment such as J2EE servers.
+
+Olive has _no dependencies_, everything is included in the olive-x.x.x.jar.
+
 Below is a sample SQL file we want to load into our application.
 
 `insert_person.sql`:
@@ -46,7 +64,7 @@ try {
     params.setInt("age", 21);
     
     // Create a PreparedStatement for the given sql and parameters
-    PreparedStatement ps = OliveUtils.prepareStatement(conn, sql, params);
+    PreparedStatement ps = olive.prepareStatement(conn, sql, params);
 
     // Execute the statement to receive the ResultSet
     ResultSet rs = pstmt.executeQuery();
@@ -74,7 +92,7 @@ The most common components of Olive are the classes
 
 Creating an instance of Olive is easy, simply create a new instance with one of the many constructors.
 
-_Note:_ Olive is thread safe so a single instance  can be created and shared in a multi threaded environment such as a servlet container.
+_Note:_ Olive is _thread safe_ so a single instance  can be created and shared in a multi threaded environment such as a servlet container.
 
 ```java
 // By default Olive starts in PRODUCTION mode and automatically caches SQL files it loads
@@ -90,10 +108,13 @@ Olive olive = new Olive(loader);
 
 ```
 
-Olive can be customized where it loads SL files from by specifying the
+Olive can be customized where it loads SL files from by specifying which
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoader.html" target="_blank">ResourceLoader</a> to use.
 
-The <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a> loads SQL file form the classpath. You must provide the _absolute_ path to the SQL files. Absolute paths starts with a _'/'_ character. For example, given the sql file:
+Olive ships with two resource loaders, <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a> which is the default and
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebappResourceLoader</a> which is outlined in the [web] (#web) section.
+
+ClasspathResourceLoader loads SQL file form the classpath. We must provide the _absolute_ path to the SQL files. Absolute paths starts with a _'/'_ character. For example, given the sql file:
 
 `org/mycorp/dao/person/insert_person.sql`:
 
@@ -106,7 +127,7 @@ ParsedSql sql = olive.loadParsedSql("/org/mycorp/dao/person/insert_person.sql");
 
 ```
 
-However, you can use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize-java.lang.Class-java.lang.String-" target="_blank">OliveUtils.normalize(Class, filename)</a> to create absolute filenames relative to the given class argument. For example:
+However, we can use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize-java.lang.Class-java.lang.String-" target="_blank">OliveUtils.normalize(Class, filename)</a> to create absolute filenames relative to the given class argument. For example:
 
 ```java
 import org.mycorp.dao.person.PersonDao;
@@ -122,8 +143,77 @@ fullname = OliveUtils.normalize(PersonDao.class, "../product/insert_product.sql"
 // We can then use this normalized name to load SQL files with Olive
 Olive olive = new Olive();
 String fullname = OliveUtils.normalize(PersonDao.class, "insert_person.sql");
-String parsedSql = olive.loadParsedSql(fullname);
+ParsedSql parsedSql = olive.loadParsedSql(fullname);
 ```
+
+When Olive loads SQL files it will cache the result for fast retrieval in the future. Olive also caches the parsed SQL results so there is no need to reparse for future queries.
+
+Note: in development mode Olive does not perform any caching.
+
+Olive provides named parameters for prepared statements. This feature is based on the <a href="http://projects.spring.io/spring-framework/" target="_blank">Spring framework</a>.
+
+When Olive parses a query (by calling Olive.loadParsedSql or Olive.prepareStatement), it automatically finds all named parameters and replaces them with '?'. A named parameter is specified as a ':' followed by an identifier, for example:
+
+`select.sql`:
+```sql
+SELECT * FROM mytable WHERE name = :name and age >= :age
+```
+
+In the query above two named parameters are specified namely _:name_ and _:age_. By invoking Olive.loadParsedSql("select.sql"), Olive will load and parse the SQL. Parsing basically means Olive will scan for all named parameters, mark where they occur in the SQL, and replace them a '?'. The above query becomes:
+
+```sql
+SELECT * FROM mytable WHERE name = ? and age >= ?
+```
+
+Since Olive marked the occurrences of the named parameters it knows that the 1st '?' is where the :name parameter should be used and the 2nd parameter is for :age.
+
+Olive.loadParsedSql returns a ParsedSql instance which contains the information about where each named parameter is located in the SQL.
+
+You can query ParsedSql about the <a href="" target="_blank"> TODO original SQL</a> and well as the name and location of the named parameters. You can also see the number of named and unnamed parameters in the SQL string.
+
+To specify the named parameters to use for the SQL we use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParams.html" target="_blank">SqlParams</a>  class.
+
+SqlParams provides a similar API to PreparedStatement for setting parameters, but instead of using indexes it uses names. For example we can set the :name and :age named parameters as follows:
+
+```java
+ParsedSql sql = olive.loadParsedSql("myfile.sql");
+SqlParams params = new SqlParams();
+params.setString("name", "Bob");
+params.setInt("age", 18);
+```
+
+Equipped with the ParsedSql and SqlParams we can create the PreparedStatement:
+
+```java
+
+Connection conn;
+PreparedStatement ps;
+ResultSet rs;
+
+try {
+    Connection conn...
+    Olive olive = new Olive();
+    ParsedSql sql = olive.loadParsedSql("myfile.sql");
+    SqlParams params = new SqlParams();
+    ps = olive.prepareStatement(conn, sql, params);
+    rs = ps.execute();
+} catch (SQLException e) {
+    throw new RuntimeException(e);
+} finally {
+    OliveUtils.close(conn, ps, rs);
+}
+```
+
+
+
+Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is common to have a centralized exception handling mechanism to catch any errors occuring in the code. For example in a standalone application the Thread.setUncaughtExceptionHandler is often used. In a web app a exception handling Filter is often used to log and alert errors.
+
+TODO mention OliveUtils.close and that it handles nulls
+
+Collections is also supported for SELECT IN type queries.
+TODO
+
+
 
 ## Standalone
 <a id="#standalone"></a>
@@ -162,7 +252,7 @@ public class AppUtils {
 
 ```
 
-To use this in your application you can use:
+To use this in our application we can use:
 ```java
 Olive olive = AppUtils.getOlive();
 String name =  OliveUtils.normalize(PersonDao.class, "insert_person.sql");
@@ -172,7 +262,7 @@ ParsedSql sql = olive.loadParsedSql(name);
 ## Web
 <a id="#web"></a>
 In a web environment such as a Servlet container, we should rather use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebapResourceLoader</a>  instead of the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a>. The problem with the ClasspathResourceLoader is that when making changes
-to the SQL files it could cause the container to restart, which isn't ideal in development mode, where you often make changes to the files.
+to the SQL files it could cause the container to restart, which isn't ideal in development mode, where we often make changes to the files.
 
 To use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebapResourceLoader</a> create Olive as follows:
 
@@ -272,11 +362,11 @@ As seen above Olive has a PRODUCTION and DEVELOPMENT mode as well as a TRACE mod
 
 PRODUCTION mode is the default mode and ensures that SQL files that are loaded are cached for fast retrieval in the future. Once the SQL file is parsed the result is also cached so files do not have to be reparsed each time.
 
-DEVELOPMENT mode is useful while developing your application as the SQL files are reloaded each time. Changes made to the files are immediately visible.
+DEVELOPMENT mode is useful while developing our applications as the SQL files are reloaded each time. Changes made to the files are immediately visible.
 
-TRACE mode is useful when you want to see output printed as to why errors occur.
+TRACE mode is useful when we want to see output printed as to why errors occur.
 
-If you are using Spring profiles it is common to leverage the _spring.profiles.active_ property in web.xml to setup the 
+When using Spring profiles it is common to leverage the _spring.profiles.active_ property in web.xml to setup the 
 mode. For example, given the following web.xml:
 
 The web.xml would look like this:
