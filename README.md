@@ -14,9 +14,9 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 ##### Table of Contents  
 [Intro] (#intro)   
-[Load SQL] (#load)  
-[Named Parameters] (#named)  
-[Utilities] (#utilis)  
+[Load SQL] (#load-sql)  
+[Named Parameters] (#named-parameters)  
+[Utilities] (#utilities)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
 [Web] (#web)   
@@ -26,12 +26,8 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 
 ## Intro
-<a id="#intro"></a>
+<a id="intro"></a>
 Olive provides common SQL and JDBC utilities to enhance JDBC usage. Olive doesn't replace JDBC in any way.
-
-Olive is thread-safe and can be used in a multithreaded environment such as J2EE servers.
-
-Olive has _no dependencies_, everything is included in the olive-x.x.x.jar.
 
 Below is a sample SQL file we want to load into our application.
 
@@ -80,8 +76,66 @@ try {
 }
 ```
 
+## Load SQL
+<a id="load"></a>
+The primary use case for Olive is to load and cache external SQL files in order to create JDBC Statements with.
+
+While it is possible to write SQL strings in Java code, it is cumbersome, especially large queries spanning multiple lines where each line has to be concatenated. It also makes it difficult to execute the query in our favorite query tool because we need remove the Java String concatenations.
+
+If the SQL files are externalized we can just copy and paste the queries from and to our query tools.
+
+Olive use <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoaders.html" target="_blank">ResourceLoaders</a> to load SQL files with.
+
+Olive ships with two resource loaders, <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a> which is the default and
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebappResourceLoader</a>.
+
+ClasspathResourceLoader is used to load SQL files from the classpath, while WebappResourceLoader is used to load SQL files from the web application root folder in servlet containers.
+
+In PRODUCTION mode, the default mode, Olive will cache all loaded files for fast retrieval in the future. In DEVELOPMENT mode Olive does not perform any caching, and changes to files are picked up automatically.
+
+## Named Parameters
+<a id="named"></a>
+JDBC provides a PreparedStatement for writing queries which automatically escapes the values which also ensures SQL injection cannot occur.
+
+However PreparedStatement uses index based parameters which is cumbersome to match when working with large queries which change over time as you continuously need to adjust the index positions.
+
+Named parameters are an alternative where instead of using question marks ('?') and indexes we name the parameters and use this name to specify it's value, instead of an index position.
+
+_Note:_ Olive does not replace the PreparedStatement, it simply provides a alternative way to create PreparedStatements from a SQL string.
+
+_Also note:_ Named parameters feature is based on the <a href="http://projects.spring.io/spring-framework/" target="_blank">Spring framework</a>, although Olive does not depend on Spring at all.
+
+When Olive parses a query (by calling Olive.loadParsedSql or Olive.prepareStatement), it automatically finds all named parameters and replaces them with '?'. A named parameter is specified as a ':' followed by an identifier, for example:
+
+`select.sql`:
+```sql
+SELECT * FROM mytable WHERE name = :name and age >= :age
+```
+
+In the query above two named parameters are specified namely _:name_ and _:age_. By invoking Olive.loadParsedSql("select.sql"), Olive will load and parse the SQL. Parsing basically means Olive will scan for all named parameters, mark where they occur in the SQL, and replace them a '?'. The above query becomes:
+
+```sql
+SELECT * FROM mytable WHERE name = ? and age >= ?
+```
+
+Since Olive marked the occurrences of the named parameters it knows that the 1st '?' is where the :name parameter should be used and the 2nd parameter is for :age.
+
+To specify the values for the named parameters Olive provides the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParams.html" target="_blank">SqlParams</a> class.
+
+SqlParams is a HashMap but with an API similar to PreparedStatement in that you can specify the value type with methods such as `setString(String name, String value)`, `setInt(String name, int value)`, `setBoolean(String name, boolean bool)` etc. Belows is an example for specifying the named parameters for the query above:
+
+```java
+ParsedSql sql = olive.loadParsedSql("myfile.sql");
+SqlParams params = new SqlParams();
+params.setString("name", "Bob");
+params.setInt("age", 18);
+```
+
+## Utilities
+<a id="utilities"></a>
+
 ## Usage
-<a id="#usage"></a>
+<a id="usage"></a>
 The most common components of Olive are the classes 
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/Olive.html" target="_blank">Olive</a>,
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoader.html" target="_blank">ResourceLoader</a>,
@@ -90,7 +144,7 @@ The most common components of Olive are the classes
 
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/Olive.html" target="_blank">Olive</a> provides the main entry for loading, parsing and caching external SQL files.
 
-Creating an instance of Olive is easy, simply create a new instance with one of the many constructors.
+Creating an instance of Olive is easy, simply create a new instance with one of it's many constructors.
 
 _Note:_ Olive is _thread safe_ so a single instance  can be created and shared in a multi threaded environment such as a servlet container.
 
@@ -150,22 +204,7 @@ When Olive loads SQL files it will cache the result for fast retrieval in the fu
 
 Note: in development mode Olive does not perform any caching.
 
-Olive provides named parameters for prepared statements. This feature is based on the <a href="http://projects.spring.io/spring-framework/" target="_blank">Spring framework</a>.
-
-When Olive parses a query (by calling Olive.loadParsedSql or Olive.prepareStatement), it automatically finds all named parameters and replaces them with '?'. A named parameter is specified as a ':' followed by an identifier, for example:
-
-`select.sql`:
-```sql
-SELECT * FROM mytable WHERE name = :name and age >= :age
-```
-
-In the query above two named parameters are specified namely _:name_ and _:age_. By invoking Olive.loadParsedSql("select.sql"), Olive will load and parse the SQL. Parsing basically means Olive will scan for all named parameters, mark where they occur in the SQL, and replace them a '?'. The above query becomes:
-
-```sql
-SELECT * FROM mytable WHERE name = ? and age >= ?
-```
-
-Since Olive marked the occurrences of the named parameters it knows that the 1st '?' is where the :name parameter should be used and the 2nd parameter is for :age.
+Olive provides named parameters for easily authoring queries for PreparedStatements. In order to find the named parameter in a SQL string Olive parses (and caches) the string.
 
 Olive.loadParsedSql returns a ParsedSql instance which contains the information about where each named parameter is located in the SQL.
 
@@ -216,7 +255,7 @@ TODO
 
 
 ## Standalone
-<a id="#standalone"></a>
+<a id="standalone"></a>
 Using Olive in a standalone application it is often desirable to access Olive as a singleon. Since Olive is thread safe this can easily be achieved as follows:
 
 ```java
@@ -260,7 +299,7 @@ ParsedSql sql = olive.loadParsedSql(name);
 ```
 
 ## Web
-<a id="#web"></a>
+<a id="web"></a>
 In a web environment such as a Servlet container, we should rather use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebapResourceLoader</a>  instead of the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a>. The problem with the ClasspathResourceLoader is that when making changes
 to the SQL files it could cause the container to restart, which isn't ideal in development mode, where we often make changes to the files.
 
@@ -357,7 +396,7 @@ ParsedSql sql = olive.loadParsedSql("/sql/person/insert_peson.sql");
 Note: in a web application it doesn't make sense to use OliveUtils.normalize since the SQL files are not relative to class files, but are placed on the webapp folder instead.
 
 ## Mode
-<a id="#mode"></a>
+<a id="mode"></a>
 As seen above Olive has a PRODUCTION and DEVELOPMENT mode as well as a TRACE mode. 
 
 PRODUCTION mode is the default mode and ensures that SQL files that are loaded are cached for fast retrieval in the future. Once the SQL file is parsed the result is also cached so files do not have to be reparsed each time.
@@ -420,4 +459,4 @@ public class AppUtils {
 ```
 
 ## Build
-<a id="#build"></a>
+<a id="build"></a>
