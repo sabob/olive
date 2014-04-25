@@ -101,7 +101,7 @@ However PreparedStatement uses index based parameters which is cumbersome to mat
 
 Named parameters are an alternative where instead of using question marks ('?') and indexes we name the parameters and use this name to specify it's value, instead of an index position.
 
-_Note:_ Olive does not replace the PreparedStatement, it simply provides a alternative way to create PreparedStatements from a SQL string.
+_Note:_ Olive does not replace the PreparedStatement, it simply provides an alternative way to create PreparedStatements from a SQL string.
 
 _Also note:_ Named parameters feature is based on the <a href="http://projects.spring.io/spring-framework/" target="_blank">Spring framework</a>, although Olive does not depend on Spring at all.
 
@@ -133,6 +133,13 @@ params.setInt("age", 18);
 
 ## Utilities
 <a id="utilities"></a>
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html" target="_blank">OliveUtils</a> provides common SQL utilities such as:
+
+* easily <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.Connection-" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize-java.lang.String-" target="_blank">normalize</a> paths to SQL files
+* create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement-java.sql.Connection-za.sabob.olive.ps.ParsedSql-za.sabob.olive.ps.SqlParams-" target="_blank">prepareStatements</a> from SQL files containing named parameters
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParam-java.sql.PreparedStatement-int-za.sabob.olive.ps.SqlParam-" target="_blank">set named parameter values</a> on existing PreparedStatements
+
 
 ## Usage
 <a id="usage"></a>
@@ -245,9 +252,9 @@ try {
 
 
 
-Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is common to have a centralized exception handling mechanism to catch any errors occuring in the code. For example in a standalone application the Thread.setUncaughtExceptionHandler is often used. In a web app a exception handling Filter is often used to log and alert errors.
+Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is common to have a centralized exception handling mechanism to catch any errors occuring in the code. For example in a standalone application the Thread.setUncaughtExceptionHandler is often used. In a web app an exception handling Filter is often used to log and alert errors.
 
-TODO mention OliveUtils.close and that it handles nulls
+In the example above we use <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.ResultSet-java.sql.Statement-java.sql.Connection-" target="_blank">OliveUtils.close</a> in the finally block to close the Connection, PreparedStatement and ResultSet. OliveUtils.close will safely handle null values for any of these resources and any exceptions thrown by closing these resources will be rethrown as a RuntimeException.
 
 Collections is also supported for SELECT IN type queries.
 TODO
