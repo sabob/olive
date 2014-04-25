@@ -101,7 +101,7 @@ However PreparedStatement uses index based parameters which is cumbersome to mat
 
 Named parameters are an alternative where instead of using question marks ('?') and indexes we name the parameters and use this name to specify it's value, instead of an index position.
 
-_Note:_ Olive does not replace the PreparedStatement, it simply provides a alternative way to create PreparedStatements from a SQL string.
+_Note:_ Olive does not replace the PreparedStatement, it simply provides an alternative way to create PreparedStatements from a SQL string.
 
 _Also note:_ Named parameters feature is based on the <a href="http://projects.spring.io/spring-framework/" target="_blank">Spring framework</a>, although Olive does not depend on Spring at all.
 
@@ -133,6 +133,13 @@ params.setInt("age", 18);
 
 ## Utilities
 <a id="utilities"></a>
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html" target="_blank">OliveUtils</a> provides common SQL utilities such as:
+
+* easily <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.Connection-" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize-java.lang.String-" target="_blank">normalize</a> paths to SQL files
+* create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement-java.sql.Connection-za.sabob.olive.ps.ParsedSql-za.sabob.olive.ps.SqlParams-" target="_blank">prepareStatements</a> from SQL files containing named parameters
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParam-java.sql.PreparedStatement-int-za.sabob.olive.ps.SqlParam-" target="_blank">set named parameter values</a> on existing PreparedStatements
+
 
 ## Usage
 <a id="usage"></a>
@@ -206,9 +213,10 @@ Note: in development mode Olive does not perform any caching.
 
 Olive provides named parameters for easily authoring queries for PreparedStatements. In order to find the named parameter in a SQL string Olive parses (and caches) the string.
 
-Olive.loadParsedSql returns a ParsedSql instance which contains the information about where each named parameter is located in the SQL.
+Olive.loadParsedSql returns a <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html" target="_blank">ParsedSql</a> instance which contains the information about where each named parameter is located in the SQL.
 
-You can query ParsedSql about the <a href="" target="_blank"> TODO original SQL</a> and well as the name and location of the named parameters. You can also see the number of named and unnamed parameters in the SQL string.
+You can query ParsedSql about the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getOriginalSql--" target="_blank">Original SQL</a> as well as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterNames--" target="_blank">names</a>
+ and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterIndexes--" target="_blank">location</a> of the named parameters. You can also see the number of <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getNamedParameterCount--" target="_blank">named</a> and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getUnnamedParameterCount--" target="_blank">unnamed</a> parameters in the SQL string.
 
 To specify the named parameters to use for the SQL we use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParams.html" target="_blank">SqlParams</a>  class.
 
@@ -245,14 +253,46 @@ try {
 
 
 
-Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is common to have a centralized exception handling mechanism to catch any errors occuring in the code. For example in a standalone application the Thread.setUncaughtExceptionHandler is often used. In a web app a exception handling Filter is often used to log and alert errors.
+Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is common to have a centralized exception handling mechanism to catch any errors occuring in the code. For example in a standalone application the Thread.setUncaughtExceptionHandler is often used. In a web app an exception handling Filter is often used to log and alert errors.
 
-TODO mention OliveUtils.close and that it handles nulls
+In the example above we use <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.ResultSet-java.sql.Statement-java.sql.Connection-" target="_blank">OliveUtils.close</a> in the finally block to close the Connection, PreparedStatement and ResultSet. OliveUtils.close will safely handle null values for any of these resources and any exceptions thrown by closing these resources will be rethrown as a RuntimeException.
 
-Collections is also supported for SELECT IN type queries.
-TODO
+Olive also supports named parameters for SELECT IN type queries. For example:
 
+```sql
+SELECT * FROM person p WHERE p.id IN (1, 3, 5, 10)
+```
 
+We can create this query with named parameters as follows:
+
+```sql
+SELECT * FROM person p WHERE p.id IN (:ids)
+```
+
+By specifying _:ids_ as a collection of primitives, it will be expanded to a '?' for each item in the collection:
+
+```java
+Conn conn = ...
+ParsedSql sql = ...
+SqlParams params = new SqlParams();
+List list = new ArrayList();
+list.add(1);
+list.add(3);
+list.add(5);
+list.add(10);
+params.set("ids", list); 
+PreparedStatement ps = olive.createStatement(conn, sql, params);
+```
+
+WARNING:_ the maximum number of entries in the collection should not exceed 100. The JDBC spec does not guarantee that the PreparedStatement will work for larger number of entries, although some drivers could support it.
+
+In addition to primitives _:ids_ could also be a collection of collections or a collection of arrays. This allows for queries such as:
+
+```sql
+SELECT * FROM person p WHERE (p.id, p.name) IN ( (1, 'John'), (3, 'Steve'))
+```
+
+This is dependent of wether or not the database supports such queries.
 
 ## Standalone
 <a id="standalone"></a>
