@@ -120,8 +120,11 @@ public class WebappResourceLoader implements ResourceLoader {
         }
 
         // since the paths always ends in '/', make sure the name never starts with one
-        while (source.startsWith("/")) {
-            source = source.substring(1);
+        //while (source.startsWith("/")) {
+            //source = source.substring(1);
+        //}
+        if (!source.startsWith("/")) {
+            source = "/" + source;
         }
 
         Exception exception = null;
