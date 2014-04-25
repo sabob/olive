@@ -257,10 +257,42 @@ Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is
 
 In the example above we use <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.ResultSet-java.sql.Statement-java.sql.Connection-" target="_blank">OliveUtils.close</a> in the finally block to close the Connection, PreparedStatement and ResultSet. OliveUtils.close will safely handle null values for any of these resources and any exceptions thrown by closing these resources will be rethrown as a RuntimeException.
 
-Collections is also supported for SELECT IN type queries.
-TODO
+Olive also supports named parameters for SELECT IN type queries. For example:
 
+```sql
+SELECT * FROM person p WHERE p.id IN (1, 3, 5, 10)
+```
 
+We can create this query with named parameters as follows:
+
+```sql
+SELECT * FROM person p WHERE p.id IN (:ids)
+```
+
+By specifying _:ids_ as a collection of primitives, it will be expanded to a '?' for each item in the collection:
+
+```java
+Conn conn = ...
+ParsedSql sql = ...
+SqlParams params = new SqlParams();
+List list = new ArrayList();
+list.add(1);
+list.add(3);
+list.add(5);
+list.add(10);
+params.set("ids", list); 
+PreparedStatement ps = olive.createStatement(conn, sql, params);
+```
+
+WARNING:_ the maximum number of entries in the collection should not exceed 100. The JDBC spec does not guarantee that the PreparedStatement will work for larger number of entries, although some drivers could support it.
+
+In addition to primitives _:ids_ could also be a collection of collections or a collection of arrays. This allows for queries such as:
+
+```sql
+SELECT * FROM person p WHERE (p.id, p.name) IN ( (1, 'John'), (3, 'Steve'))
+```
+
+This is dependent of wether or not the database supports such queries.
 
 ## Standalone
 <a id="standalone"></a>
