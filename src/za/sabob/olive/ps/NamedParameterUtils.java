@@ -15,6 +15,7 @@
  */
 package za.sabob.olive.ps;
 
+import com.sun.org.apache.bcel.internal.classfile.*;
 import java.util.*;
 
 /**
@@ -293,6 +294,60 @@ public abstract class NamedParameterUtils {
         actualSql.append(originalSql, lastIndex, originalSql.length());
         return actualSql.toString();
     }
+    
+    public static SqlParam createSqlParam(Object value, String name) {
+        SqlParam param;
+        if (value instanceof SqlParam) {
+            param = (SqlParam) value;
+
+        } else {
+            param = new SqlParam(name, value);
+        }
+        return param;
+    }
+
+    public static SqlParam createSqlParam(Object value, SqlParam parent) {
+        SqlParam param;
+        if (value instanceof SqlParam) {
+            param = (SqlParam) value;
+
+        } else {
+            if (parent.getScale() == null) {
+                param = new SqlParam(parent.getName(), value, parent.getSqlType(), parent.getTypeName());
+            } else {
+                param = new SqlParam(parent.getName(), value, parent.getSqlType(), parent.getScale());
+            }
+
+        }
+        return param;
+    }
+
+    public static void addSqlParams(List<SqlParam> paramList, Collection<?> values, SqlParam parent) {
+
+        for (Object value : values) {
+            
+            if (value instanceof Collection) {
+                Collection innerValues = (Collection) value;
+                for (Object innerValue : innerValues) {
+                    SqlParam param = createSqlParam(innerValue, parent.getName());
+                    paramList.add(param);
+                }
+
+            } else if (value instanceof Object[]) {
+
+                Object[] innerValues = (Object[]) value;
+                for (Object innerValue : innerValues) {
+                    SqlParam param = createSqlParam(innerValue, parent.getName());
+                    paramList.add(param);
+                }
+
+            } else {
+                SqlParam param = createSqlParam(value, parent);
+                paramList.add(param);
+
+            }
+        }
+    }
 
     /**
      * Convert a Map of named parameter values to a corresponding array.
@@ -303,39 +358,9 @@ public abstract class NamedParameterUtils {
      * @return the array of values
      */
     public static SqlParam[] buildValueArray(ParsedSql parsedSql, SqlParams paramSource) {
-        SqlParam[] paramArray = new SqlParam[parsedSql.getTotalParameterCount()];
+        //SqlParam[] paramArray = new SqlParam[parsedSql.getTotalParameterCount()];
+        List<SqlParam> paramList = new ArrayList<SqlParam>(parsedSql.getTotalParameterCount());
 
-         if (parsedSql.getNamedParameterCount() > 0 && parsedSql.getUnnamedParameterCount() > 0) {
-            throw new IllegalStateException(
-                "Not allowed to mix named and traditional ? placeholders. You have " + parsedSql.getNamedParameterCount()
-                + " named parameter(s) and " + parsedSql.getUnnamedParameterCount() + " traditional placeholder(s) in statement: "
-                + parsedSql.getOriginalSql());
-        }
-         
-         List<String> paramNames = parsedSql.getParameterNames();
-         for (int i = 0; i < paramNames.size(); i++) {
-            String paramName = paramNames.get(i);
-
-            try {
-                SqlParam sqlParam = paramSource.get(paramName);
-                if (sqlParam == null) {
-                    throw new IllegalArgumentException("No value supplied for the SQL parameter '" + paramName + "': ");
-                }
-
-                paramArray[i] = sqlParam;
-            } catch (IllegalArgumentException ex) {
-                throw new IllegalStateException(
-                    "No value supplied for the SQL parameter '" + paramName + "': " + ex.getMessage());
-            }
-        }
-
-        return paramArray;
-    }
-
-    /*
-    public static Object[] buildValueArray(ParsedSql parsedSql, SqlParams paramSource, List<SqlParameter> declaredParams) {
-
-        Object[] paramArray = new Object[parsedSql.getTotalParameterCount()];
         if (parsedSql.getNamedParameterCount() > 0 && parsedSql.getUnnamedParameterCount() > 0) {
             throw new IllegalStateException(
                 "Not allowed to mix named and traditional ? placeholders. You have " + parsedSql.getNamedParameterCount()
@@ -344,21 +369,58 @@ public abstract class NamedParameterUtils {
         }
 
         List<String> paramNames = parsedSql.getParameterNames();
-        for (int i = 0; i < paramNames.size(); i++) {
-            String paramName = paramNames.get(i);
-
+        for (String paramName : paramNames) {
             try {
                 SqlParam sqlParam = paramSource.get(paramName);
-                SqlParam param = findParameter(declaredParams, paramName, i);
-                paramArray[i] = (param != null ? new SqlParameterValue(param, value) : value);
+                if (sqlParam == null) {
+                    throw new IllegalArgumentException("No value supplied for the SQL parameter '" + paramName + "': ");
+                }
+
+                //paramArray[i] = sqlParam;
+                Object value = sqlParam.getValue();
+                if (value instanceof Collection) {
+                    Collection col = (Collection) value;
+                    addSqlParams(paramList, col, sqlParam);
+                } else {
+                    paramList.add(sqlParam);
+                }
             } catch (IllegalArgumentException ex) {
                 throw new IllegalStateException(
                     "No value supplied for the SQL parameter '" + paramName + "': " + ex.getMessage());
             }
         }
-        return paramArray;
-    }*/
 
+        SqlParam[] paramArray = new SqlParam[paramList.size()];
+        return paramList.toArray(paramArray);
+        //return paramArray;
+    }
+
+    /*
+     public static Object[] buildValueArray(ParsedSql parsedSql, SqlParams paramSource, List<SqlParameter> declaredParams) {
+
+     Object[] paramArray = new Object[parsedSql.getTotalParameterCount()];
+     if (parsedSql.getNamedParameterCount() > 0 && parsedSql.getUnnamedParameterCount() > 0) {
+     throw new IllegalStateException(
+     "Not allowed to mix named and traditional ? placeholders. You have " + parsedSql.getNamedParameterCount()
+     + " named parameter(s) and " + parsedSql.getUnnamedParameterCount() + " traditional placeholder(s) in statement: "
+     + parsedSql.getOriginalSql());
+     }
+
+     List<String> paramNames = parsedSql.getParameterNames();
+     for (int i = 0; i < paramNames.size(); i++) {
+     String paramName = paramNames.get(i);
+
+     try {
+     SqlParam sqlParam = paramSource.get(paramName);
+     SqlParam param = findParameter(declaredParams, paramName, i);
+     paramArray[i] = (param != null ? new SqlParameterValue(param, value) : value);
+     } catch (IllegalArgumentException ex) {
+     throw new IllegalStateException(
+     "No value supplied for the SQL parameter '" + paramName + "': " + ex.getMessage());
+     }
+     }
+     return paramArray;
+     }*/
     /**
      * Find a matching parameter in the given list of declared parameters.
      * @param declaredParams the declared SqlParameter objects
@@ -480,11 +542,11 @@ public abstract class NamedParameterUtils {
      * @param paramMap the Map of parameters
      * @return the array of values
      */
-     public static SqlParam[] buildValueArray(String sql, Map<String, ?> paramMap) {
-     ParsedSql parsedSql = parseSqlStatement(sql);
-     SqlParams sqlParams = new SqlParams(paramMap);
-     return buildValueArray(parsedSql, sqlParams);
-     }
+    public static SqlParam[] buildValueArray(String sql, Map<String, ?> paramMap) {
+        ParsedSql parsedSql = parseSqlStatement(sql);
+        SqlParams sqlParams = new SqlParams(paramMap);
+        return buildValueArray(parsedSql, sqlParams);
+    }
 
     private static class ParameterHolder {
 
