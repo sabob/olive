@@ -213,9 +213,10 @@ Note: in development mode Olive does not perform any caching.
 
 Olive provides named parameters for easily authoring queries for PreparedStatements. In order to find the named parameter in a SQL string Olive parses (and caches) the string.
 
-Olive.loadParsedSql returns a ParsedSql instance which contains the information about where each named parameter is located in the SQL.
+Olive.loadParsedSql returns a <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html" target="_blank">ParsedSql</a> instance which contains the information about where each named parameter is located in the SQL.
 
-You can query ParsedSql about the <a href="" target="_blank"> TODO original SQL</a> and well as the name and location of the named parameters. You can also see the number of named and unnamed parameters in the SQL string.
+You can query ParsedSql about the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getOriginalSql--" target="_blank">Original SQL</a> as well as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterNames--" target="_blank">names</a>
+ and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterIndexes--" target="_blank">location</a> of the named parameters. You can also see the number of <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getNamedParameterCount--" target="_blank">named</a> and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getUnnamedParameterCount--" target="_blank">unnamed</a> parameters in the SQL string.
 
 To specify the named parameters to use for the SQL we use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParams.html" target="_blank">SqlParams</a>  class.
 
