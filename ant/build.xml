@@ -18,7 +18,7 @@
    under the License.
 -->
 
-<project name="disc" default="dist" basedir="..">
+<project name="olive" default="dist" basedir="..">
     
     <property file="ant/build.properties"/>
     <xmlproperty file="ant/javascript-syntax-highlighter.xml"/>
@@ -136,6 +136,24 @@
     </target>
           
     <target name="dist" depends="clean, jar, javadoc" description="create Olive distribution">
+        
+        <copy todir="dist/lib">
+            <fileset dir="lib">
+                <include name="*servlet*"/>
+            </fileset>
+        </copy>
+        
+        <copy todir="dist/ant">
+            <fileset dir="ant" casesensitive="yes">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        
+        <copy todir="dist/src">
+            <fileset dir="src" casesensitive="yes">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
         
         <copy todir="dist/docs">
             <fileset dir="docs" casesensitive="yes">
