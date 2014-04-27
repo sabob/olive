@@ -178,7 +178,7 @@
     
     <target name="javadoc" description="create Javadoc HTML files">
         <delete quiet="false" failonerror="false">
-            <fileset dir="docs/javadocs/javadocs" includes="**/*"/>
+            <fileset dir="docs/javadocs" includes="**/*"/>
         </delete>
 
         <javadocMacro src="src"

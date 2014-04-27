@@ -15,13 +15,17 @@
  */
 package za.sabob.olive;
 
+import java.io.*;
 import java.sql.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.*;
 import za.sabob.olive.loader.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
 /**
- * Provides the main entry point for Olive. It acts as a facade for the {@link OliveRuntime}.
+ * Provides the main entry point for using Olive.
  * <p/>
  * <h4>Load SQL files</h4>
  * Olive provides the method {@link #loadSql(java.lang.String)} for loading and caching external SQL files. For example:
@@ -84,14 +88,20 @@ import za.sabob.olive.util.*;
 public class Olive {
 
     /**
+     * Logger instance for logging messages.
+     */
+    private static final Logger LOGGER = Logger.getLogger(Olive.class.getName());
+
+    private static Map<String, String> fileMap = new ConcurrentHashMap<String, String>();
+
+    private static Map<String, ParsedSql> parsedMap = new ConcurrentHashMap<String, ParsedSql>();
+
+    private ResourceLoader resourceLoader;
+
+    /**
      * Specifies the mode in which Olive is running. The default mode is {@link Mode#PRODUCTION}.
      */
     private static Mode mode = Mode.PRODUCTION;
-
-    /**
-     * Specifies the OliveRuntime.
-     */
-    private OliveRuntime runtime;
 
     /**
      * Creates a new Olive instance in {@link Mode#PRODUCTION} mode.
@@ -114,7 +124,7 @@ public class Olive {
      * @param resourceLoader the ResourceLoader for this olive instance
      */
     public Olive(ResourceLoader resourceLoader) {
-        runtime = new OliveRuntime(mode, resourceLoader);
+        this.resourceLoader = resourceLoader;
     }
 
     /**
@@ -125,27 +135,7 @@ public class Olive {
      */
     public Olive(Mode mode, ResourceLoader resourceLoader) {
         Olive.mode = mode;
-        runtime = new OliveRuntime(mode, resourceLoader);
-    }
-
-    /**
-     * Create a new Olive instance for the given OliveRuntime.
-     *
-     * @param runtime the runtime underlying this olive instance
-     */
-    public Olive(OliveRuntime runtime) {
-        this.runtime = runtime;
-    }
-
-    /**
-     * Create a new Olive instance for the given OliveRuntime and mode.
-     *
-     * @param mode the mode for this olive instance
-     * @param runtime the runtime underlying this olive instance
-     */
-    public Olive(Mode mode, OliveRuntime runtime) {
-        Olive.mode = mode;
-        this.runtime = runtime;
+        this.resourceLoader = resourceLoader;
     }
 
     /**
@@ -154,7 +144,10 @@ public class Olive {
      * @return this olive instance resource loader.
      */
     public ResourceLoader getResourceLoader() {
-        return getRuntime().getResourceLoader();
+        if (resourceLoader == null) {
+            resourceLoader = new ClasspathResourceLoader();
+        }
+        return resourceLoader;
     }
 
     /**
@@ -163,39 +156,33 @@ public class Olive {
      * @param resourceLoader the resource loaded where SQL files will be loaded from
      */
     public void setResourceLoader(ResourceLoader resourceLoader) {
-        getRuntime().setResourceLoader(resourceLoader);
+        this.resourceLoader = resourceLoader;
     }
 
     /**
-     * @return the runtime
-     */
-    public OliveRuntime getRuntime() {
-        if (runtime == null) {
-            runtime = new OliveRuntime(getMode());
-        }
-        return runtime;
-    }
-
-    /**
-     * @param runtime the runtime to set
-     */
-    public void setRuntime(OliveRuntime runtime) {
-        this.runtime = runtime;
-    }
-
-    /**
-     * @return the mode
+     * Returns the {@link za.sabob.olive.Mode} Olive is running in.
+     *
+     * @return the mode Olive is running in
      */
     public static Mode getMode() {
         return mode;
     }
 
     /**
-     * @param mode the mode to set
+     * Set the {@link za.sabob.olive.Mode} for Olive to run in.
+     *
+     * @param mode the mode Olive must Run in
      */
     public void setMode(Mode mode) {
         Olive.mode = mode;
-        getRuntime().setMode(mode);
+    }
+
+    /**
+     * Clear Olive's internal cache containing previously loaded SQL files and parsed SQL statements.
+     */
+    public void clearCache() {
+        fileMap.clear();
+        parsedMap.clear();
     }
 
     /**
@@ -211,7 +198,28 @@ public class Olive {
      * @throws IllegalStateException if the SQL file could not be found
      */
     public String loadSql(String filename) {
-        return getRuntime().loadSql(filename);
+        if (filename == null) {
+            throw new IllegalArgumentException("filename cannot be null!");
+        }
+
+        if (getMode() == Mode.PRODUCTION) {
+            String file = fileMap.get(filename);
+            if (file != null) {
+                if (getMode() == Mode.TRACE) {
+                    LOGGER.info("return the cached sql for filename '" + filename + "'");
+                }
+                return file;
+            }
+        }
+
+        InputStream is = getResourceLoader().getResourceStream(filename);
+
+        String file = OliveUtils.toString(is);
+
+        if (getMode() == Mode.PRODUCTION) {
+            fileMap.put(filename, file);
+        }
+        return file;
     }
 
     /**
@@ -229,7 +237,29 @@ public class Olive {
      * @return the content of the SQL filename as a {@link ParsedSql} instance
      */
     public ParsedSql loadParsedSql(String filename) {
-        return getRuntime().loadParsedSql(filename);
+        if (filename == null) {
+            throw new IllegalArgumentException("filename cannot be null!");
+        }
+
+        if (getMode() == Mode.PRODUCTION) {
+            ParsedSql parsedSql = parsedMap.get(filename);
+
+            if (parsedSql != null) {
+                if (getMode() == Mode.TRACE) {
+                    LOGGER.info("return the cached ParsedSql for filename '" + filename + "'");
+                }
+                return parsedSql;
+            }
+        }
+
+        String sql = loadSql(filename);
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
+
+        if (getMode() == Mode.PRODUCTION) {
+            parsedMap.put(filename, parsedSql);
+        }
+
+        return parsedSql;
     }
 
     /**
@@ -287,7 +317,7 @@ public class Olive {
      * @return the PreparedStatement for the given arguments
      */
     public PreparedStatement prepareStatement(Connection conn, String filename, SqlParams params) {
-        ParsedSql parsedSql = getRuntime().loadParsedSql(filename);
+        ParsedSql parsedSql = loadParsedSql(filename);
         PreparedStatement ps = prepareStatement(conn, parsedSql, params);
         return ps;
     }
