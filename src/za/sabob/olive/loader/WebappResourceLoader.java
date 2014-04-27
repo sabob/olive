@@ -28,17 +28,11 @@ import javax.servlet.ServletContext;
  * the standard FileResourceLoader, in particular the use of war files
  * is transparent).
  *
- * The default search path is '/' (relative to the webapp root), but
- * you can change this behaviour by specifying one or more paths
- * by mean of as many webapp.resource.loader.path properties as needed
- * in the velocity.properties file.
+ * All paths must be absolute to the root of the webapp.
  *
- * All paths must be relative to the root of the webapp.
- *
- * To enable caching and cache refreshing the webapp.resource.loader.cache and
- * webapp.resource.loader.modificationCheckInterval properties need to be
- * set in the velocity.properties file ... auto-reloading of global macros
- * requires the webapp.resource.loader.cache property to be set to 'false'.
+ * To enable caching ensure {@link za.sabob.olive.Olive} is created in {@link za.sabob.olive.Mode#PRODUCTION} mode. To disable the cache
+ * and ensure resource changes are reflecting immediately, ensure {@link za.sabob.olive.Olive} is created in
+ * {@link za.sabob.olive.Mode#PRODUCTION} mode.
  *
  * @author <a href="mailto:geirm@optonline.net">Geir Magnusson Jr.</a>
  * @author Nathan Bubna
@@ -47,6 +41,7 @@ import javax.servlet.ServletContext;
  */
 public class WebappResourceLoader implements ResourceLoader {
 
+    /** Logger to use for logging messages. */
     private static final Logger LOGGER = Logger.getLogger(WebappResourceLoader.class.getName());
 
     /**

@@ -3,3 +3,6 @@
 /out/
 /.idea/
 /olive.iml
+/gradlebuild/.nb-gradle/private/
+/gradle-olive/.nb-gradle/private/
+/gradle-olive/build/

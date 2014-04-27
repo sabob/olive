@@ -17,18 +17,44 @@ package za.sabob.olive;
 
 import java.util.*;
 
-
+/**
+ * Provides the different modes to run an {@link Olive} instance with.
+ * <p/>
+ * In {@link #PRODUCTION} mode SQL files and parsed SQL strings will be cached for fast retrieval.
+ * <p/>
+ * * In {@link #DEVELOPMENT} mode SQL files will <em>not</em> be cached and can be dynamically updated.
+ * <p/>
+ * In {@link #TRACE} mode mode SQL files will <em>not</em> be cached and fine grained logging will be enabled to allow tracing and debugging
+ * of the runtime, eg if there are missing named parameters.
+ */
 public enum Mode {
 
+    /**
+     * In production mode SQL files are cached.
+     */
     PRODUCTION("prod", 0),
+    /**
+     * In development mode SQL files are <em>not</em> cached.
+     */
     DEVELOPMENT("dev", 1),
+    /**
+     * In trace mode SQL files are <em>not</em> cached and fine grained logging are enabled.
+     */
     TRACE("trace", 2);
-    
 
+    /**
+     * The name of the mode.
+     */
     private String name;
 
+    /**
+     * The level of the mode. PRODUCTION mode is lowest level and TRACE mode the highest.
+     */
     private int level;
 
+    /**
+     * A map to quickly lookup modes from strings.
+     */
     private final static Map<String, Mode> lookup = new HashMap<String, Mode>();
 
     static {
@@ -37,15 +63,32 @@ public enum Mode {
         }
     }
 
+    /**
+     * Create a new mode for the give name and level.
+     *
+     * @param name the name of the mode
+     * @param level the level of the mode
+     */
     Mode(String name, int level) {
         this.name = name;
         this.level = level;
     }
 
+    /**
+     * Return the name of the mode.
+     *
+     * @return the name of the mode
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Return the mode for the given key or null if no mode is found.
+     *
+     * @param key the string name to find the mode for
+     * @return the mode for the given key or null if no mode is found
+     */
     public static Mode getMode(String key) {
         if (key == null) {
             return null;
@@ -54,14 +97,29 @@ public enum Mode {
         return lookup.get(key.toLowerCase());
     }
 
+    /**
+     * Return true if the mode is PRODUCTION.
+     *
+     * @return true if the mode is PRODUCTION
+     */
     public boolean isProductionModes() {
         return this.level <= PRODUCTION.level;
     }
 
+    /**
+     * Return true if the mode is DEVELOPMENT or TRACE mode.
+     *
+     * @return true if the mode is DEVELOPMENT or TRACE mode.
+     */
     public boolean isDevelopmentModes() {
         return this.level >= DEVELOPMENT.level;
     }
 
+    /**
+     * Return the level for the mode.
+     *
+     * @return the level of the mode
+     */
     public int getLevel() {
         return level;
     }
