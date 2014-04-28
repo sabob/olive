@@ -16,7 +16,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 [Intro] (#intro)   
 [Load SQL] (#load-sql)  
 [Named Parameters] (#named-parameters)  
-[Custom SQL Values] (#custom-sql-values)  
+[Custom SQL Value] (#custom-sql-value)  
 [Utilities] (#utilities)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
@@ -132,9 +132,44 @@ params.setString("name", "Bob");
 params.setInt("age", 18);
 ```
 
-## Custom SQL Values
-<a id="custom-sql-values"></a>
+## Custom SQL Value
+<a id="custom-sql-value"></a>
+When using named parameters for PreparedStatements it is sometimes neccessary to set a parameter such as a custom Java type. In these situations we can create a <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlValue.html" target="_blank">SqlValue</a> instance and set that as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParam.html" target="_blank">SqlParam</a> value.
 
+SqlValue is an interface with a single method, <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/SqlValue.html#setValue(java.sql.PreparedStatement, int)" target="_blank">setValue</a> for setting a PreparedStatement parameter at the given index.
+
+Say we have the following Money class to pass as a named parameter:
+
+```java
+public vclass Money {
+    private int dollars;
+    private int sents;
+    
+    // getters and setters
+}
+```
+
+To use Money.java as a named parameter we will create a custom SqlValue instance to set the Money object as a PreparedStatement parameter: 
+
+```java
+
+// $3.45
+Money money = new Money(3, 45);
+
+SqlValue moneySqlValue = new SqlValue() {
+
+    @Override
+    public void setValue(PreparedStatement ps, int paramIndex) throws SQLException {
+        String val = money.getDollars() + "|" + money.getSents();
+        ps.setString(paramIndex, val);
+    }
+};
+
+SqlParams params = new SqlParams();
+params.set("money", moneySqlValue);
+```
+
+Above we create a SqlValue and set it as value of the named parameter "money". In the _setValue_ method we create a String representation of our money class and set that as the PreparedStatement parameter.
 ## Utilities
 <a id="utilities"></a>
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html" target="_blank">OliveUtils</a> provides common SQL utilities such as:
