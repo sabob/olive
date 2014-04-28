@@ -16,6 +16,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 [Intro] (#intro)   
 [Load SQL] (#load-sql)  
 [Named Parameters] (#named-parameters)  
+[Custom SQL Values] (#custom-sql-values)  
 [Utilities] (#utilities)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
@@ -130,6 +131,9 @@ SqlParams params = new SqlParams();
 params.setString("name", "Bob");
 params.setInt("age", 18);
 ```
+
+## Custom SQL Values
+<a id="custom-sql-values"></a>
 
 ## Utilities
 <a id="utilities"></a>
