@@ -16,7 +16,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 [Intro] (#intro)   
 [Load SQL] (#load-sql)  
 [Named Parameters] (#named-parameters)  
-[Custom SQL Values] (#custom-sql-values)  
+[Custom SQL Value] (#custom-sql-value)  
 [Utilities] (#utilities)  
 [Usage] (#usage)   
 [Standalone] (#standalone)   
@@ -132,17 +132,52 @@ params.setString("name", "Bob");
 params.setInt("age", 18);
 ```
 
-## Custom SQL Values
-<a id="custom-sql-values"></a>
+## Custom SQL Value
+<a id="custom-sql-value"></a>
+When using named parameters for PreparedStatements it is sometimes neccessary to set a parameter such as a custom Java type. In these situations we can create a <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlValue.html" target="_blank">SqlValue</a> instance and set that as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParam.html" target="_blank">SqlParam</a> value.
 
+SqlValue is an interface with a single method, <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/SqlValue.html#setValue(java.sql.PreparedStatement, int)" target="_blank">setValue</a> for setting a PreparedStatement parameter at the given index.
+
+Say we have the following Money class to pass as a named parameter:
+
+```java
+public vclass Money {
+    private int dollars;
+    private int sents;
+    
+    // getters and setters
+}
+```
+
+To use Money.java as a named parameter we will create a custom SqlValue instance to set the Money object as a PreparedStatement parameter: 
+
+```java
+
+// $3.45
+Money money = new Money(3, 45);
+
+SqlValue moneySqlValue = new SqlValue() {
+
+    @Override
+    public void setValue(PreparedStatement ps, int paramIndex) throws SQLException {
+        String val = money.getDollars() + "|" + money.getSents();
+        ps.setString(paramIndex, val);
+    }
+};
+
+SqlParams params = new SqlParams();
+params.set("money", moneySqlValue);
+```
+
+Above we create a SqlValue and set it as value of the named parameter "money". In the _setValue_ method we create a String representation of our money class and set that as the PreparedStatement parameter.
 ## Utilities
 <a id="utilities"></a>
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html" target="_blank">OliveUtils</a> provides common SQL utilities such as:
 
-* easily <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.Connection-" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
-* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize-java.lang.String-" target="_blank">normalize</a> paths to SQL files
-* create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement-java.sql.Connection-za.sabob.olive.ps.ParsedSql-za.sabob.olive.ps.SqlParams-" target="_blank">prepareStatements</a> from SQL files containing named parameters
-* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParam-java.sql.PreparedStatement-int-za.sabob.olive.ps.SqlParam-" target="_blank">set named parameter values</a> on existing PreparedStatements
+* easily <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close(java.sql.Connection)" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize(java.lang.Class, java.lang.String)" target="_blank">normalize</a> paths to SQL files
+* create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement(java.sql.Connection, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)" target="_blank">prepareStatements</a> from SQL files containing named parameters
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParams(java.sql.PreparedStatement, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)" target="_blank">set named parameter values</a> on existing PreparedStatements
 
 
 ## Usage
@@ -192,7 +227,7 @@ ParsedSql sql = olive.loadParsedSql("/org/mycorp/dao/person/insert_person.sql");
 
 ```
 
-However, we can use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize-java.lang.Class-java.lang.String-" target="_blank">OliveUtils.normalize(Class, filename)</a> to create absolute filenames relative to the given class argument. For example:
+However, we can use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize(java.lang.Class, java.lang.String)" target="_blank">OliveUtils.normalize(Class, filename)</a> to create absolute filenames relative to the given class argument. For example:
 
 ```java
 import org.mycorp.dao.person.PersonDao;
@@ -219,8 +254,8 @@ Olive provides named parameters for easily authoring queries for PreparedStateme
 
 Olive.loadParsedSql returns a <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html" target="_blank">ParsedSql</a> instance which contains the information about where each named parameter is located in the SQL.
 
-You can query ParsedSql about the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getOriginalSql--" target="_blank">Original SQL</a> as well as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterNames--" target="_blank">names</a>
- and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterIndexes--" target="_blank">location</a> of the named parameters. You can also see the number of <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getNamedParameterCount--" target="_blank">named</a> and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getUnnamedParameterCount--" target="_blank">unnamed</a> parameters in the SQL string.
+You can query ParsedSql about the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getOriginalSql()" target="_blank">Original SQL</a> as well as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterNames()" target="_blank">names</a>
+ and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getParameterIndexes()" target="_blank">location</a> of the named parameters. You can also see the number of <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getNamedParameterCount()" target="_blank">named</a> and <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/ParsedSql.html#getUnnamedParameterCount()" target="_blank">unnamed</a> parameters in the SQL string.
 
 To specify the named parameters to use for the SQL we use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParams.html" target="_blank">SqlParams</a>  class.
 
@@ -259,7 +294,7 @@ try {
 
 Note: above we wrap the SQLException as a RuntimeException and rethrow it. It is common to have a centralized exception handling mechanism to catch any errors occuring in the code. For example in a standalone application the Thread.setUncaughtExceptionHandler is often used. In a web app an exception handling Filter is often used to log and alert errors.
 
-In the example above we use <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close-java.sql.ResultSet-java.sql.Statement-java.sql.Connection-" target="_blank">OliveUtils.close</a> in the finally block to close the Connection, PreparedStatement and ResultSet. OliveUtils.close will safely handle null values for any of these resources and any exceptions thrown by closing these resources will be rethrown as a RuntimeException.
+In the example above we use <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close(java.sql.ResultSet, java.sql.Statement, java.sql.Connection)" target="_blank">OliveUtils.close</a> in the finally block to close the Connection, PreparedStatement and ResultSet. OliveUtils.close will safely handle null values for any of these resources and any exceptions thrown by closing these resources will be rethrown as a RuntimeException.
 
 Olive also supports named parameters for SELECT IN type queries. For example:
 
@@ -504,3 +539,16 @@ public class AppUtils {
 
 ## Build
 <a id="build"></a>
+To build Olive from source you will need <a href="http://ant.apache.org/" target="_blank"> Ant</a>.
+
+Download the _zip_ distribution of Olive and navigate to the _ant_ folder:
+
+> ant>
+
+Then run the command _ant -p_ to view all the available tasks
+
+> ant>ant -p
+
+To build a distribution run:
+
+> ant> ant dist
