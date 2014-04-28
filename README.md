@@ -539,3 +539,16 @@ public class AppUtils {
 
 ## Build
 <a id="build"></a>
+To build Olive from source you will need <a href="http://ant.apache.org/" target="_blank"> Ant</a>.
+
+Download the _zip_ distribution of Olive and navigate to the _ant_ folder:
+
+> ant>
+
+Then run the command _ant -p_ to view all the available tasks
+
+> ant>ant -p
+
+To build a distribution run:
+
+> ant> ant dist
