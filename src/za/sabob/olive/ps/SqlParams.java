@@ -24,7 +24,24 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
+ * Provides a class for setting all the named parameters for a SQL statement.
+ * <p/>
+ * SqlParams consist of a map of {@link SqlParam} instances keyed by named parameter.
+ * <p/>
+ <code>/sql/person/select-person.sql:</code>
+ * <pre class="prettyprint">
+ * SELECT * FROM person p WHERE p.name = :name and p.age = :age </pre>
+ * <p/>
+ * <code>Example.java:</code>
  *
+ * <pre class="prettyprint">
+ * Connection conn = DriverManager.getConnection("jdbc:...", "username", "password");
+ * Olive olive = new Olive();
+ * String filename = "/sql/person/select-person.sql";
+ * SqlParams params = new SqlParams();
+ * * params.setString("name", "Bob");
+ * params.setInt("age", 21);
+ * PreparedStatement ps = olive.prepareStatement(conn, filename, params); </pre>
  */
 public class SqlParams {
 
@@ -58,8 +75,11 @@ public class SqlParams {
         return map.get(name);
     }
 
-    public SqlParams set(String name, SqlParam param) {
-        map.put(name, param);
+    public SqlParams set(SqlParam param) {
+        if (param.getName() == null) {
+            throw new IllegalStateException("SqlParam name is required!");
+        }
+        map.put(param.getName(), param);
         return this;
     }
 
@@ -81,14 +101,15 @@ public class SqlParams {
             if (sqlParam.getValue() == null) {
                 sqlParam.setValue(defaultIfNull);
             }
-            set(name, sqlParam);
+            sqlParam.setName(name);
+            set(sqlParam);
 
         } else {
             if (value == null) {
                 value = defaultIfNull;
             }
             SqlParam param = new SqlParam(name, value);
-            set(name, param);
+            set(param);
         }
         return this;
 
@@ -111,14 +132,15 @@ public class SqlParams {
             SqlParam param = (SqlParam) value;
             param.setSqlType(sqlType);
             param.setScale(scaleOrLength);
-            set(name, param);
+            param.setName(name);
+            set(param);
 
         } else {
             if (value == null) {
                 value = defaultIfNull;
             }
             SqlParam param = new SqlParam(name, value, sqlType, scaleOrLength);
-            set(name, param);
+            set(param);
         }
         return this;
     }
@@ -126,27 +148,28 @@ public class SqlParams {
     public SqlParams set(String name, Object value, int sqlType, String typeName) {
         if (value instanceof SqlParam) {
             SqlParam param = (SqlParam) value;
+            param.setName(name);
             param.setSqlType(sqlType);
             param.setTypeName(typeName);
-            set(name, param);
+            set(param);
 
         } else {
             SqlParam param = new SqlParam(name, value, sqlType, typeName);
-            set(name, param);
+            set(param);
         }
         return this;
     }
 
     public SqlParams set(String name, Collection<?> collection) {
         SqlParam param = new SqlParam(name, collection);
-        set(name, param);
+        set(param);
 
         return this;
     }
 
     public SqlParams set(String name, Collection<?> collection, int sqlType) {
         SqlParam param = new SqlParam(name, collection, sqlType);
-        set(name, param);
+        set(param);
 
         return this;
     }
@@ -182,7 +205,7 @@ public class SqlParams {
     public SqlParams setObject(String name, Object value, Object defaultIfNull, int sqlType, int scaleOrLength) {
         return set(name, value, defaultIfNull, sqlType, (Integer) scaleOrLength);
     }
-    
+
     public SqlParams setString(String name, String value, String defaultIfNull, int maxLength) {
         if (value == null) {
             value = defaultIfNull;
@@ -203,78 +226,78 @@ public class SqlParams {
 
     public SqlParams setString(String name, String value) {
         SqlParam param = new SqlParam(name, value, Types.VARCHAR);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setInt(String name, int value) {
         SqlParam param = new SqlParam(name, value, Types.INTEGER);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setLong(String name, long value) {
         SqlParam param = new SqlParam(name, value, Types.BIGINT);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setDouble(String name, double value) {
         SqlParam param = new SqlParam(name, value, Types.DOUBLE);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setNull(String name, int sqlType) {
         SqlParam param = new SqlParam(name, null, sqlType);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setNull(String name, int sqlType, String typeName) {
         SqlParam param = new SqlParam(name, null, sqlType, typeName);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setBigDecimal(String name, BigDecimal value) {
         SqlParam param = new SqlParam(name, value, Types.DECIMAL);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setFloat(String name, float value) {
         SqlParam param = new SqlParam(name, value, Types.FLOAT);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setBoolean(String name, boolean value) {
         SqlParam param = new SqlParam(name, value, Types.BOOLEAN);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setChar(String name, char value) {
         String str = String.valueOf(value);
         SqlParam param = new SqlParam(name, str, Types.CHAR);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setByte(String name, byte value) {
         SqlParam param = new SqlParam(name, value, Types.TINYINT);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setBytes(String name, byte[] value) {
         SqlParam param = new SqlParam(name, value, Types.TINYINT);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setShort(String name, short value) {
         SqlParam param = new SqlParam(name, value, Types.SMALLINT);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setClob(String name, Clob value) {
         SqlParam param = new SqlParam(name, value, Types.CLOB);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setClob(String name, Reader value) {
         SqlParam param = new SqlParam(name, value, Types.CLOB);
-        return set(name, param);
+        return set(param);
     }
 
     /*
@@ -286,12 +309,12 @@ public class SqlParams {
      */
     public SqlParams setBlob(String name, Blob value) {
         SqlParam param = new SqlParam(name, value, Types.BLOB);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setBlob(String name, InputStream value) {
         SqlParam param = new SqlParam(name, value, Types.BLOB);
-        return set(name, param);
+        return set(param);
     }
 
     /*
@@ -302,27 +325,27 @@ public class SqlParams {
      }*/
     public SqlParams setDate(String name, java.sql.Date value) {
         SqlParam param = new SqlParam(name, value, Types.DATE);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setDate(String name, java.util.Date value) {
         SqlParam param = new SqlParam(name, value, Types.DATE);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setTime(String name, Time value) {
         SqlParam param = new SqlParam(name, value, Types.TIME);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setTimestamp(String name, Timestamp value) {
         SqlParam param = new SqlParam(name, value, Types.TIMESTAMP);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setAsciiStream(String name, InputStream value) {
         SqlParam param = new SqlParam(name, value, Types.LONGVARCHAR);
-        return set(name, param);
+        return set(param);
     }
 
     /* Need a way to store the length param before exposing this method
@@ -337,7 +360,7 @@ public class SqlParams {
      }*/
     public SqlParams setBinaryStream(String name, InputStream value) {
         SqlParam param = new SqlParam(name, value, Types.LONGVARBINARY);
-        return set(name, param);
+        return set(param);
     }
 
     /*
@@ -354,7 +377,7 @@ public class SqlParams {
      */
     public SqlParams setCharacterStream(String name, Reader value) {
         SqlParam param = new SqlParam(name, value, Types.LONGVARCHAR);
-        return set(name, param);
+        return set(param);
     }
 
     /*
@@ -370,32 +393,32 @@ public class SqlParams {
      }*/
     public SqlParams setRef(String name, Ref value) {
         SqlParam param = new SqlParam(name, value, Types.REF);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setArray(String name, Array value) {
         SqlParam param = new SqlParam(name, value, Types.ARRAY);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setURL(String name, URL value) {
         SqlParam param = new SqlParam(name, value, Types.DATALINK);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setRowId(String name, RowId value) {
         SqlParam param = new SqlParam(name, value, Types.ROWID);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setNString(String name, String value) {
         SqlParam param = new SqlParam(name, value, Types.NVARCHAR);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setNCharacterStream(String name, Reader value) {
         SqlParam param = new SqlParam(name, value, Types.LONGNVARCHAR);
-        return set(name, param);
+        return set(param);
     }
 
     /*
@@ -406,12 +429,12 @@ public class SqlParams {
      }*/
     public SqlParams setNClob(String name, NClob value) {
         SqlParam param = new SqlParam(name, value, Types.NCLOB);
-        return set(name, param);
+        return set(param);
     }
 
     public SqlParams setNClob(String name, Reader value) {
         SqlParam param = new SqlParam(name, value, Types.NCLOB);
-        return set(name, param);
+        return set(param);
     }
 
     /*
@@ -422,7 +445,7 @@ public class SqlParams {
      }*/
     public SqlParams setSQLXML(String name, SQLXML value) {
         SqlParam param = new SqlParam(name, value, Types.SQLXML);
-        return set(name, param);
+        return set(param);
     }
 
     public Object remove(String key) {

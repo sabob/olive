@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.ps;
+package za.sabob.olive.util;
 
-import com.sun.org.apache.bcel.internal.classfile.*;
 import java.util.*;
+import za.sabob.olive.ps.ParsedSql;
+import za.sabob.olive.ps.SqlParam;
+import za.sabob.olive.ps.SqlParams;
 
 /**
  * Helper methods for named parameter parsing.
  *
  * <p>
- * Only intended for internal use within Spring's JDBC framework.
+ * Only intended for internal use within Olives.
  *
  * @author Thomas Risberg
  * @author Juergen Hoeller
  * @since 2.0
  */
-public abstract class NamedParameterUtils {
+class NamedParameterUtils {
 
     /**
      * Set of characters that qualify as parameter separators,

@@ -13,46 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.ps;
+package za.sabob.olive.util;
 
 import java.sql.*;
-import java.util.*;
 import java.util.logging.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.ps.ParsedSql;
+import za.sabob.olive.ps.SqlParams;
 
 /**
  *
  */
-public class Test {
+public class SqlValueTest {
 
     public static void main(String[] args) {
-        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement("select * from information_schema.catalogs c where c.CATALOG_NAME = :name and c.CATALOG_NAME in (:names)");
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(
+            "select * from information_schema.catalogs c where c.CATALOG_NAME = :name");
 
         SqlParams params = new SqlParams();
-        List ids = new ArrayList();
-        ids.add("a");
-        ids.add(new Object[] {"TEST", "TEST", 5});
-        ids.add(new Object[] {"ok", 1});
-        params.set("names", ids);
-        params.set("name", "TEST");
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, params);
-        SqlParam[] paramArray = NamedParameterUtils.buildValueArray(parsedSql, params);
-        for (SqlParam param : paramArray) {
-            System.out.println("name: " + param.getName() + ", value:" + param.getValue());
-        }
-        System.out.println(sql);
-        System.out.println("named params " + parsedSql.getTotalParameterCount());
+        params.set("name", new SqlValue() {
+
+            @Override
+            public void setValue(PreparedStatement ps, int paramIndex) throws SQLException {
+                System.out.println("setValue called for index: " + paramIndex);
+                ps.setString(paramIndex, "TEST");
+            }
+        });
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:h2:~/test", "sa", "sa");
-            
+
             PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);
             ResultSet rs = ps.executeQuery();
-            while(rs.next()) {
+            while (rs.next()) {
                 System.out.println("Row:" + rs.getString("CATALOG_NAME"));
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SqlValueTest.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

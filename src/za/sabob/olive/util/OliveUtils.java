@@ -18,7 +18,6 @@ package za.sabob.olive.util;
 import java.io.*;
 import za.sabob.olive.ps.SqlParam;
 import za.sabob.olive.ps.ParsedSql;
-import za.sabob.olive.ps.NamedParameterUtils;
 import za.sabob.olive.ps.SqlParams;
 
 import java.sql.*;
@@ -162,6 +161,17 @@ public class OliveUtils {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public static ParsedSql parseSql(String sqlStr) {
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlStr);
+        return parsedSql;
+    }
+    
+    public static String substituteNamedParameters(ParsedSql parsedSql, SqlParams params) {
+
+        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, params);
+        return sql;
     }
 
     public static PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params) {

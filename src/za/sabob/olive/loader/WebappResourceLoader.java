@@ -23,119 +23,106 @@ import java.util.logging.*;
 import javax.servlet.ServletContext;
 
 /**
- * Resource loader that uses the ServletContext of a webapp to
- * load Velocity templates. (it's much easier to use with servlets than
- * the standard FileResourceLoader, in particular the use of war files
- * is transparent).
+ * Resource loader that uses the {@link javax.servlet.ServletContext} of a webapp to load resources (SQL files).
+ * <p/>
+ * This class is easier to use with Servlets and web environments than {@link ClasspathResourceLoader} as the resources are not specified
+ * on the classpath and thus won' cause the server to restart when changes are made to resources.
+ * <p/>
+ * <b>Note:</b> all paths must be absolute to the root of the webapp.
+ * <p>
+ * For example, given the following resources in the webapp:
+ * 
+ * <pre class="prettyprint">
+ * /webapp/sql/person/select-person.sql
+ * </pre>
+ * 
+ * Example usage:
+ * <pre class="prettyprint">
+ * ServletContext servletContext = ...
+ * WebappResourceLoader loader = new WebappResourceLoader(servletContext);
  *
- * All paths must be absolute to the root of the webapp.
+ * // We specify the absolute path to the root of the webapp
+ * InputStream is = loader.getResourceStream("/sql/person/select-person.sql");
+ * String sql = OliveUtils.toString(is);
+ * </pre>
+ * <p/>
+ * To enable caching ensure {@link za.sabob.olive.Olive} is created in {@link za.sabob.olive.Mode#PRODUCTION} mode.
+ * <p/>
+ * To disable the cache and ensure resource changes are reflecting immediately, ensure {@link za.sabob.olive.Olive} is created in
+ * {@link za.sabob.olive.Mode#DEVELOPMENT} mode.
  *
- * To enable caching ensure {@link za.sabob.olive.Olive} is created in {@link za.sabob.olive.Mode#PRODUCTION} mode. To disable the cache
- * and ensure resource changes are reflecting immediately, ensure {@link za.sabob.olive.Olive} is created in
- * {@link za.sabob.olive.Mode#PRODUCTION} mode.
- *
- * @author <a href="mailto:geirm@optonline.net">Geir Magnusson Jr.</a>
- * @author Nathan Bubna
- * @author <a href="mailto:claude@savoirweb.com">Claude Brisson</a>
- * @version $Id$
  */
 public class WebappResourceLoader implements ResourceLoader {
 
-    /** Logger to use for logging messages. */
+    /**
+     * Logger to use for logging messages.
+     */
     private static final Logger LOGGER = Logger.getLogger(WebappResourceLoader.class.getName());
 
     /**
-     * The root paths for templates (relative to webapp's root).
+     * The ServletContext to lod resources with.
      */
-    //protected String[] paths = null;
-    //protected HashMap templatePaths = null;
     protected ServletContext servletContext = null;
 
+    /**
+     * Creates a new default WebappResourceLoader for the given {@link javax.servlet.ServletContext}.
+     *
+     * @param servletContext the servletContext to use for this WebappResourceLoader
+     */
     public WebappResourceLoader(ServletContext servletContext) {
         this.servletContext = servletContext;
     }
 
     /**
-     * This is abstract in the base class, so we need it.
-     * <br>
-     * NOTE: this expects that the ServletContext has already
-     * been placed in the runtime's application attributes
-     * under its full class name (i.e. "javax.servlet.ServletContext").
+     * Returns the {@link InputStream} of the resource with the given name.
+     * <p/>
+     * <b>Note:</b> all paths must be absolute to the root of the webapp.
+     * <p/>
+     * For example, given the following sql files:
+     * 
+     * <pre class="prettyprint">
+     * /webapp/sql/person/select-person.sql
+     * /webapp/sql/product/insert-product.sql
+     * </pre>
+     * 
+     * To load these files you must specify the absolute path to the root of the <em>webapp</em> as follows:
+     * 
+     * <pre class="prettyprint">
+     * ServletContext servletContext = ...
+     * WebappResourceLoader loader = new WebappResourceLoader(servletContext);
+     * Olive olive = new Olive(loader);
      *
-     * @param configuration the {@link ExtendedProperties} associated with
-     * this resource loader.
-     */
-    /*
-     public void init() {
-     LOGGER.fine("WebappResourceLoader: initialization starting.");
-
-     // get configured paths
-     paths = configuration.getStringArray("path");
-     if (paths == null || paths.length == 0) {
-     paths = new String[1];
-     paths[0] = "/";
-     } else {
-     // make sure the paths end with a '/' 
-     for (int i = 0; i < paths.length; i++) {
-     if (!paths[i].endsWith("/")) {
-     paths[i] += '/';
-     }
-     LOGGER.info("WebappResourceLoader: added template path - '" + paths[i] + "'");
-     }
-     }
-
-     // get the ServletContext 
-     Object obj = rsvc.getApplicationAttribute(ServletContext.class.getName());
-     if (obj instanceof ServletContext) {
-     servletContext = (ServletContext) obj;
-     } else {
-     LOGGER.severe("WebappResourceLoader: unable to retrieve ServletContext");
-     }
-
-     // init the template paths map 
-     templatePaths = new HashMap();
-
-     LOGGER.fine("WebappResourceLoader: initialization complete.");
-     }*/
-    
-
-    /**
-     * Get an InputStream so that the Runtime can build a
-     * template with it.
+     * // The path is absolute to the root fo the webapp.
+     * String personSQL = "/person/select-person.sql";
+     * olive.loadSql(personSql);
+     * 
+     * String productSQL = "/product/insert-product.sql";
+     * olive.loadSql(productSql);
+     * </pre>
      *
-     * @param source name of template to get
-     * @return InputStream containing the template
+     * @param name the name of the resource for which the InputStream must be returned
+     * @return the InputStream for the given source name
+     * @throws IllegalStateException if no resource is found for the given source
      */
     @Override
-    public synchronized InputStream getResourceStream(String source) {
-        InputStream result = null;
+    public InputStream getResourceStream(String name) {
+        InputStream result;
 
-        if (source == null || source.length() == 0) {
+        if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("WebappResourceLoader: source name is required!");
         }
 
-        // since the paths always ends in '/', make sure the name never starts with one
-        //while (source.startsWith("/")) {
-            //source = source.substring(1);
-        //}
-        if (!source.startsWith("/")) {
-            source = "/" + source;
+        if (!name.startsWith("/")) {
+            name = "/" + name;
         }
 
-        Exception exception = null;
+        result = servletContext.getResourceAsStream(name);
 
-        try {
-            result = servletContext.getResourceAsStream(source);
-
-            if (result == null) {
-                throw new IllegalStateException("WebappResourceLoader: Could not load " + source);
-            }
-
-            return result;
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (result == null) {
+            throw new IllegalStateException("WebappResourceLoader: Could not load " + name);
         }
+
+        return result;
     }
 
 }

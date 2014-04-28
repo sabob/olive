@@ -253,7 +253,7 @@ public class Olive {
         }
 
         String sql = loadSql(filename);
-        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sql);
+        ParsedSql parsedSql = OliveUtils.parseSql(sql);
 
         if (getMode() == Mode.PRODUCTION) {
             parsedMap.put(filename, parsedSql);

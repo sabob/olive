@@ -38,19 +38,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
 
 /**
- * Utility methods for PreparedStatementSetter/Creator and CallableStatementCreator
- * implementations, providing sophisticated parameter management (including support
- * for LOB values).
+ * Utility methods for setting the values of a {@link java.sql.PreparedStatement}.
  *
  * <p>
- * Used by PreparedStatementCreatorFactory and CallableStatementCreatorFactory,
- * but also available for direct use in custom setter/creator implementations.
+ * Used by {@link OliveUtils}
+ * but also available for direct use in custom creation and setup of a {@link java.sql.PreparedStatement}.
  *
  * @author Thomas Risberg
  * @author Juergen Hoeller
  * @since 1.1
  */
-public class StatementUtils {
+class StatementUtils {
 
     private static final Logger LOGGER = Logger.getLogger(StatementUtils.class.getName());
 
@@ -340,8 +338,8 @@ public class StatementUtils {
     public static void cleanupParameters(Collection<?> paramValues) {
         if (paramValues != null) {
             for (Object inValue : paramValues) {
-                if (inValue instanceof SqlValue) {
-                    ((SqlValue) inValue).cleanup();
+                if (inValue instanceof DisposableSqlValue) {
+                    ((DisposableSqlValue) inValue).cleanup();
                 }
             }
         }

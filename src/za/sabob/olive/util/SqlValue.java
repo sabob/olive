@@ -27,22 +27,37 @@ import java.sql.SQLException;
  * that will be caught and translated by the calling code. This callback method has
  * access to the underlying Connection via the given PreparedStatement object, if that
  * should be needed to create any database-specific objects.
+ * 
+ * <pre class="prettyprint">
+ * SqlParams params = new SqlParams();
+ * params.set("name", new SqlValue() {
+ * 
+ *     {@literal @}Override
+ *     public void setValue(PreparedStatement ps, int paramIndex) throws SQLException {
+ *
+ *          // Here we can set the custom value for the given paramIndex
+ *         ps.setString(paramIndex, "Steve");
+ *     }
+ * });
+ * 
+ * try {
+ *     Connection conn = DriverManager.getConnection(...);
+ *     PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);
+ *     ResultSet rs = ps.executeQuery();
+ * } catch (SQLException ex) {
+ *     throw new RuntimException(ex);
+ * } </pre>
  *
  * @author Juergen Hoeller
  */
 public interface SqlValue {
 
 	/**
-	 * Set the value on the given PreparedStatement.
+	 * Set the SQL value on the given PreparedStatement at the paramIndex.
+   *
 	 * @param ps the PreparedStatement to work on
 	 * @param paramIndex the index of the parameter for which we need to set the value
 	 * @throws SQLException if a SQLException is encountered while setting parameter values
 	 */
 	void setValue(PreparedStatement ps, int paramIndex)	throws SQLException;
-
-	/**
-	 * Clean up resources held by this value object.
-	 */
-	void cleanup();
-
 }
