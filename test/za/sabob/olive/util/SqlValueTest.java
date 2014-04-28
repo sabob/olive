@@ -30,14 +30,17 @@ public class SqlValueTest {
             "select * from information_schema.catalogs c where c.CATALOG_NAME = :name");
 
         SqlParams params = new SqlParams();
-        params.set("name", new SqlValue() {
+
+        SqlValue sqlValue = new SqlValue() {
 
             @Override
             public void setValue(PreparedStatement ps, int paramIndex) throws SQLException {
                 System.out.println("setValue called for index: " + paramIndex);
                 ps.setString(paramIndex, "TEST");
             }
-        });
+        };
+
+        params.set("name", sqlValue);
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:h2:~/test", "sa", "sa");
