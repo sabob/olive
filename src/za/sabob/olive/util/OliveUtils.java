@@ -28,8 +28,35 @@ import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
 
+/**
+ * Provides common utilities:
+ * <ul>
+ * <li>easily closing {@link #close(java.sql.Connection) Connections}, {@link #close(java.sql.ResultSet) ResultSets},
+ * and {@link #close(java.sql.Statement) Statements}.</li>
+ * <li>{@link #normalize(java.lang.Class, java.lang.String)} returns the absolute path for a resource that is relative to a given class.</li>
+ * <li>Create {@link #prepareStatement(java.sql.Connection, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams) preparedStatements}
+ * for named parameters.</li>
+ * </ul>
+ *
+ * <pre class="prettyprint">
+ * Connection conn = ...
+ * Olive olive =new Olive();
+ * SqlParams params = new SqlParams();
+ * params.setString("name", "Steve");
+ *
+ * String sql = olive.loadSql(fullname);
+ * String fullname = OliveUtils.normalize(PersonDao.class, "insert_person.sql");
+ * ParseSql parseSql = OliveUtils.parseSql(sql);
+ * PreparedStatement ps = OliveUtils.prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params);
+ * ...
+ * </pre>
+ *
+ */
 public class OliveUtils {
 
+    /**
+     * Not found indicator.
+     */
     private static final int NOT_FOUND = -1;
 
     /**
@@ -60,10 +87,54 @@ public class OliveUtils {
      */
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 
+    /**
+     * Logger instance for logging messages.
+     */
     private static final Logger LOGGER = Logger.getLogger(OliveUtils.class.getName());
 
+    /**
+     * Indicates and unknown SQL type.
+     */
     public static final int TYPE_UNKNOWN = Integer.MIN_VALUE;
 
+    /**
+     * Commit the given connection and wraps SQLExceptions as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * <pre class="prettyprint">
+     * Connection conn;
+     * PreparedStatement ps;
+     *
+     * try {
+     * conn = ...;
+     *
+     *     // We'll handle our own transctions so switch off autocommit
+     * conn.setAutoCommit(false);
+     *
+     * Olive olive = new Olive();
+     * ParsedSql sql = olive.loadParsedSql("/org/mycorp/dao/person/insert_person.sql");
+     * SqlParams params = new SqlParams();
+     * params.setString("name", "Steve Sanders");
+     * params.setInt("age", 21);
+     * ps = olive.prepareStatement(conn, sql, params);
+     * ps.executeUpdate();
+     *
+     *     // Commit the transaction
+     * OliveUtils.commit(conn);
+     *
+     * } catch (SqlException e) {
+     *     // Rollback the transaction
+     * OliveUtils.rollback(conn, e);
+     *
+     * } finally {
+     *     // Close resources
+     * OliveUtils.close(ps, conn);
+     * }
+     * </pre>
+     *
+     * @param conn the connection to commit
+     */
     public static void commit(Connection conn) {
         try {
             if (conn != null) {
@@ -74,7 +145,51 @@ public class OliveUtils {
         }
     }
 
-    public static void rollback(Connection conn, SQLException sqle) {
+    /**
+     * Rollback the given connection and throw the sqlException as a RuntimeException. Any SQLExceptions thrown will be logged by the
+     * {@link #LOGGER}.
+     * <p/>
+     * This method is null safe, so the connection and sqlException can be null.
+     *
+     * <pre class="prettyprint">
+     *
+     * Connection conn;
+     * PreparedStatement ps;
+     *
+     * try {
+     *
+     * conn = ...
+     *
+     *     // We'll handle our own transctions so switch off autocommit
+     * conn.setAutoCommit(false);
+     *
+     * Olive olive = new Olive();
+     * ParsedSql sql = olive.loadParsedSql("/org/mycorp/dao/person/insert_person.sql");
+     * SqlParams params = new SqlParams();
+     * params.setString("name", "Steve Sanders");
+     * params.setInt("age", 21);
+     * ps = olive.prepareStatement(conn, sql, params);
+     * ps.executeUpdate();
+     *
+     *     // Commit the transaction
+     * OliveUtils.commit(conn);
+     *
+     *
+     * } catch (SqlException e) {
+     *     // Rollback the transaction
+     * OliveUtils.rollback(conn, e);
+     * } finally {
+     *
+     *     // Close resources
+     * OliveUtils.close(ps, conn);
+     * }
+     *
+     * </pre>
+     *
+     * @param conn the connection to rollback
+     * @param sqlException the SqlExcpetion that is causing the transaction to be rolled backs
+     */
+    public static void rollback(Connection conn, SQLException sqlException) {
 
         try {
 
@@ -85,9 +200,52 @@ public class OliveUtils {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
-        throw new RuntimeException(sqle);
+        if (sqlException != null) {
+            throw new RuntimeException(sqlException);
+        }
     }
 
+    /**
+     * Closes the given resultset and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the resultset can be null.
+     *
+     * @param rs the resultset to close
+     */
+    public static void closeResultSet(ResultSet rs) {
+        try {
+            if (rs != null) {
+                rs.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Closes the given statement and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the statement can be null.
+     *
+     * @param st the statement to close
+     */
+    public static void closeStatement(Statement st) {
+        try {
+            if (st != null) {
+                st.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Closes the given connection and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * @param conn the connection to close
+     */
     public static void closeConnection(Connection conn) {
         try {
             if (conn != null) {
@@ -98,6 +256,54 @@ public class OliveUtils {
         }
     }
 
+    /**
+     * Closes the given statement and connection and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * <b>Note:</b> only the first exception thrown by closing the statement and connection will be thrown as a RuntimeExcepion.
+     * <p/>
+     * This method is null safe, so the statement and connection can be null.
+     *
+     * @param st the statement to close
+     * @param conn the connection to close
+     */
+    public static void close(Statement st, Connection conn) {
+
+        // Track the first exception thrown
+        RuntimeException origException = null;
+
+        try {
+            closeStatement(st);
+        } catch (RuntimeException e) {
+
+            if (origException != null) {
+                origException = e;
+            }
+        }
+
+        try {
+            closeConnection(conn);
+        } catch (RuntimeException e) {
+            if (origException != null) {
+                origException = e;
+            }
+        }
+
+        if (origException != null) {
+            throw origException;
+        }
+    }
+
+    /**
+     * Closes the given resultset, statement and connection and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * <b>Note:</b> only the first exception thrown by closing the resultset, statement and connection will be thrown as a RuntimeExcepion.
+     * <p/>
+     * This method is null safe, so the resultset, statement and connection can be null.
+     *
+     * @param rs the resultset to close
+     * @param st the statement to close
+     * @param conn the connection to close
+     */
     public static void close(ResultSet rs, Statement st, Connection conn) {
 
         // Track the first exception thrown
@@ -131,55 +337,89 @@ public class OliveUtils {
         }
     }
 
+    /**
+     * Closes the given resultset and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the resultset can be null.
+     *
+     * @param rs the resultset to close
+     */
     public static void close(ResultSet rs) {
         closeResultSet(rs);
     }
 
+    /**
+     * Closes the given statement and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the statement can be null.
+     *
+     * @param st the statement to close
+     */
     public static void close(Statement st) {
         closeStatement(st);
     }
 
+    /**
+     * Closes the given connection and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * @param conn the connection to close
+     */
     public static void close(Connection conn) {
         closeConnection(conn);
     }
 
-    public static void closeResultSet(ResultSet rs) {
-        try {
-            if (rs != null) {
-                rs.close();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void closeStatement(Statement st) {
-        try {
-            if (st != null) {
-                st.close();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
+    /**
+     * Parse the given SQL statement and find any named parameters contained therein.
+     *
+     * @param sqlStr the SQL statement which named parameters is to be parsed
+     * @return a {@link ParsedSql} instance
+     */
     public static ParsedSql parseSql(String sqlStr) {
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlStr);
         return parsedSql;
     }
-    
-    public static String substituteNamedParameters(ParsedSql parsedSql, SqlParams params) {
 
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, params);
+    /**
+     * Replace all named parameters with the given parameters.
+     * <p/>
+     * Named parameters are substituted for a JDBC placeholder ('?'), and any select list is
+     * expanded to the required number of placeholders. Select lists may contain an array or Collection of
+     * objects, and in that case the placeholders will be grouped and enclosed with
+     * parentheses. This allows for the use of "expression lists" in the SQL statement
+     * like: <br><br>
+     * {@code select id, name, state from table where (name, age) in (('John', 35), ('Ann', 50))}
+     * <p>
+     * The parameter values passed in are used to determine the number of placeholders to
+     * be used for a select list. Select lists should be limited to 100 or fewer elements.
+     * A larger number of elements is not guaranteed to be supported by the database and
+     * is strictly vendor-dependent.
+     * @param parsedSql the parsed representation of the SQL statement
+     * @param parameters the source for named parameters
+     * @return the SQL statement with substituted parameters
+     */
+    public static String substituteNamedParameters(ParsedSql parsedSql, SqlParams parameters) {
+
+        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, parameters);
         return sql;
     }
 
-    public static PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params) {
-
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, params);
+    /**
+     * Create and return a PreparedStatement for the given connection, parsedSql and parameters.
+     * <p/>
+     * the PreparedStatement will have all it's named parameters replaced by the given parameters
+     *
+     * @param conn the connection to create the PreparedStatement with
+     * @param parsedSql the parsed representation of the SQL statement
+     * @param parameters the source for named parameters
+     * @return the PreparedStatement with all named parameters replaced by the given parameters
+     */
+    public static PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams parameters) {
+        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, parameters);
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            setParams(ps, parsedSql, params);
+            setParams(ps, parsedSql, parameters);
             return ps;
 
         } catch (SQLException ex) {
@@ -187,14 +427,26 @@ public class OliveUtils {
         }
     }
 
-    public static PreparedStatement prepareStatement(Connection conn, String sqlStr, SqlParams params) {
+    /**
+     * Create and return a PreparedStatement for the given connection, SQL statement and parameters.
+     * <p/>
+     * The SQL statement will be parsed and all named parameters will be found.
+     * <p/>
+     * the PreparedStatement will have all it's named parameters replaced by the given parameters
+     *
+     * @param conn the connection to create the PreparedStatement with
+     * @param sqlStatement a SQL statement
+     * @param parameters the source for named parameters
+     * @return the PreparedStatement with all named parameters replaced by the given parameters
+     */
+    public static PreparedStatement prepareStatement(Connection conn, String sqlStatement, SqlParams parameters) {
 
-        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlStr);
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, params);
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlStatement);
+        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, parameters);
 
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            setParams(ps, parsedSql, params);
+            setParams(ps, parsedSql, parameters);
             return ps;
 
         } catch (SQLException ex) {
@@ -202,9 +454,16 @@ public class OliveUtils {
         }
     }
 
-    public static void setParams(PreparedStatement ps, ParsedSql sql, SqlParams params) {
+    /**
+     * Replace the named parameters defined on the parsedSql with JDBC placeholders ('?') on the PreparedStatement for the given parameters.
+     *
+     * @param ps the PreparedStatement which named parameters must be replaced with JDBC placeholders('?')
+     * @param parsedSql the parsed sql which named parameters must be replaced
+     * @param parameters the source for named parameters
+     */
+    public static void setParams(PreparedStatement ps, ParsedSql parsedSql, SqlParams parameters) {
 
-        SqlParam[] input = NamedParameterUtils.buildValueArray(sql, params);
+        SqlParam[] input = NamedParameterUtils.buildValueArray(parsedSql, parameters);
         if (input != null) {
             for (int i = 0; i < input.length; i++) {
                 SqlParam arg = input[i];
@@ -213,10 +472,17 @@ public class OliveUtils {
         }
     }
 
-    public static void setParam(PreparedStatement ps, int indexPosition, SqlParam param) {
+    /**
+     * Replace the named parameter defined at the given index with a JDBC placeholder('?') on the PreparedStatement.
+     *
+     * @param ps the PreparedStatement which named parameter must be replaced with a JDBC placeholder('?')
+     * @param indexPosition the index where the named parameter is defined in the PreparedStatement
+     * @param parameter the parameter value that must replace the named parameter
+     */
+    public static void setParam(PreparedStatement ps, int indexPosition, SqlParam parameter) {
 
         try {
-            StatementUtils.setParameterValue(ps, indexPosition, param);
+            StatementUtils.setParameterValue(ps, indexPosition, parameter);
 
             /*
              if (param.hasSqlType()) {
@@ -241,6 +507,14 @@ public class OliveUtils {
         }
     }
 
+    /**
+     * Truncate the string at the given maximum width. If the string length does not exceed the maximum width, the original string is
+     * returned, otherwise the string is truncated to the maximum width.
+     *
+     * @param str the string to truncate
+     * @param maxWidth the maximum width of the string
+     * @return the truncated string
+     */
     public static String truncate(String str, int maxWidth) {
         if (isBlank(str)) {
             return str;
@@ -253,6 +527,12 @@ public class OliveUtils {
         return str.substring(0, maxWidth);
     }
 
+    /**
+     * Return true if a CharSequence is whitespace, empty ("") or null.
+     *
+     * @param cs the CharSequence to check, may be null
+     * @return true if the CharSequence is null, empty or whitespace
+     */
     public static boolean isBlank(final CharSequence cs) {
         int strLen;
         if (cs == null || (strLen = cs.length()) == 0) {
@@ -266,60 +546,35 @@ public class OliveUtils {
         return true;
     }
 
+    /**
+     * Return false if a CharSequence is whitespace, empty ("") or null.
+     *
+     * @param cs the CharSequence to check, may be null
+     * @return false if the CharSequence is null, empty or whitespace
+     */
     public static boolean isNotBlank(final CharSequence cs) {
         return !isBlank(cs);
     }
 
+    /**
+     * Returns the contents of an InputStream as a String using "UTF-8" encodings.
+     *
+     * @param input the InputStream to read from
+     * @return the contents of the InputStream as a String
+     */
     public static String toString(final InputStream input) {
         final StringBuilderWriter sw = new StringBuilderWriter();
         copy(input, sw, "utf-8");
         return sw.toString();
     }
 
-    public static void copy(final InputStream input, final Writer output, String inputEncoding) {
-        try {
-            final InputStreamReader in = new InputStreamReader(input, inputEncoding);
-            copy(in, output);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static int copy(final Reader input, final Writer output) {
-        final long count = copyLarge(input, output);
-        if (count > Integer.MAX_VALUE) {
-            return -1;
-        }
-        return (int) count;
-    }
-
-    public static long copyLarge(final Reader input, final Writer output) {
-        return copyLarge(input, output, new char[DEFAULT_BUFFER_SIZE]);
-    }
-
-    public static long copyLarge(final Reader input, final Writer output, final char[] buffer) {
-        try {
-
-            long count = 0;
-            int n = 0;
-            while (EOF != (n = input.read(buffer))) {
-                output.write(buffer, 0, n);
-                count += n;
-            }
-            return count;
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
-     * Finds a resource with the given name. Checks the Thread Context
-     * classloader, then uses the System classloader. Should replace all
-     * calls to <code>Class.getResourceAsString</code> when the resource
-     * might come from a different classloader. (e.g. a webapp).
-     * @param cls Class to use when getting the System classloader (used if no Thread
-     * Context classloader available or fails to get resource).
+     * Finds a resource with the given name. Checks the Thread Context classloader, then uses the System classloader.
+     * <p/>
+     * Should replace all calls to <code>Class.getResourceAsString</code> when the resource might come from a different classloader.
+     * (e.g. a webapp).
+     *
+     * @param cls Class to use when getting the System classloader (used if no Thread Context classloader available or fails to get resource).
      * @param name name of the resource
      * @return InputStream for the resource.
      */
@@ -400,7 +655,32 @@ public class OliveUtils {
         return doNormalize(filename, CLASSPATH_SEPARATOR, true);
     }
 
-    // TODO rename method to something more accurate -> absolute? prefix?
+    /**
+     * Create absolute filenames relative to the given class.
+     * <p/>
+     * For example given the following sql file:
+     * 
+     * <code>/com/mycorp/dao/person/insert_person.sql:</code>
+     * 
+     * <pre class="prettyprint">
+     * INSERT INTO PERSON (name, age) VALUES (:name, :age);
+     * </pre>
+     * 
+     * and given that the <code>PersonDao</code> exists in the same package" <code>com.mycorp.dao.person.PersonDao</code>, create an absolute
+     * filename to the insert_person.sql file as follows:
+     * 
+     * <pre class="prettyprint">
+     * // The PersonDao.class package will be converted to a path and prepended to insert_product.sql filename
+     * String filename = OliveUtils.normalize(PersonDao.class, "insert_product.sql");
+     * System.out.println(filename);
+     * </pre>
+     * 
+     * The result of the above <code>println</code> statement will be: <code>/com/mycorp/dao/person/insert_person.sql</code>.
+     * 
+     * @param cls the class to create an absolute filename from
+     * @param filename the filename to create an absolute filename relative to the class
+     * @return the absolute filenames relative to the given class
+     */
     public static String normalize(Class cls, final String filename) {
         if (cls == null) {
             throw new IllegalArgumentException("class is required!");
@@ -416,6 +696,87 @@ public class OliveUtils {
         String fullname = '/' + pkg + '/' + filename;
 
         return doNormalize(fullname, '/', true);
+    }
+
+    /**
+     * Return a new XML Document for the given input stream.
+     *
+     * @param inputStream the input stream
+     * @return new XML Document
+     * @throws RuntimeException if a parsing error occurs
+     */
+    public static Document buildDocument(InputStream inputStream) {
+        return buildDocument(inputStream, null);
+    }
+
+    /**
+     * Return a new XML Document for the given input stream and XML entity
+     * resolver.
+     *
+     * @param inputStream the input stream
+     * @param entityResolver the XML entity resolver
+     * @return new XML Document
+     * @throws RuntimeException if a parsing error occurs
+     */
+    public static Document buildDocument(InputStream inputStream,
+        EntityResolver entityResolver) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            if (entityResolver != null) {
+                builder.setEntityResolver(entityResolver);
+            }
+
+            return builder.parse(inputStream);
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error parsing XML", ex);
+        }
+    }
+
+    /**
+     * Return the first XML child Element for the given parent Element and child
+     * Element name.
+     *
+     * @param parent the parent element to get the child from
+     * @param name the name of the child element
+     * @return the first child element for the given name and parent
+     */
+    public static Element getChild(Element parent, String name) {
+        NodeList nodeList = parent.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node instanceof Element) {
+                if (node.getNodeName().equals(name)) {
+                    return (Element) node;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Return the list of XML child Element elements with the given name from
+     * the given parent Element.
+     *
+     * @param parent the parent element to get the child from
+     * @param name the name of the child element
+     * @return the list of XML child elements for the given name
+     */
+    public static List<Element> getChildren(Element parent, String name) {
+        List<Element> list = new ArrayList<Element>();
+        NodeList nodeList = parent.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node instanceof Element) {
+                if (node.getNodeName().equals(name)) {
+                    list.add((Element) node);
+                }
+            }
+        }
+        return list;
     }
 
     /**
@@ -553,7 +914,7 @@ public class OliveUtils {
      * @param filename the filename to find the prefix in, null returns -1
      * @return the length of the prefix, -1 if invalid or null
      */
-    static int getPrefixLength(final String filename) {
+    private static int getPrefixLength(final String filename) {
         if (filename == null) {
             return NOT_FOUND;
         }
@@ -617,85 +978,41 @@ public class OliveUtils {
         return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR;
     }
 
-    /**
-     * Return a new XML Document for the given input stream.
-     *
-     * @param inputStream the input stream
-     * @return new XML Document
-     * @throws RuntimeException if a parsing error occurs
-     */
-    public static Document buildDocument(InputStream inputStream) {
-        return buildDocument(inputStream, null);
+    private static long copyLarge(final Reader input, final Writer output) {
+        return copyLarge(input, output, new char[DEFAULT_BUFFER_SIZE]);
     }
 
-    /**
-     * Return a new XML Document for the given input stream and XML entity
-     * resolver.
-     *
-     * @param inputStream the input stream
-     * @param entityResolver the XML entity resolver
-     * @return new XML Document
-     * @throws RuntimeException if a parsing error occurs
-     */
-    public static Document buildDocument(InputStream inputStream,
-        EntityResolver entityResolver) {
+    private static long copyLarge(final Reader input, final Writer output, final char[] buffer) {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            if (entityResolver != null) {
-                builder.setEntityResolver(entityResolver);
+            long count = 0;
+            int n = 0;
+            while (EOF != (n = input.read(buffer))) {
+                output.write(buffer, 0, n);
+                count += n;
             }
+            return count;
 
-            return builder.parse(inputStream);
-
-        } catch (Exception ex) {
-            throw new RuntimeException("Error parsing XML", ex);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Return the first XML child Element for the given parent Element and child
-     * Element name.
-     *
-     * @param parent the parent element to get the child from
-     * @param name the name of the child element
-     * @return the first child element for the given name and parent
-     */
-    public static Element getChild(Element parent, String name) {
-        NodeList nodeList = parent.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node node = nodeList.item(i);
-            if (node instanceof Element) {
-                if (node.getNodeName().equals(name)) {
-                    return (Element) node;
-                }
-            }
+    private static void copy(final InputStream input, final Writer output, String inputEncoding) {
+        try {
+            final InputStreamReader in = new InputStreamReader(input, inputEncoding);
+            copy(in, output);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
-    /**
-     * Return the list of XML child Element elements with the given name from
-     * the given parent Element.
-     *
-     * @param parent the parent element to get the child from
-     * @param name the name of the child element
-     * @return the list of XML child elements for the given name
-     */
-    public static List<Element> getChildren(Element parent, String name) {
-        List<Element> list = new ArrayList<Element>();
-        NodeList nodeList = parent.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node node = nodeList.item(i);
-            if (node instanceof Element) {
-                if (node.getNodeName().equals(name)) {
-                    list.add((Element) node);
-                }
-            }
+    private static int copy(final Reader input, final Writer output) {
+        final long count = copyLarge(input, output);
+        if (count > Integer.MAX_VALUE) {
+            return -1;
         }
-        return list;
+        return (int) count;
     }
 
     public static void main(String[] args) {
@@ -707,12 +1024,10 @@ public class OliveUtils {
         System.out.println("root nodename: " + rootElm.getNodeName());
         List< Element> queries = getChildren(rootElm, "query");
         for (Element query : queries) {
-            System.out.println("name: " +query.getAttribute("name"));
+            System.out.println("name: " + query.getAttribute("name"));
             String sql = query.getTextContent();
             //sql = sql.replaceAll("[\n\r]", "");
             System.out.println("sql: " + sql);
         }
-        
-
     }
 }
