@@ -22,6 +22,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 [Standalone] (#standalone)   
 [Web] (#web)   
 [Mode] (#mode)   
+[Examples] (#examples)   
 [Build] (#build)   
 <a href="http://sabob.github.io/olive/javadocs/api/index.html" target="_blank">Javadocs</a>
 
@@ -535,6 +536,25 @@ public class AppUtils {
         return appMode;
     }
 }
+```
+
+## Examples
+<a id="examples"></a>
+
+Select example:
+```java
+```
+
+Insert example:
+```java
+```
+
+Update example:
+```java
+```
+
+Delete example:
+```java
 ```
 
 ## Build
