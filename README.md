@@ -597,7 +597,6 @@ INSERT INTO person (age, name) VALUES (:age, :name)
 public void insert(Person person) {
     Connection conn = ...
     PreparedStatement ps = null;
-    ResultSet rs = null;
 
     try {
         Olive olive = AppUtils.getOlive();
@@ -614,7 +613,7 @@ public void insert(Person person) {
         OliveUtils.rollback(conn, e);
 
     } finally {
-        OliveUtils.close(rs, ps, conn);
+        OliveUtils.close(ps, conn);
     }
 }
 ```
@@ -631,7 +630,6 @@ UPDATE person p set p.age = :age, p.name = :name WHERE p.id = :id
 public void update(Person person) {
     Connection conn = ...
     PreparedStatement ps = null;
-    ResultSet rs = null;
 
     try {
         Olive olive = AppUtils.getOlive();
@@ -649,7 +647,7 @@ public void update(Person person) {
         OliveUtils.rollback(conn, e);
 
     } finally {
-        OliveUtils.close(rs, ps, conn);
+        OliveUtils.close(ps, conn);
     }
 }
 ```
@@ -666,7 +664,6 @@ DELETE FROM person p WHERE p.id = :id
 public void delete(Person person) {
     Connection conn = ...
     PreparedStatement ps = null;
-    ResultSet rs = null;
 
     try {
         Olive olive = AppUtils.getOlive();
@@ -682,7 +679,7 @@ public void delete(Person person) {
         OliveUtils.rollback(conn, e);
 
     } finally {
-        OliveUtils.close(rs, ps, conn);
+        OliveUtils.close(ps, conn);
     }
 }
 ```
