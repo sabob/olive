@@ -540,21 +540,204 @@ public class AppUtils {
 
 ## Examples
 <a id="examples"></a>
+Below are some common CRUD examples.  
+_Note:_ it is assumed that exceptions are handled higher up the call chain in a Servlet Filter or UncaughtExceptionHandler or similar.
 
-Select example:
-```java
+#### Select example
+
+`select-person.sql`:
+```sql
+SELECT * FROM person p WHERE p.id = :id
 ```
 
-Insert example:
+`PersonDao.java`:
 ```java
+public Person loadPerson(long id) {
+    Connection conn = ...
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+
+    try {
+        Olive olive = AppUtils.getOlive();
+        ParsedSql selectSql = olive.loadParsedSql("/sql/person/select-person.sql");
+        SqlParams params = new SqlParams();
+        params.setInt("id", id);
+        ps = olive.prepareStatement(conn, selectSql, params);
+
+        rs = ps.executeQuery();
+
+        Person person = new Person();
+        if (rs.next()) {
+            person.setId(rs.getLong("id"));
+            person.setName(rs.getString("name"));
+            person.setAge(rs.getInt("age"));
+        }
+    
+        return person;
+
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+
+    } finally {
+        OliveUtils.close(rs, ps, conn);
+    }
+}
 ```
 
-Update example:
-```java
+
+#### Insert example
+
+`insert-person.sql`:
+```sql
+INSERT INTO person (age, name) VALUES (:age, :name)
 ```
 
-Delete example:
+`PersonDao.java`:
 ```java
+public void insert(Person person) {
+    Connection conn = ...
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+
+    try {
+        Olive olive = AppUtils.getOlive();
+        ParsedSql insertSql = olive.loadParsedSql("/sql/person/insert-person.sql");
+        SqlParams params = new SqlParams();
+        params.setInt("age", person.getAge());
+        params.setString("name", person.getName());
+        ps = olive.prepareStatement(conn, insertSql, params);
+
+        int insertCount = ps.executeUpdate();
+
+    } catch (SQLException e) {
+        // OliveUtils.rollback throws a RuntimeException for the given SQLException
+        OliveUtils.rollback(conn, e);
+
+    } finally {
+        OliveUtils.close(rs, ps, conn);
+    }
+}
+```
+
+#### Update example
+
+`update-person.sql`:
+```sql
+UPDATE person p set p.age = :age, p.name = :name WHERE p.id = :id
+```
+
+`PersonDao.java`:
+```java
+public void update(Person person) {
+    Connection conn = ...
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+
+    try {
+        Olive olive = AppUtils.getOlive();
+        ParsedSql updateSql = olive.loadParsedSql("/sql/person/update-person.sql");
+        SqlParams params = new SqlParams();
+        params.setLong("id", person.getId());
+        params.setInt("age", person.getAge());
+        params.setString("name", person.getName());
+        ps = olive.prepareStatement(conn, updateSql, params);
+
+        int updateCount = ps.executeUpdate();
+
+    } catch (SQLException e) {
+        // OliveUtils.rollback throws a RuntimeException for the given SQLException
+        OliveUtils.rollback(conn, e);
+
+    } finally {
+        OliveUtils.close(rs, ps, conn);
+    }
+}
+```
+
+#### Delete example
+
+`delete-person.sql`:
+```sql
+DELETE FROM person p WHERE p.id = :id
+```
+
+`PersonDao.java`:
+```java
+public void delete(Person person) {
+    Connection conn = ...
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+
+    try {
+        Olive olive = AppUtils.getOlive();
+        ParsedSql deleteSql = olive.loadParsedSql("/sql/person/delete-person.sql");
+        SqlParams params = new SqlParams();
+        params.setLong("id", person.getId());
+        ps = olive.prepareStatement(conn, deleteSql, params);
+
+        int updateCount = ps.executeUpdate();
+
+    } catch (SQLException e) {
+        // OliveUtils.rollback throws a RuntimeException for the given SQLException
+        OliveUtils.rollback(conn, e);
+
+    } finally {
+        OliveUtils.close(rs, ps, conn);
+    }
+}
+```
+
+#### Insert + Update example
+
+`insert-person.sql`:
+```sql
+INSERT INTO person (age, name) VALUES (:age, :name)
+```
+
+`update-person.sql`:
+```sql
+UPDATE person p set p.counter = p.counter + 1
+```
+
+`PersonDao.java`:
+```java
+public void saveAndIncrement(Person person) {
+    Connection conn = ...
+    PreparedStatement insertPs = null;
+    PreparedStatement updatePs = null;
+
+    try {
+        // Start transaction to include both insert and update statements
+        conn.setAutoCommit(false);
+        
+        // Person insert
+        Olive olive = AppUtils.getOlive();
+        ParsedSql insertSql = olive.loadParsedSql("/sql/person/insert-person.sql");
+        SqlParams params = new SqlParams();
+        params.setInt("age", person.getAge());
+        params.setString("name", person.getName());
+        insertPs = olive.prepareStatement(conn, insertSql, params);
+
+        int insertCount = insertPs.executeUpdate();
+        
+        // Person update
+        ParsedSql updateSql = olive.loadParsedSql("/sql/person/update-person.sql");
+        updatePs = olive.prepareStatement(conn, updateSql, params);
+        int updateCount = updatePs.executeUpdate();
+        
+        // Commit the transaction
+        OliveUtils.commit(conn);
+
+    } catch (SQLException e) {
+        // OliveUtils.rollback throws a RuntimeException for the given SQLException
+        OliveUtils.rollback(conn, e);
+
+    } finally {
+        OliveUtils.close(insertPs);
+        OliveUtils.close(updatePs);
+        OliveUtils.close(conn);
+    }
+}
 ```
 
 ## Build
