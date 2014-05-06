@@ -704,7 +704,7 @@ public void saveAndIncrement(Person person) {
     PreparedStatement updatePs = null;
 
     try {
-        // Start transaction to include both insert and update statements
+        // Start transaction for both insert and update statements
         conn.setAutoCommit(false);
         
         // Person insert
