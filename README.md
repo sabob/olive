@@ -13,6 +13,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 
 ##### Table of Contents  
+[Why Olive] (#why)   
 [Intro] (#intro)   
 [Load SQL] (#load-sql)  
 [Named Parameters] (#named-parameters)  
@@ -25,6 +26,69 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 [Examples] (#examples)   
 [Build] (#build)   
 <a href="http://sabob.github.io/olive/javadocs/api/index.html" target="_blank">Javadocs</a>
+
+## Why Olive
+<a id="why"></a>
+
+Olive allows you to externalize your SQL queries to files, instead of managing them in code where you have to deal with Newlines, quotes and String concatenation.
+
+So from this PersonDao.java:
+
+```java
+public Person findPerson(String firstname, String lastname) {
+
+    // Retrieve a connection
+    Connection conn = ...
+   
+   // Build SQL string
+    String sql = "SELECT p.id, p.firstname, p.lastname, p.date_of_birth " +
+                 " FROM person p " +
+                " WHERE  p.firstname like = %" + firstname + "%"
+                " AND    p.lastname like = %" + lastname + "%";
+
+    // Create prepared statement
+    PreparedStatement ps = conn.prepareStatement(sql);
+    
+    // Execute sql and convert to a Person pojo
+    ...
+}
+```
+
+
+to this:
+
+```java
+public Person findPerson(String firstname, String lastname) {
+   
+    // Retrieve a connection
+    Connection conn = ...;
+    
+    // Create an instance of olive
+    Olive olive  = new Olive();
+    
+    // Load the sql from a file.
+    ParsedSql sql = olive.loadParsedSql("/org/mycorp/dao/person/person.sql");
+    
+    // Setup the named parameters for :firstname and :lastname
+    SqlParams params = new SqlParams();
+    params.setString("firstname", firstname);
+    params.setString("lastname", lastname);
+    
+    // Create a PreparedStatement for the given sql and parameters
+    PreparedStatement ps = olive.prepareStatement(conn, sql, params);
+
+    // Execute sql and convert to a Person pojo
+    ...
+}
+```
+
+`person.sql`:
+```sql
+SELECT p.id, p.firstname, p.lastname, p.date_of_birth
+FROM person p
+WHERE p.firstname like = %:firstname%
+AND p.lastname like = %:lastname%
+```
 
 
 ## Intro
