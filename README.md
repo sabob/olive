@@ -32,8 +32,9 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 Olive allows you to externalize your SQL queries to files, instead of managing them in code where you have to deal with Newlines, quotes and String concatenation.
 
-So from this PersonDao.java:
+So from this
 
+`PersonDao.java:`
 ```java
 public Person findPerson(String firstname, String lastname) {
 
@@ -55,8 +56,9 @@ public Person findPerson(String firstname, String lastname) {
 ```
 
 
-to this:
+to this
 
+`PersonDao.java:`
 ```java
 public Person findPerson(String firstname, String lastname) {
    
@@ -82,7 +84,7 @@ public Person findPerson(String firstname, String lastname) {
 }
 ```
 
-`person.sql`:
+`with the sql placed in person.sql`:
 ```sql
 SELECT p.id, p.firstname, p.lastname, p.date_of_birth
 FROM person p
