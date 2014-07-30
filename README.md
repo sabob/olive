@@ -84,7 +84,7 @@ public Person findPerson(String firstname, String lastname) {
 }
 ```
 
-`with the sql placed in person.sql`:
+`with the sql moved to the file person.sql:`
 ```sql
 SELECT p.id, p.firstname, p.lastname, p.date_of_birth
 FROM person p
