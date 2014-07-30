@@ -44,8 +44,8 @@ public Person findPerson(String firstname, String lastname) {
    // Build SQL string
     String sql = "SELECT p.id, p.firstname, p.lastname, p.date_of_birth " +
                  " FROM person p " +
-                " WHERE  p.firstname like = %" + firstname + "%"
-                " AND    p.lastname like = %" + lastname + "%";
+                " WHERE  p.firstname like %" + firstname + "%"
+                " AND    p.lastname like %" + lastname + "%";
 
     // Create prepared statement
     PreparedStatement ps = conn.prepareStatement(sql);
@@ -88,8 +88,8 @@ public Person findPerson(String firstname, String lastname) {
 ```sql
 SELECT p.id, p.firstname, p.lastname, p.date_of_birth
 FROM person p
-WHERE p.firstname like = %:firstname%
-AND p.lastname like = %:lastname%
+WHERE p.firstname like %:firstname%
+AND p.lastname like %:lastname%
 ```
 
 
