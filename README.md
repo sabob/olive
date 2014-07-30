@@ -13,7 +13,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 
 
 ##### Table of Contents  
-[Why Olive] (#why)   
+[Why Olive] (#why-olive)   
 [Intro] (#intro)   
 [Load SQL] (#load-sql)  
 [Named Parameters] (#named-parameters)  
