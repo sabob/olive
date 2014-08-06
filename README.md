@@ -3,6 +3,9 @@ Olive
 
 Provides SQL utilities such as loading queries from files and named prepared statements.
 
+## Download
+[Current releases] (https://github.com/sabob/olive/releases)
+
 ## Features
 * Load and cache external SQL files
 * Load SQL files from classpath or web application root
