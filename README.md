@@ -405,7 +405,7 @@ This is dependent of wether or not the database supports such queries.
 
 ## Standalone
 <a id="standalone"></a>
-Using Olive in a standalone application it can be useful to access Olive as a singleon. Since Olive is thread safe this can easily be achieved as follows:
+Using Olive in a standalone application it can be useful to access Olive as a singleton. Since Olive is thread safe this can easily be achieved as follows:
 
 ```java
 public class AppUtils {
