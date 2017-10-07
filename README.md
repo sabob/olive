@@ -3,8 +3,7 @@ Olive
 
 Provides SQL utilities such as loading queries from files and named prepared statements.
 
-## Download
-[Current releases] (https://github.com/sabob/olive/releases)
+## [Downloads](https://github.com/sabob/olive/releases)
 
 ## Features
 * Load and cache external SQL files
@@ -15,20 +14,21 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 * No dependencies - Olive is a self-contained jar
 
 
-##### Table of Contents  
-[Why Olive] (#why-olive)   
-[Intro] (#intro)   
-[Load SQL] (#load-sql)  
-[Named Parameters] (#named-parameters)  
-[Custom SQL Value] (#custom-sql-value)  
-[Utilities] (#utilities)  
-[Usage] (#usage)   
-[Standalone] (#standalone)   
-[Web] (#web)   
-[Mode] (#mode)   
-[Examples] (#examples)   
-[Build] (#build)   
-<a href="http://sabob.github.io/olive/javadocs/api/index.html" target="_blank">Javadocs</a>
+## Table of Contents  
+- [Why Olive](#why)   
+- [Intro](#intro)   
+- [Load SQL](#load-sql)  
+- [Named Parameters](#named-parameters)  
+- [Custom SQL Value](#custom-sql-value)  
+- [Utilities](#utilities)  
+- [Usage](#usage)   
+- [Standalone](#standalone)   
+- [Web](#web)   
+- [Mode](#mode)   
+- [Examples](#examples)   
+- [Build](#build)   
+- <a href="http://sabob.github.io/olive/javadocs/api/index.html" target="_blank">Javadocs</a>
+
 
 ## Why Olive
 <a id="why"></a>
@@ -95,7 +95,6 @@ WHERE p.firstname like %:firstname%
 AND p.lastname like %:lastname%
 ```
 
-
 ## Intro
 <a id="intro"></a>
 Olive provides common SQL and JDBC utilities to enhance JDBC usage. Olive doesn't replace JDBC in any way.
@@ -147,8 +146,8 @@ try {
 }
 ```
 
-## Load SQL
-<a id="load"></a>
+##Load SQL
+<a id="load-sql"></a>
 The primary use case for Olive is to load and cache external SQL files in order to create JDBC Statements with.
 
 While it is possible to write SQL strings in Java code, it is cumbersome, especially large queries spanning multiple lines where each line has to be concatenated. It also makes it difficult to execute the query in our favorite query tool because we need remove the Java String concatenations.
