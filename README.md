@@ -30,8 +30,7 @@ Provides SQL utilities such as loading queries from files and named prepared sta
 - <a href="http://sabob.github.io/olive/javadocs/api/index.html" target="_blank">Javadocs</a>
 
 
-## Why Olive
-<a id="why"></a>
+## <a id="why"></a>Why Olive
 
 Olive allows you to externalize your SQL queries to files, instead of managing them in code where you have to deal with Newlines, quotes and String concatenation.
 
@@ -95,8 +94,7 @@ WHERE p.firstname like %:firstname%
 AND p.lastname like %:lastname%
 ```
 
-## Intro
-<a id="intro"></a>
+## <a id="intro"></a>Intro
 Olive provides common SQL and JDBC utilities to enhance JDBC usage. Olive doesn't replace JDBC in any way.
 
 Below is a sample SQL file we want to load into our application.
@@ -146,8 +144,7 @@ try {
 }
 ```
 
-##Load SQL
-<a id="load-sql"></a>
+## <a id="load-sql"></a>Load SQL
 The primary use case for Olive is to load and cache external SQL files in order to create JDBC Statements with.
 
 While it is possible to write SQL strings in Java code, it is cumbersome, especially large queries spanning multiple lines where each line has to be concatenated. It also makes it difficult to execute the query in our favorite query tool because we need remove the Java String concatenations.
@@ -163,8 +160,8 @@ ClasspathResourceLoader is used to load SQL files from the classpath, while Weba
 
 In PRODUCTION mode, the default mode, Olive will cache all loaded files for fast retrieval in the future. In DEVELOPMENT mode Olive does not perform any caching, and changes to files are picked up automatically.
 
-## Named Parameters
-<a id="named"></a>
+
+## <a id="named"></a>Named Parameters
 JDBC provides a PreparedStatement for writing queries which automatically escapes the values which also ensures SQL injection cannot occur.
 
 However PreparedStatement uses index based parameters which is cumbersome to match when working with large queries which change over time as you continuously need to adjust the index positions.
@@ -201,8 +198,7 @@ params.setString("name", "Bob");
 params.setInt("age", 18);
 ```
 
-## Custom SQL Value
-<a id="custom-sql-value"></a>
+## <a id="custom-sql-value"></a>Custom SQL Value
 When using named parameters for PreparedStatements it is sometimes neccessary to set a parameter such as a custom Java type. In these situations we can create a <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlValue.html" target="_blank">SqlValue</a> instance and set that as the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/ps/SqlParam.html" target="_blank">SqlParam</a> value.
 
 SqlValue is an interface with a single method, <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/SqlValue.html#setValue(java.sql.PreparedStatement, int)" target="_blank">setValue</a> for setting a PreparedStatement parameter at the given index.
@@ -239,18 +235,17 @@ params.set("money", moneySqlValue);
 ```
 
 Above we create a SqlValue and set it as value of the named parameter "money". In the _setValue_ method we create a String representation of our money class and set that as the PreparedStatement parameter.
-## Utilities
-<a id="utilities"></a>
+
+## <a id="utilities"></a>Utilities
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html" target="_blank">OliveUtils</a> provides common SQL utilities such as:
 
-* easily <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close(java.sql.Connection)" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close(java.sql.Connection)" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
 * <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize(java.lang.Class, java.lang.String)" target="_blank">normalize</a> paths to SQL files
 * create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement(java.sql.Connection, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)" target="_blank">prepareStatements</a> from SQL files containing named parameters
 * <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParams(java.sql.PreparedStatement, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)" target="_blank">set named parameter values</a> on existing PreparedStatements
 
 
-## Usage
-<a id="usage"></a>
+## <a id="usage"></a>Usage
 The most common components of Olive are the classes 
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/Olive.html" target="_blank">Olive</a>,
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoader.html" target="_blank">ResourceLoader</a>,
@@ -402,8 +397,7 @@ SELECT * FROM person p WHERE (p.id, p.name) IN ( (1, 'John'), (3, 'Steve'))
 
 This is dependent of wether or not the database supports such queries.
 
-## Standalone
-<a id="standalone"></a>
+## <a id="standalone"></a>Standalone
 Using Olive in a standalone application it can be useful to access Olive as a singleton. Since Olive is thread safe this can easily be achieved as follows:
 
 ```java
@@ -446,8 +440,7 @@ String name =  OliveUtils.normalize(PersonDao.class, "insert_person.sql");
 ParsedSql sql = olive.loadParsedSql(name);
 ```
 
-## Web
-<a id="web"></a>
+## <a id="web"></a>Web
 In a web environment such as a Servlet container, we should rather use the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebapResourceLoader</a>  instead of the <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a>. The problem with the ClasspathResourceLoader is that when making changes
 to the SQL files it could cause the container to restart, which isn't ideal in development mode, where we often make changes to the files.
 
@@ -543,8 +536,7 @@ ParsedSql sql = olive.loadParsedSql("/sql/person/insert_peson.sql");
 
 Note: in a web application it doesn't make sense to use OliveUtils.normalize since the SQL files are not relative to class files, but are placed on the webapp folder instead.
 
-## Mode
-<a id="mode"></a>
+## <a id="mode"></a>Mode
 As seen above Olive has a PRODUCTION and DEVELOPMENT mode as well as a TRACE mode. 
 
 PRODUCTION mode is the default mode and ensures that SQL files that are loaded are cached for fast retrieval in the future. Once the SQL file is parsed the result is also cached so files do not have to be reparsed each time.
@@ -606,8 +598,7 @@ public class AppUtils {
 }
 ```
 
-## Examples
-<a id="examples"></a>
+## <a id="examples"></a>Examples
 Below are some common CRUD examples.  
 _Note:_ it is assumed that exceptions are handled higher up the call chain in a Servlet Filter or UncaughtExceptionHandler or similar.
 
@@ -805,8 +796,7 @@ public void saveAndIncrement(Person person) {
 }
 ```
 
-## Build
-<a id="build"></a>
+## <a id="build"></a>Build
 To build Olive from source you will need <a href="http://ant.apache.org/" target="_blank"> Ant</a>.
 
 Download the _zip_ distribution of Olive and navigate to the _ant_ folder:
