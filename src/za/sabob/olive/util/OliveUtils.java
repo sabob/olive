@@ -90,7 +90,7 @@ public class OliveUtils {
     /**
      * Logger instance for logging messages.
      */
-    private static final Logger LOGGER = Logger.getLogger(OliveUtils.class.getName());
+    private static final Logger LOGGER = Logger.getLogger( OliveUtils.class.getName() );
 
     /**
      * Indicates and unknown SQL type.
@@ -109,7 +109,7 @@ public class OliveUtils {
      * try {
      * conn = ...;
      *
-     *     // We'll handle our own transctions so switch off autocommit
+     *     // We'll handle our own transactions so switch off autocommit
      * conn.setAutoCommit(false);
      *
      * Olive olive = new Olive();
@@ -123,7 +123,7 @@ public class OliveUtils {
      *     // Commit the transaction
      * OliveUtils.commit(conn);
      *
-     * } catch (SqlException e) {
+     * } catch (Exception e) {
      *     // Rollback the transaction
      * OliveUtils.rollback(conn, e);
      *
@@ -135,13 +135,13 @@ public class OliveUtils {
      *
      * @param conn the connection to commit
      */
-    public static void commit(Connection conn) {
+    public static void commit( Connection conn ) {
         try {
-            if (conn != null) {
+            if ( conn != null ) {
                 conn.commit();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -160,7 +160,7 @@ public class OliveUtils {
      *
      * conn = ...
      *
-     *     // We'll handle our own transctions so switch off autocommit
+     *     // We'll handle our own transactions so switch off autocommit
      * conn.setAutoCommit(false);
      *
      * Olive olive = new Olive();
@@ -175,7 +175,7 @@ public class OliveUtils {
      * OliveUtils.commit(conn);
      *
      *
-     * } catch (SqlException e) {
+     * } catch (Exception e) {
      *     // Rollback the transaction
      * OliveUtils.rollback(conn, e);
      * } finally {
@@ -187,21 +187,27 @@ public class OliveUtils {
      * </pre>
      *
      * @param conn the connection to rollback
-     * @param sqlException the SqlExcpetion that is causing the transaction to be rolled backs
+     * @param exception the Exception that is causing the transaction to be rolled backs
      */
-    public static void rollback(Connection conn, SQLException sqlException) {
+    public static void rollback( Connection conn, Exception exception ) {
 
         try {
 
-            if (conn != null) {
+            if ( conn != null ) {
                 conn.rollback();
             }
 
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        } catch ( SQLException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
         }
-        if (sqlException != null) {
-            throw new RuntimeException(sqlException);
+
+        if ( exception instanceof RuntimeException ) {
+
+            throw (RuntimeException) exception;
+        }
+
+        if ( exception != null ) {
+            throw new RuntimeException( exception );
         }
     }
 
@@ -212,13 +218,13 @@ public class OliveUtils {
      *
      * @param rs the resultset to close
      */
-    public static void closeResultSet(ResultSet rs) {
+    public static void closeResultSet( ResultSet rs ) {
         try {
-            if (rs != null) {
+            if ( rs != null ) {
                 rs.close();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -229,13 +235,13 @@ public class OliveUtils {
      *
      * @param st the statement to close
      */
-    public static void closeStatement(Statement st) {
+    public static void closeStatement( Statement st ) {
         try {
-            if (st != null) {
+            if ( st != null ) {
                 st.close();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -246,13 +252,13 @@ public class OliveUtils {
      *
      * @param conn the connection to close
      */
-    public static void closeConnection(Connection conn) {
+    public static void closeConnection( Connection conn ) {
         try {
-            if (conn != null) {
+            if ( conn != null ) {
                 conn.close();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -266,29 +272,28 @@ public class OliveUtils {
      * @param st the statement to close
      * @param conn the connection to close
      */
-    public static void close(Statement st, Connection conn) {
+    public static void close( Statement st, Connection conn ) {
 
         // Track the first exception thrown
         RuntimeException origException = null;
 
         try {
-            closeStatement(st);
-        } catch (RuntimeException e) {
+            closeStatement( st );
+        } catch ( RuntimeException e ) {
 
-            if (origException != null) {
-                origException = e;
-            }
+            origException = e;
         }
 
         try {
-            closeConnection(conn);
-        } catch (RuntimeException e) {
-            if (origException != null) {
+            closeConnection( conn );
+
+        } catch ( RuntimeException e ) {
+            if ( origException == null ) {
                 origException = e;
             }
         }
 
-        if (origException != null) {
+        if ( origException != null ) {
             throw origException;
         }
     }
@@ -304,35 +309,36 @@ public class OliveUtils {
      * @param st the statement to close
      * @param conn the connection to close
      */
-    public static void close(ResultSet rs, Statement st, Connection conn) {
+    public static void close( ResultSet rs, Statement st, Connection conn ) {
 
         // Track the first exception thrown
         RuntimeException origException = null;
 
         try {
-            closeResultSet(rs);
-        } catch (RuntimeException e) {
+            closeResultSet( rs );
+
+        } catch ( RuntimeException e ) {
             origException = e;
         }
 
         try {
-            closeStatement(st);
-        } catch (RuntimeException e) {
+            closeStatement( st );
+        } catch ( RuntimeException e ) {
 
-            if (origException != null) {
+            if ( origException == null ) {
                 origException = e;
             }
         }
 
         try {
-            closeConnection(conn);
-        } catch (RuntimeException e) {
-            if (origException != null) {
+            closeConnection( conn );
+        } catch ( RuntimeException e ) {
+            if ( origException == null ) {
                 origException = e;
             }
         }
 
-        if (origException != null) {
+        if ( origException != null ) {
             throw origException;
         }
     }
@@ -344,8 +350,8 @@ public class OliveUtils {
      *
      * @param rs the resultset to close
      */
-    public static void close(ResultSet rs) {
-        closeResultSet(rs);
+    public static void close( ResultSet rs ) {
+        closeResultSet( rs );
     }
 
     /**
@@ -355,8 +361,8 @@ public class OliveUtils {
      *
      * @param st the statement to close
      */
-    public static void close(Statement st) {
-        closeStatement(st);
+    public static void close( Statement st ) {
+        closeStatement( st );
     }
 
     /**
@@ -366,8 +372,28 @@ public class OliveUtils {
      *
      * @param conn the connection to close
      */
-    public static void close(Connection conn) {
-        closeConnection(conn);
+    public static void close( Connection conn ) {
+        closeConnection( conn );
+    }
+
+    /**
+     * Sets the connection autoCommit mode and and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     * 
+     * @param conn the connection on which to set autoCommit
+     * @param bool true to enable setAutoCommit, false to disable autoCommit
+     */
+    public static void setAutoCommit( Connection conn, boolean bool ) {
+
+        try {
+            if ( conn != null ) {
+                conn.setAutoCommit( bool );
+            }
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
     }
 
     /**
@@ -376,8 +402,8 @@ public class OliveUtils {
      * @param sqlStr the SQL statement which named parameters is to be parsed
      * @return a {@link ParsedSql} instance
      */
-    public static ParsedSql parseSql(String sqlStr) {
-        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlStr);
+    public static ParsedSql parseSql( String sqlStr ) {
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement( sqlStr );
         return parsedSql;
     }
 
@@ -399,9 +425,9 @@ public class OliveUtils {
      * @param parameters the source for named parameters
      * @return the SQL statement with substituted parameters
      */
-    public static String substituteNamedParameters(ParsedSql parsedSql, SqlParams parameters) {
+    public static String substituteNamedParameters( ParsedSql parsedSql, SqlParams parameters ) {
 
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, parameters);
+        String sql = NamedParameterUtils.substituteNamedParameters( parsedSql, parameters );
         return sql;
     }
 
@@ -415,15 +441,15 @@ public class OliveUtils {
      * @param parameters the source for named parameters
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
-    public static PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams parameters) {
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, parameters);
+    public static PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams parameters ) {
+        String sql = NamedParameterUtils.substituteNamedParameters( parsedSql, parameters );
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            setParams(ps, parsedSql, parameters);
+            PreparedStatement ps = conn.prepareStatement( sql );
+            setParams( ps, parsedSql, parameters );
             return ps;
 
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
         }
     }
 
@@ -439,18 +465,18 @@ public class OliveUtils {
      * @param parameters the source for named parameters
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
-    public static PreparedStatement prepareStatement(Connection conn, String sqlStatement, SqlParams parameters) {
+    public static PreparedStatement prepareStatement( Connection conn, String sqlStatement, SqlParams parameters ) {
 
-        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement(sqlStatement);
-        String sql = NamedParameterUtils.substituteNamedParameters(parsedSql, parameters);
+        ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement( sqlStatement );
+        String sql = NamedParameterUtils.substituteNamedParameters( parsedSql, parameters );
 
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            setParams(ps, parsedSql, parameters);
+            PreparedStatement ps = conn.prepareStatement( sql );
+            setParams( ps, parsedSql, parameters );
             return ps;
 
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
         }
     }
 
@@ -461,13 +487,13 @@ public class OliveUtils {
      * @param parsedSql the parsed sql which named parameters must be replaced
      * @param parameters the source for named parameters
      */
-    public static void setParams(PreparedStatement ps, ParsedSql parsedSql, SqlParams parameters) {
+    public static void setParams( PreparedStatement ps, ParsedSql parsedSql, SqlParams parameters ) {
 
-        SqlParam[] input = NamedParameterUtils.buildValueArray(parsedSql, parameters);
-        if (input != null) {
-            for (int i = 0; i < input.length; i++) {
+        SqlParam[] input = NamedParameterUtils.buildValueArray( parsedSql, parameters );
+        if ( input != null ) {
+            for ( int i = 0; i < input.length; i++ ) {
                 SqlParam arg = input[i];
-                setParam(ps, i + 1, arg);
+                setParam( ps, i + 1, arg );
             }
         }
     }
@@ -479,10 +505,10 @@ public class OliveUtils {
      * @param indexPosition the index where the named parameter is defined in the PreparedStatement
      * @param parameter the parameter value that must replace the named parameter
      */
-    public static void setParam(PreparedStatement ps, int indexPosition, SqlParam parameter) {
+    public static void setParam( PreparedStatement ps, int indexPosition, SqlParam parameter ) {
 
         try {
-            StatementUtils.setParameterValue(ps, indexPosition, parameter);
+            StatementUtils.setParameterValue( ps, indexPosition, parameter );
 
             /*
              if (param.hasSqlType()) {
@@ -502,8 +528,8 @@ public class OliveUtils {
              ps.setObject(indexPosition, param.getValue());
              }
              */
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -515,16 +541,16 @@ public class OliveUtils {
      * @param maxWidth the maximum width of the string
      * @return the truncated string
      */
-    public static String truncate(String str, int maxWidth) {
-        if (isBlank(str)) {
+    public static String truncate( String str, int maxWidth ) {
+        if ( isBlank( str ) ) {
             return str;
         }
 
-        if (str.length() <= maxWidth) {
+        if ( str.length() <= maxWidth ) {
             return str;
         }
 
-        return str.substring(0, maxWidth);
+        return str.substring( 0, maxWidth );
     }
 
     /**
@@ -533,13 +559,13 @@ public class OliveUtils {
      * @param cs the CharSequence to check, may be null
      * @return true if the CharSequence is null, empty or whitespace
      */
-    public static boolean isBlank(final CharSequence cs) {
+    public static boolean isBlank( final CharSequence cs ) {
         int strLen;
-        if (cs == null || (strLen = cs.length()) == 0) {
+        if ( cs == null || (strLen = cs.length()) == 0 ) {
             return true;
         }
-        for (int i = 0; i < strLen; i++) {
-            if (Character.isWhitespace(cs.charAt(i)) == false) {
+        for ( int i = 0; i < strLen; i++ ) {
+            if ( Character.isWhitespace( cs.charAt( i ) ) == false ) {
                 return false;
             }
         }
@@ -552,8 +578,8 @@ public class OliveUtils {
      * @param cs the CharSequence to check, may be null
      * @return false if the CharSequence is null, empty or whitespace
      */
-    public static boolean isNotBlank(final CharSequence cs) {
-        return !isBlank(cs);
+    public static boolean isNotBlank( final CharSequence cs ) {
+        return !isBlank( cs );
     }
 
     /**
@@ -562,9 +588,9 @@ public class OliveUtils {
      * @param input the InputStream to read from
      * @return the contents of the InputStream as a String
      */
-    public static String toString(final InputStream input) {
+    public static String toString( final InputStream input ) {
         final StringBuilderWriter sw = new StringBuilderWriter();
-        copy(input, sw, "utf-8");
+        copy( input, sw, "utf-8" );
         return sw.toString();
     }
 
@@ -578,32 +604,32 @@ public class OliveUtils {
      * @param name name of the resource
      * @return InputStream for the resource.
      */
-    public static InputStream getResourceAsStream(Class cls, String name) {
+    public static InputStream getResourceAsStream( Class cls, String name ) {
         InputStream result = null;
 
         /**
          * remove leading slash so path will work with classes in a JAR file
          */
-        while (name.startsWith("/")) {
-            name = name.substring(1);
+        while ( name.startsWith( "/" ) ) {
+            name = name.substring( 1 );
         }
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        if (classLoader == null) {
+        if ( classLoader == null ) {
             classLoader = cls.getClassLoader();
-            result = classLoader.getResourceAsStream(name);
+            result = classLoader.getResourceAsStream( name );
         } else {
-            result = classLoader.getResourceAsStream(name);
+            result = classLoader.getResourceAsStream( name );
 
             /**
              * for compatibility with texen / ant tasks, fall back to
              * old method when resource is not found.
              */
-            if (result == null) {
+            if ( result == null ) {
                 classLoader = cls.getClassLoader();
-                if (classLoader != null) {
-                    result = classLoader.getResourceAsStream(name);
+                if ( classLoader != null ) {
+                    result = classLoader.getResourceAsStream( name );
                 }
             }
         }
@@ -651,51 +677,51 @@ public class OliveUtils {
      * @param filename the filename to normalize, null returns null
      * @return the normalized filename, or null if invalid
      */
-    public static String normalize(final String filename) {
-        return doNormalize(filename, CLASSPATH_SEPARATOR, true);
+    public static String normalize( final String filename ) {
+        return doNormalize( filename, CLASSPATH_SEPARATOR, true );
     }
 
     /**
      * Create absolute filenames relative to the given class.
      * <p/>
      * For example given the following sql file:
-     * 
+     *
      * <code>/com/mycorp/dao/person/insert_person.sql:</code>
-     * 
+     *
      * <pre class="prettyprint">
      * INSERT INTO PERSON (name, age) VALUES (:name, :age);
      * </pre>
-     * 
+     *
      * and given that the <code>PersonDao</code> exists in the same package" <code>com.mycorp.dao.person.PersonDao</code>, create an absolute
      * filename to the insert_person.sql file as follows:
-     * 
+     *
      * <pre class="prettyprint">
      * // The PersonDao.class package will be converted to a path and prepended to insert_product.sql filename
      * String filename = OliveUtils.normalize(PersonDao.class, "insert_product.sql");
      * System.out.println(filename);
      * </pre>
-     * 
+     *
      * The result of the above <code>println</code> statement will be: <code>/com/mycorp/dao/person/insert_person.sql</code>.
-     * 
+     *
      * @param cls the class to create an absolute filename from
      * @param filename the filename to create an absolute filename relative to the class
      * @return the absolute filenames relative to the given class
      */
-    public static String normalize(Class cls, final String filename) {
-        if (cls == null) {
-            throw new IllegalArgumentException("class is required!");
+    public static String normalize( Class cls, final String filename ) {
+        if ( cls == null ) {
+            throw new IllegalArgumentException( "class is required!" );
         }
-        if (filename == null) {
+        if ( filename == null ) {
             return null;
         }
-        if (filename.startsWith("/")) {
+        if ( filename.startsWith( "/" ) ) {
             return filename;
         }
         String pkg = cls.getPackage().getName();
-        pkg = pkg.replace(".", "/");
+        pkg = pkg.replace( ".", "/" );
         String fullname = '/' + pkg + '/' + filename;
 
-        return doNormalize(fullname, '/', true);
+        return doNormalize( fullname, '/', true );
     }
 
     /**
@@ -705,8 +731,8 @@ public class OliveUtils {
      * @return new XML Document
      * @throws RuntimeException if a parsing error occurs
      */
-    public static Document buildDocument(InputStream inputStream) {
-        return buildDocument(inputStream, null);
+    public static Document buildDocument( InputStream inputStream ) {
+        return buildDocument( inputStream, null );
     }
 
     /**
@@ -718,21 +744,21 @@ public class OliveUtils {
      * @return new XML Document
      * @throws RuntimeException if a parsing error occurs
      */
-    public static Document buildDocument(InputStream inputStream,
-        EntityResolver entityResolver) {
+    public static Document buildDocument( InputStream inputStream,
+        EntityResolver entityResolver ) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
             DocumentBuilder builder = factory.newDocumentBuilder();
 
-            if (entityResolver != null) {
-                builder.setEntityResolver(entityResolver);
+            if ( entityResolver != null ) {
+                builder.setEntityResolver( entityResolver );
             }
 
-            return builder.parse(inputStream);
+            return builder.parse( inputStream );
 
-        } catch (Exception ex) {
-            throw new RuntimeException("Error parsing XML", ex);
+        } catch ( Exception ex ) {
+            throw new RuntimeException( "Error parsing XML", ex );
         }
     }
 
@@ -744,12 +770,12 @@ public class OliveUtils {
      * @param name the name of the child element
      * @return the first child element for the given name and parent
      */
-    public static Element getChild(Element parent, String name) {
+    public static Element getChild( Element parent, String name ) {
         NodeList nodeList = parent.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node node = nodeList.item(i);
-            if (node instanceof Element) {
-                if (node.getNodeName().equals(name)) {
+        for ( int i = 0; i < nodeList.getLength(); i++ ) {
+            Node node = nodeList.item( i );
+            if ( node instanceof Element ) {
+                if ( node.getNodeName().equals( name ) ) {
                     return (Element) node;
                 }
             }
@@ -765,14 +791,14 @@ public class OliveUtils {
      * @param name the name of the child element
      * @return the list of XML child elements for the given name
      */
-    public static List<Element> getChildren(Element parent, String name) {
+    public static List<Element> getChildren( Element parent, String name ) {
         List<Element> list = new ArrayList<Element>();
         NodeList nodeList = parent.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node node = nodeList.item(i);
-            if (node instanceof Element) {
-                if (node.getNodeName().equals(name)) {
-                    list.add((Element) node);
+        for ( int i = 0; i < nodeList.getLength(); i++ ) {
+            Node node = nodeList.item( i );
+            if ( node instanceof Element ) {
+                if ( node.getNodeName().equals( name ) ) {
+                    list.add( (Element) node );
                 }
             }
         }
@@ -787,19 +813,19 @@ public class OliveUtils {
      * @param keepSeparator true to keep the final separator
      * @return the normalized filename
      */
-    private static String doNormalize(final String filename, final char separator, final boolean keepSeparator) {
+    private static String doNormalize( final String filename, final char separator, final boolean keepSeparator ) {
 
         int size = filename.length();
-        if (size == 0) {
+        if ( size == 0 ) {
             return filename;
         }
-        final int prefix = getPrefixLength(filename);
-        if (prefix < 0) {
+        final int prefix = getPrefixLength( filename );
+        if ( prefix < 0 ) {
             return null;
         }
 
         final char[] array = new char[size + 2];  // +1 for possible extra slash, +2 for arraycopy
-        filename.getChars(0, filename.length(), array, 0);
+        filename.getChars( 0, filename.length(), array, 0 );
 
         // fix separators throughout
         /*
@@ -811,27 +837,27 @@ public class OliveUtils {
          }*/
         // add extra separator on the end to simplify code below
         boolean lastIsDirectory = true;
-        if (array[size - 1] != separator) {
+        if ( array[size - 1] != separator ) {
             array[size++] = separator;
             lastIsDirectory = false;
         }
 
         // adjoining slashes
-        for (int i = prefix + 1; i < size; i++) {
-            if (array[i] == separator && array[i - 1] == separator) {
-                System.arraycopy(array, i, array, i - 1, size - i);
+        for ( int i = prefix + 1; i < size; i++ ) {
+            if ( array[i] == separator && array[i - 1] == separator ) {
+                System.arraycopy( array, i, array, i - 1, size - i );
                 size--;
                 i--;
             }
         }
 
         // dot slash
-        for (int i = prefix + 1; i < size; i++) {
-            if (array[i] == separator && array[i - 1] == '.' && (i == prefix + 1 || array[i - 2] == separator)) {
-                if (i == size - 1) {
+        for ( int i = prefix + 1; i < size; i++ ) {
+            if ( array[i] == separator && array[i - 1] == '.' && (i == prefix + 1 || array[i - 2] == separator) ) {
+                if ( i == size - 1 ) {
                     lastIsDirectory = true;
                 }
-                System.arraycopy(array, i + 1, array, i - 1, size - i);
+                System.arraycopy( array, i + 1, array, i - 1, size - i );
                 size -= 2;
                 i--;
             }
@@ -839,41 +865,41 @@ public class OliveUtils {
 
         // double dot slash
         outer:
-        for (int i = prefix + 2; i < size; i++) {
-            if (array[i] == separator && array[i - 1] == '.' && array[i - 2] == '.' && (i == prefix + 2 || array[i - 3] == separator)) {
-                if (i == prefix + 2) {
+        for ( int i = prefix + 2; i < size; i++ ) {
+            if ( array[i] == separator && array[i - 1] == '.' && array[i - 2] == '.' && (i == prefix + 2 || array[i - 3] == separator) ) {
+                if ( i == prefix + 2 ) {
                     return null;
                 }
-                if (i == size - 1) {
+                if ( i == size - 1 ) {
                     lastIsDirectory = true;
                 }
                 int j;
-                for (j = i - 4; j >= prefix; j--) {
-                    if (array[j] == separator) {
+                for ( j = i - 4; j >= prefix; j-- ) {
+                    if ( array[j] == separator ) {
                         // remove b/../ from a/b/../c
-                        System.arraycopy(array, i + 1, array, j + 1, size - i);
+                        System.arraycopy( array, i + 1, array, j + 1, size - i );
                         size -= i - j;
                         i = j + 1;
                         continue outer;
                     }
                 }
                 // remove a/../ from a/../c
-                System.arraycopy(array, i + 1, array, prefix, size - i);
+                System.arraycopy( array, i + 1, array, prefix, size - i );
                 size -= i + 1 - prefix;
                 i = prefix + 1;
             }
         }
 
-        if (size <= 0) {  // should never be less than 0
+        if ( size <= 0 ) {  // should never be less than 0
             return "";
         }
-        if (size <= prefix) {  // should never be less than prefix
-            return new String(array, 0, size);
+        if ( size <= prefix ) {  // should never be less than prefix
+            return new String( array, 0, size );
         }
-        if (lastIsDirectory && keepSeparator) {
-            return new String(array, 0, size);  // keep trailing separator
+        if ( lastIsDirectory && keepSeparator ) {
+            return new String( array, 0, size );  // keep trailing separator
         }
-        return new String(array, 0, size - 1);  // lose trailing separator
+        return new String( array, 0, size - 1 );  // lose trailing separator
     }
 
     /**
@@ -914,56 +940,56 @@ public class OliveUtils {
      * @param filename the filename to find the prefix in, null returns -1
      * @return the length of the prefix, -1 if invalid or null
      */
-    private static int getPrefixLength(final String filename) {
-        if (filename == null) {
+    private static int getPrefixLength( final String filename ) {
+        if ( filename == null ) {
             return NOT_FOUND;
         }
         final int len = filename.length();
-        if (len == 0) {
+        if ( len == 0 ) {
             return 0;
         }
-        char ch0 = filename.charAt(0);
-        if (ch0 == ':') {
+        char ch0 = filename.charAt( 0 );
+        if ( ch0 == ':' ) {
             return NOT_FOUND;
         }
-        if (len == 1) {
-            if (ch0 == '~') {
+        if ( len == 1 ) {
+            if ( ch0 == '~' ) {
                 return 2;  // return a length greater than the input
             }
-            return isSeparator(ch0) ? 1 : 0;
+            return isSeparator( ch0 ) ? 1 : 0;
         } else {
-            if (ch0 == '~') {
-                int posUnix = filename.indexOf(UNIX_SEPARATOR, 1);
-                int posWin = filename.indexOf(WINDOWS_SEPARATOR, 1);
-                if (posUnix == NOT_FOUND && posWin == NOT_FOUND) {
+            if ( ch0 == '~' ) {
+                int posUnix = filename.indexOf( UNIX_SEPARATOR, 1 );
+                int posWin = filename.indexOf( WINDOWS_SEPARATOR, 1 );
+                if ( posUnix == NOT_FOUND && posWin == NOT_FOUND ) {
                     return len + 1;  // return a length greater than the input
                 }
                 posUnix = posUnix == NOT_FOUND ? posWin : posUnix;
                 posWin = posWin == NOT_FOUND ? posUnix : posWin;
-                return Math.min(posUnix, posWin) + 1;
+                return Math.min( posUnix, posWin ) + 1;
             }
-            final char ch1 = filename.charAt(1);
-            if (ch1 == ':') {
-                ch0 = Character.toUpperCase(ch0);
-                if (ch0 >= 'A' && ch0 <= 'Z') {
-                    if (len == 2 || isSeparator(filename.charAt(2)) == false) {
+            final char ch1 = filename.charAt( 1 );
+            if ( ch1 == ':' ) {
+                ch0 = Character.toUpperCase( ch0 );
+                if ( ch0 >= 'A' && ch0 <= 'Z' ) {
+                    if ( len == 2 || isSeparator( filename.charAt( 2 ) ) == false ) {
                         return 2;
                     }
                     return 3;
                 }
                 return NOT_FOUND;
 
-            } else if (isSeparator(ch0) && isSeparator(ch1)) {
-                int posUnix = filename.indexOf(UNIX_SEPARATOR, 2);
-                int posWin = filename.indexOf(WINDOWS_SEPARATOR, 2);
-                if (posUnix == NOT_FOUND && posWin == NOT_FOUND || posUnix == 2 || posWin == 2) {
+            } else if ( isSeparator( ch0 ) && isSeparator( ch1 ) ) {
+                int posUnix = filename.indexOf( UNIX_SEPARATOR, 2 );
+                int posWin = filename.indexOf( WINDOWS_SEPARATOR, 2 );
+                if ( posUnix == NOT_FOUND && posWin == NOT_FOUND || posUnix == 2 || posWin == 2 ) {
                     return NOT_FOUND;
                 }
                 posUnix = posUnix == NOT_FOUND ? posWin : posUnix;
                 posWin = posWin == NOT_FOUND ? posUnix : posWin;
-                return Math.min(posUnix, posWin) + 1;
+                return Math.min( posUnix, posWin ) + 1;
             } else {
-                return isSeparator(ch0) ? 1 : 0;
+                return isSeparator( ch0 ) ? 1 : 0;
             }
         }
     }
@@ -974,60 +1000,60 @@ public class OliveUtils {
      * @param ch the character to check
      * @return true if it is a separator character
      */
-    private static boolean isSeparator(final char ch) {
+    private static boolean isSeparator( final char ch ) {
         return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR;
     }
 
-    private static long copyLarge(final Reader input, final Writer output) {
-        return copyLarge(input, output, new char[DEFAULT_BUFFER_SIZE]);
+    private static long copyLarge( final Reader input, final Writer output ) {
+        return copyLarge( input, output, new char[DEFAULT_BUFFER_SIZE] );
     }
 
-    private static long copyLarge(final Reader input, final Writer output, final char[] buffer) {
+    private static long copyLarge( final Reader input, final Writer output, final char[] buffer ) {
         try {
 
             long count = 0;
             int n = 0;
-            while (EOF != (n = input.read(buffer))) {
-                output.write(buffer, 0, n);
+            while ( EOF != (n = input.read( buffer )) ) {
+                output.write( buffer, 0, n );
                 count += n;
             }
             return count;
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
     }
 
-    private static void copy(final InputStream input, final Writer output, String inputEncoding) {
+    private static void copy( final InputStream input, final Writer output, String inputEncoding ) {
         try {
-            final InputStreamReader in = new InputStreamReader(input, inputEncoding);
-            copy(in, output);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            final InputStreamReader in = new InputStreamReader( input, inputEncoding );
+            copy( in, output );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
         }
     }
 
-    private static int copy(final Reader input, final Writer output) {
-        final long count = copyLarge(input, output);
-        if (count > Integer.MAX_VALUE) {
+    private static int copy( final Reader input, final Writer output ) {
+        final long count = copyLarge( input, output );
+        if ( count > Integer.MAX_VALUE ) {
             return -1;
         }
         return (int) count;
     }
 
-    public static void main(String[] args) {
-        String source = normalize(OliveUtils.class, "queries.xml");
-        InputStream is = getResourceAsStream(OliveUtils.class, source);
-        System.out.println("is" + is);
-        Document document = buildDocument(is);
+    public static void main( String[] args ) {
+        String source = normalize( OliveUtils.class, "queries.xml" );
+        InputStream is = getResourceAsStream( OliveUtils.class, source );
+        System.out.println( "is" + is );
+        Document document = buildDocument( is );
         Element rootElm = document.getDocumentElement();
-        System.out.println("root nodename: " + rootElm.getNodeName());
-        List< Element> queries = getChildren(rootElm, "query");
-        for (Element query : queries) {
-            System.out.println("name: " + query.getAttribute("name"));
+        System.out.println( "root nodename: " + rootElm.getNodeName() );
+        List< Element> queries = getChildren( rootElm, "query" );
+        for ( Element query : queries ) {
+            System.out.println( "name: " + query.getAttribute( "name" ) );
             String sql = query.getTextContent();
             //sql = sql.replaceAll("[\n\r]", "");
-            System.out.println("sql: " + sql);
+            System.out.println( "sql: " + sql );
         }
     }
 }
