@@ -276,7 +276,7 @@ Olive can be customized where it loads SL files from by specifying which
 <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ResourceLoader.html" target="_blank">ResourceLoader</a> to use.
 
 Olive ships with two resource loaders, <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/ClasspathResourceLoader.html" target="_blank">ClasspathResourceLoader</a> which is the default and
-<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebappResourceLoader</a> which is outlined in the [web] (#web) section.
+<a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/loader/WebappResourceLoader.html" target="_blank">WebappResourceLoader</a> which is outlined in the [Web](#web) section.
 
 ClasspathResourceLoader loads SQL file form the classpath. We must provide the _absolute_ path to the SQL files. Absolute paths starts with a _'/'_ character. For example, given the sql file:
 
