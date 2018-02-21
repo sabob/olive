@@ -253,6 +253,11 @@ class NamedParameterUtils {
                 Object value = sqlParam.getValue();
                 //value = ((SqlParameterValue) value).getValue();
                 //}
+
+                if ( OliveUtils.isArray( value ) ) {
+                    value = OliveUtils.toList( value );
+                }
+
                 if (value instanceof Collection) {
                     Iterator<?> entryIter = ((Collection<?>) value).iterator();
                     int k = 0;
@@ -263,12 +268,15 @@ class NamedParameterUtils {
                         k++;
                         Object entryItem = entryIter.next();
                         Integer length = null;
-                        if (entryItem instanceof Object[]) {
-                            length = ((Object[]) entryItem).length;
-                        }
 
                         if (entryItem instanceof Collection) {
                             length = ((Collection) entryItem).size();
+
+                        } else if ( entryItem instanceof Object[] ) {
+                            length = ((Object[]) entryItem).length;
+
+                        } else if ( OliveUtils.isArray( entryItem ) ) {
+                            length = OliveUtils.getArrayLength( entryItem );
                         }
 
                         if (length != null) {
@@ -343,6 +351,14 @@ class NamedParameterUtils {
                     paramList.add(param);
                 }
 
+            } else if ( OliveUtils.isArray( value ) ) {
+
+                List innerValues = OliveUtils.toList( value );
+                for (Object innerValue : innerValues) {
+                    SqlParam param = createSqlParam(innerValue, parent.getName());
+                    paramList.add(param);
+                }
+
             } else {
                 SqlParam param = createSqlParam(value, parent);
                 paramList.add(param);
@@ -380,12 +396,19 @@ class NamedParameterUtils {
 
                 //paramArray[i] = sqlParam;
                 Object value = sqlParam.getValue();
+
                 if (value instanceof Collection) {
                     Collection col = (Collection) value;
                     addSqlParams(paramList, col, sqlParam);
+
+                } else if ( OliveUtils.isArray( value ) ) {
+                    Collection col = OliveUtils.toList( value );
+                    addSqlParams(paramList, col, sqlParam);
+
                 } else {
                     paramList.add(sqlParam);
                 }
+
             } catch (IllegalArgumentException ex) {
                 throw new IllegalStateException(
                     "No value supplied for the SQL parameter '" + paramName + "': " + ex.getMessage());

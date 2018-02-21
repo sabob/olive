@@ -216,7 +216,7 @@ public class SqlParams {
      * @throws IllegalArgumentException if the name is not defined
      */
     public SqlParams set(String name, Object value, int sqlType) {
-        return set(name, value, null, (Integer) null);
+        return set(name, value, null, sqlType);
     }
 
     /**
@@ -234,7 +234,7 @@ public class SqlParams {
      * @throws IllegalArgumentException if the name is not defined
      */
     public SqlParams set(String name, Object value, Object defaultIfNull, int sqlType) {
-        return set(name, value, defaultIfNull, sqlType, (Integer) null);
+        return set(name, value, defaultIfNull, sqlType, 0);
     }
 
     /**

@@ -94,7 +94,7 @@ public class SqlParam implements Serializable {
      */
     public SqlParam(String name, Object value) {
         this.name = name;
-        this.value = value;
+        setValueAndConvertArrayToList( value );
     }
 
     /**
@@ -108,7 +108,7 @@ public class SqlParam implements Serializable {
      */
     public SqlParam(String name, Object value, int sqlType) {
         this.name = name;
-        this.value = value;
+        setValueAndConvertArrayToList( value );
         this.sqlType = sqlType;
     }
 
@@ -126,7 +126,7 @@ public class SqlParam implements Serializable {
      */
     public SqlParam(String name, Object value, int sqlType, Integer scale) {
         this.name = name;
-        this.value = value;
+        setValueAndConvertArrayToList( value );
         this.sqlType = sqlType;
         this.scale = scale;
     }
@@ -146,7 +146,7 @@ public class SqlParam implements Serializable {
      */
     public SqlParam(String name, Object value, int sqlType, String typeName) {
         this.name = name;
-        this.value = value;
+        setValueAndConvertArrayToList( value );
         this.sqlType = sqlType;
         this.typeName = typeName;
     }
@@ -184,7 +184,9 @@ public class SqlParam implements Serializable {
      * @param value the value of the SqlParam
      */
     public void setValue(Object value) {
-        this.value = value;
+
+        setValueAndConvertArrayToList( value );
+
     }
 
     /**
@@ -239,5 +241,19 @@ public class SqlParam implements Serializable {
      */
     public void setTypeName(String typeName) {
         this.typeName = typeName;
+    }
+    
+    /**
+     * Set the value of the SqlParam and convert the value to a list if it is an array.
+     * 
+     * @param value the value of the SqlParam
+     */
+    private void setValueAndConvertArrayToList(Object value) {
+
+        if ( OliveUtils.isArray( value ) ) {
+            value = OliveUtils.toList( value );
+        }
+
+        this.value = value;
     }
 }
