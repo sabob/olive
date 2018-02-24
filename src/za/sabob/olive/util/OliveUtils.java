@@ -22,8 +22,9 @@ import za.sabob.olive.ps.SqlParams;
 
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.sql.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
@@ -146,8 +147,101 @@ public class OliveUtils {
     }
 
     /**
-     * Rollback the given connection and throw the sqlException as a RuntimeException. Any SQLExceptions thrown will be logged by the
-     * {@link #LOGGER}.
+     * Returns the connection for the given DataSource and wraps any SQLExceptions thrown in RuntimeExcepions.
+     * <p/>
+     *
+     * @param ds the DataSource to get a Connection from
+     * @return the DataSource Connection
+     */
+    public static Connection getConnection( DataSource ds ) {
+        try {
+            if ( ds == null ) {
+                throw new IllegalStateException( "DataSource cannot be null" );
+            }
+
+            return ds.getConnection();
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the connection for the given DataSource and set the connection#setAutoCommit to the given value. Any SQLExceptions are wrapped and thrown as
+     * RuntimeExcepions.
+     *
+     * @param ds the DataSource to get a Connection from
+     * @param autoCommit the autoCommit value to set
+     * @return the DataSource Connection
+     */
+    public static Connection getConnection( DataSource ds, boolean autoCommit ) {
+        try {
+            if ( ds == null ) {
+                throw new IllegalStateException( "DataSource cannot be null" );
+            }
+
+            Connection conn = ds.getConnection();
+
+            setAutoCommit( conn, autoCommit );
+
+            return conn;
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the connection for the given DataSource, username and password and wraps any SQLExceptions thrown in RuntimeExcepions.
+     * <p/>
+     *
+     * @param ds the DataSource to get a Connection from
+     * @param username - the database user on whose behalf the connection is being made
+     * @param password - the user's password
+     * @return the DataSource Connection
+     */
+    public static Connection getConnection( DataSource ds, String username, String password ) {
+        try {
+            if ( ds == null ) {
+                throw new IllegalStateException( "DataSource cannot be null" );
+            }
+
+            return ds.getConnection( username, password );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the connection for the given DataSource, username and password and set the connection#setAutoCommit to the given value.
+     * Any SQLExceptions are wrapped and thrown as RuntimeExcepions.
+     * <p/>
+     *
+     * @param ds the DataSource to get a Connection from
+     * @param username - the database user on whose behalf the connection is being made
+     * @param password - the user's password
+     * @param autoCommit the autoCommit value to set
+     *
+     * @return the DataSource Connection
+     */
+    public static Connection getConnection( DataSource ds, String username, String password, boolean autoCommit ) {
+        try {
+            if ( ds == null ) {
+                throw new IllegalStateException( "DataSource cannot be null" );
+            }
+
+            Connection conn = ds.getConnection( username, password );
+
+            setAutoCommit( conn, autoCommit );
+
+            return conn;
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Rollback the given connection and throw the given exception as a RuntimeException.
      * <p/>
      * This method is null safe, so the connection and sqlException can be null.
      *
@@ -180,8 +274,8 @@ public class OliveUtils {
      * OliveUtils.rollback(conn, e);
      * } finally {
      *
-     *     // Close resources
-     * OliveUtils.close(ps, conn);
+     *     // Close resources and switch autoCommit back to true
+     * OliveUtils.close(true, ps, conn);
      * }
      *
      * </pre>
@@ -198,17 +292,10 @@ public class OliveUtils {
             }
 
         } catch ( SQLException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            exception = addSuppressed( e, exception );
         }
 
-        if ( exception instanceof RuntimeException ) {
-
-            throw (RuntimeException) exception;
-        }
-
-        if ( exception != null ) {
-            throw new RuntimeException( exception );
-        }
+        throwAsRuntimeIfException( exception );
     }
 
     /**
@@ -263,6 +350,38 @@ public class OliveUtils {
     }
 
     /**
+     * Closes the given connection and wraps any SQLExceptions thrown as RuntimeExcepions. Also sets the Connection#setAutoCommit to the
+     * given value.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * @param autoCommit whether to enable/disable Connection#setAutoCommit
+     * @param conn the connection to close
+     */
+    public static void closeConnection( boolean autoCommit, Connection conn ) {
+
+        // Main exception to assign other exceptions to
+        Exception mainException = null;
+
+        try {
+            setAutoCommit( conn, autoCommit );
+
+        } catch ( RuntimeException e ) {
+            mainException = e;
+        }
+
+        try {
+
+            closeConnection( conn );
+
+        } catch ( RuntimeException e ) {
+            mainException = addSuppressed( e, mainException );
+        }
+
+        throwAsRuntimeIfException( mainException );
+    }
+
+    /**
      * Closes the given statement and connection and wraps any SQLExceptions thrown as RuntimeExcepions.
      * <p/>
      * <b>Note:</b> only the first exception thrown by closing the statement and connection will be thrown as a RuntimeExcepion.
@@ -274,28 +393,93 @@ public class OliveUtils {
      */
     public static void close( Statement st, Connection conn ) {
 
-        // Track the first exception thrown
-        RuntimeException origException = null;
+        // Main exception to assign other exceptions to
+        Exception mainException = null;
 
         try {
             closeStatement( st );
-        } catch ( RuntimeException e ) {
 
-            origException = e;
+        } catch ( RuntimeException e ) {
+            mainException = addSuppressed( e, mainException );
         }
 
         try {
             closeConnection( conn );
 
         } catch ( RuntimeException e ) {
-            if ( origException == null ) {
-                origException = e;
-            }
+            mainException = addSuppressed( e, mainException );
         }
 
-        if ( origException != null ) {
-            throw origException;
+        throwAsRuntimeIfException( mainException );
+    }
+
+    /**
+     * Closes the given resultSet and statement and wraps any SQLExceptions thrown as RuntimeExcepions.
+     * <p/>
+     * <b>Note:</b> only the first exception thrown by closing the resultSet and statement will be thrown as a RuntimeExcepion.
+     * <p/>
+     * This method is null safe, so the statement and connection can be null.
+     *
+     * @param rs the resultSet to close
+     * @param st the statement to close
+     */
+    public static void close( ResultSet rs, Statement st ) {
+
+        // Main exception to assign other exceptions to
+        Exception mainException = null;
+
+        try {
+            closeResultSet( rs );
+        } catch ( RuntimeException e ) {
+
+            mainException = e;
         }
+
+        try {
+            closeStatement( st );
+
+        } catch ( RuntimeException e ) {
+
+            mainException = addSuppressed( e, mainException );
+        }
+
+        throwAsRuntimeIfException( mainException );
+    }
+
+    /**
+     * Closes the given statement and connection and wraps any SQLExceptions thrown as RuntimeExcepions. Also sets the Connection#setAutoCommit to the
+     * given value.
+     * <p/>
+     * s
+     * <b>Note:</b> only the first exception thrown by setting Connection#autoCommit, closing the statement or closing the connection will be thrown
+     * as a RuntimeExcepion.
+     * <p/>
+     * This method is null safe, so the statement and connection can be null.
+     *
+     * @param autoCommit whether to enable/disable Connection#setAutoCommit
+     * @param st the statement to close
+     * @param conn the connection to close
+     */
+    public static void close( boolean autoCommit, Statement st, Connection conn ) {
+
+        // Main exception to assign other exceptions to
+        Exception mainException = null;
+
+        try {
+            closeStatement( st );
+        } catch ( RuntimeException e ) {
+
+            mainException = e;
+        }
+
+        try {
+            closeConnection( conn );
+
+        } catch ( RuntimeException e ) {
+            mainException = addSuppressed( e, mainException );
+        }
+
+        throwAsRuntimeIfException( mainException );
     }
 
     /**
@@ -311,36 +495,77 @@ public class OliveUtils {
      */
     public static void close( ResultSet rs, Statement st, Connection conn ) {
 
-        // Track the first exception thrown
-        RuntimeException origException = null;
+        // Main exception to assign other exceptions to
+        Exception mainException = null;
 
         try {
             closeResultSet( rs );
 
         } catch ( RuntimeException e ) {
-            origException = e;
+            mainException = e;
         }
 
         try {
             closeStatement( st );
         } catch ( RuntimeException e ) {
 
-            if ( origException == null ) {
-                origException = e;
-            }
+            mainException = addSuppressed( e, mainException );
         }
 
         try {
             closeConnection( conn );
         } catch ( RuntimeException e ) {
-            if ( origException == null ) {
-                origException = e;
-            }
+            mainException = addSuppressed( e, mainException );
         }
 
-        if ( origException != null ) {
-            throw origException;
+        throwAsRuntimeIfException( mainException );
+    }
+
+    /**
+     * Closes the given resultSet, statement and connection and wraps any SQLExceptions thrown as RuntimeExcepions. Also sets the Connection#setAutoCommit to the
+     * given value.
+     * <p/>
+     * <b>Note:</b> only the first exception thrown by setting autoCommit(false), closing the resultset, statement and connection will be thrown as a RuntimeExcepion.
+     * <p/>
+     * This method is null safe, so the resultset, statement and connection can be null.
+     *
+     * @param autoCommit whether to enable/disable Connection#setAutoCommit
+     * @param rs the resultset to close
+     * @param st the statement to close
+     * @param conn the connection to close
+     */
+    public static void close( boolean autoCommit, ResultSet rs, Statement st, Connection conn ) {
+
+        // Main exception to assign other exceptions to
+        Exception mainException = null;
+
+        try {
+            setAutoCommit( conn, autoCommit );
+
+        } catch ( RuntimeException e ) {
+            mainException = e;
         }
+
+        try {
+            closeResultSet( rs );
+
+        } catch ( RuntimeException e ) {
+            mainException = addSuppressed( e, mainException );
+        }
+
+        try {
+            closeStatement( st );
+        } catch ( RuntimeException e ) {
+            mainException = addSuppressed( e, mainException );
+        }
+
+        try {
+            closeConnection( conn );
+        } catch ( RuntimeException e ) {
+            mainException = addSuppressed( e, mainException );
+        }
+
+        throwAsRuntimeIfException( mainException );
     }
 
     /**
@@ -377,12 +602,27 @@ public class OliveUtils {
     }
 
     /**
+     * Closes the given connection and wraps any SQLExceptions thrown as RuntimeExcepions. Also sets the Connection#setAutoCommit to the
+     * given value.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * @param autoCommit whether to enable/disable Connection#setAutoCommit
+     * @param conn the connection to close
+     */
+    public static void close( boolean autoCommit, Connection conn ) {
+        closeConnection( autoCommit, conn );
+    }
+
+    /**
      * Sets the connection autoCommit mode and and wraps any SQLExceptions thrown as RuntimeExcepions.
      * <p/>
      * This method is null safe, so the connection can be null.
-     * 
+     *
      * @param conn the connection on which to set autoCommit
      * @param bool true to enable setAutoCommit, false to disable autoCommit
+     *
+     * @throws RuntimeException that wraps the SQLException
      */
     public static void setAutoCommit( Connection conn, boolean bool ) {
 
@@ -393,6 +633,60 @@ public class OliveUtils {
 
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Returns the generated key and wraps any SQLExceptions thrown as a RuntimeExcepion.
+     *
+     * This method is null safe, so the statement can be null.
+     *
+     * @param st the statement from which to get the generatedKey
+     *
+     * @return the generated key or null if no key was generated
+     */
+    public static long getGeneratedKey( Statement st ) {
+        try {
+            long id = 0;
+
+            ResultSet generatedKeys = st.getGeneratedKeys();
+
+            if ( generatedKeys.next() ) {
+                id = generatedKeys.getLong( 1 );
+            }
+
+            return id;
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the generated Keys and wraps any SQLExceptions thrown as a RuntimeExcepion.
+     *
+     * This method is null safe, so the statement can be null.
+     *
+     * @param st the statement from which to get the generatedKeys
+     *
+     * @return the list of generated keys as long values
+     */
+    public static List<Long> getGeneratedKeys( Statement st ) {
+
+        try {
+            ResultSet generatedKeys = st.getGeneratedKeys();
+
+            List list = new ArrayList();
+
+            while ( generatedKeys.next() ) {
+                long id = generatedKeys.getLong( 1 );
+                list.add( id );
+            }
+
+            return list;
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -452,7 +746,7 @@ public class OliveUtils {
             throw new RuntimeException( ex );
         }
     }
-    
+
     /**
      * Create and return a PreparedStatement for the given connection, parsedSql, parameters and options.
      * <p/>
@@ -475,7 +769,7 @@ public class OliveUtils {
             throw new RuntimeException( ex );
         }
     }
-    
+
     /**
      * Create and return a PreparedStatement for the given connection, parsedSql, parameters and options.
      * <p/>
@@ -484,15 +778,16 @@ public class OliveUtils {
      * @param conn the connection to create the PreparedStatement with
      * @param parsedSql the parsed representation of the SQL statement
      * @param parameters the source for named parameters
-     * @param resultSetType - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE 
-     * @param resultSetConcurrency - one of the following ResultSet constants: ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE 
-     * @param resultSetHoldability - one of the following ResultSet constants: ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT     
+     * @param resultSetType - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE
+     * @param resultSetConcurrency - one of the following ResultSet constants: ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE
+     * @param resultSetHoldability - one of the following ResultSet constants: ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
-    public static PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams parameters, int resultSetType, int resultSetConcurrency, int resultSetHoldability ) {
+    public static PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams parameters, int resultSetType, int resultSetConcurrency,
+        int resultSetHoldability ) {
         String sql = NamedParameterUtils.substituteNamedParameters( parsedSql, parameters );
         try {
-            PreparedStatement ps = conn.prepareStatement( sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            PreparedStatement ps = conn.prepareStatement( sql, resultSetType, resultSetConcurrency, resultSetHoldability );
             setParams( ps, parsedSql, parameters );
             return ps;
 
@@ -852,12 +1147,12 @@ public class OliveUtils {
         }
         return list;
     }
-    
+
     /**
      * Returns true if the object is an array.
      * <p>
      * This method will return true if the argument is an Object array or a primitive array.
-     * 
+     *
      * @param obj the object to check if it is an array or not
      * @return true if the object is an array, false otherwise
      */
@@ -867,18 +1162,19 @@ public class OliveUtils {
             return false;
         }
 
-        if (isObjectArray( obj )) {
+        if ( isObjectArray( obj ) ) {
             return true;
         }
-        
+
         return isPrimitiveArray( obj );
     }
 
     /**
      * Returns true if the object is an array of Objects Object[], Integer[] etc. Array of primitives will return false.
-     * <p>s
+     * <p>
+     * s
      * This method will return true if the argument is an array of Objects.
-     * 
+     *
      * @param obj the object to check if it is an array of Objects or not
      * @return true if the object is an array of Objects, false otherwise
      */
@@ -895,12 +1191,13 @@ public class OliveUtils {
         return false;
 
     }
-    
+
     /**
      * Returns true if the object is an array of primitives int[], boolean[] etc. Array of Objects will return false.
-     * <p>s
+     * <p>
+     * s
      * This method will return true if the argument is an array of primitives.
-     * 
+     *
      * @param obj the object to check if it is an array of primitives or not
      * @return true if the object is an array of primitives, false otherwise
      */
@@ -909,54 +1206,113 @@ public class OliveUtils {
         if ( obj == null ) {
             return false;
         }
-        
-        if (isObjectArray( obj )) {
+
+        if ( isObjectArray( obj ) ) {
             return false;
         }
-        
+
         return obj.getClass().isArray();
     }
 
+    /**
+     * Return the length of the given obj, or 0 if the obj is not an array.
+     *
+     * @param obj the array which length to return
+     * @return the length of the given array
+     */
     public static int getArrayLength( Object obj ) {
-        
-        if (isArray( obj )) {
+
+        if ( isArray( obj ) ) {
             return java.lang.reflect.Array.getLength( obj );
         }
 
         return 0;
     }
 
-    public static List toList( Object obj ) {
+    /**
+     * Convert the given array to a list recursively ie each array contained in the given array are also converted to a list.
+     *
+     * @param array the array to convert into a list
+     * @return the converted list
+     * @throws IllegalArgumentException if array is not an actual array
+     */
+    public static List toList( Object array ) {
 
-        if ( !isArray( obj )) {
-            throw new IllegalArgumentException("object must be an array");
+        if ( !isArray( array ) ) {
+            throw new IllegalArgumentException( "object must be an array" );
         }
 
         List list = new ArrayList();
 
-        int length = java.lang.reflect.Array.getLength( obj );
+        int length = java.lang.reflect.Array.getLength( array );
 
         for ( int i = 0; i < length; i++ ) {
 
-            Object arrayItem = java.lang.reflect.Array.get( obj, i );
+            Object arrayItem = java.lang.reflect.Array.get( array, i );
 
             if ( isObjectArray( arrayItem ) ) {
                 list.add( (Object[]) arrayItem );
-                
+
             } else if ( isPrimitiveArray( arrayItem ) ) {
-                
+
                 List innerList = toSimpleList( arrayItem );
                 list.add( innerList );
 
             } else {
                 list.add( arrayItem );
-                
+
             }
         }
 
         return list;
     }
 
+    /**
+     * Adds the given suppressedException to the mainException and returns the mainException, unless it is null, in which case the suppressedException is 
+     * returned.
+     * 
+     * @param mainException the main exception on which to add the suppressedException
+     * @param supressedException the exception to add to the mainException
+     * @return the mainException or supresesdException if mainException is null
+     */
+    public static Exception addSuppressed( Exception mainException, Exception supressedException ) {
+
+        if ( supressedException == null ) {
+            return mainException;
+        }
+
+        if ( mainException == null ) {
+            return supressedException;
+        }
+
+        mainException.addSuppressed( supressedException );
+        return mainException;
+    }
+
+    /**
+     * Throws the given exception as a RuntimeException, unless the exception is null, in which case the method simply returns.
+     * 
+     * @param exception the exception to throw as a RuntimeException
+     */
+    public static void throwAsRuntimeIfException( Exception exception ) {
+
+        if ( exception == null ) {
+            return;
+        }
+
+        if ( exception instanceof RuntimeException ) {
+            throw (RuntimeException) exception;
+        }
+
+        throw new RuntimeException( exception );
+    }
+
+    /**
+     * Converts the given array obj to a list, unless the obj is not an array, in which case an exception is thrown.
+     * 
+     * @param obj the given array to convert to a list
+     * @return the obj array as a list
+     */
     private static List toSimpleList( Object obj ) {
 
         if ( !isArray( obj ) ) {
@@ -972,10 +1328,9 @@ public class OliveUtils {
             Object arrayItem = java.lang.reflect.Array.get( obj, i );
             list.add( arrayItem );
         }
-        
+
         return list;
     }
-
 
     /**
      * Internal method to perform the normalization.
@@ -1214,6 +1569,7 @@ public class OliveUtils {
     }
 
     public static void main( String[] args ) {
+      
         String source = normalize( OliveUtils.class, "queries.xml" );
         InputStream is = getResourceAsStream( OliveUtils.class, source );
         System.out.println( "is" + is );
