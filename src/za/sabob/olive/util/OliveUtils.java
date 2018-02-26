@@ -22,12 +22,13 @@ import za.sabob.olive.ps.SqlParams;
 
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 import javax.sql.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
+import za.sabob.olive.query.*;
 
 /**
  * Provides common utilities:
@@ -283,7 +284,7 @@ public class OliveUtils {
      * @param conn the connection to rollback
      * @param exception the Exception that is causing the transaction to be rolled backs
      */
-    public static void rollback( Connection conn, Exception exception ) {
+    public static void rollback( Connection conn, Throwable exception ) {
 
         try {
 
@@ -361,7 +362,7 @@ public class OliveUtils {
     public static void closeConnection( boolean autoCommit, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Exception mainException = null;
+        Throwable mainException = null;
 
         try {
             setAutoCommit( conn, autoCommit );
@@ -394,7 +395,7 @@ public class OliveUtils {
     public static void close( Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Exception mainException = null;
+        Throwable mainException = null;
 
         try {
             closeStatement( st );
@@ -426,7 +427,7 @@ public class OliveUtils {
     public static void close( ResultSet rs, Statement st ) {
 
         // Main exception to assign other exceptions to
-        Exception mainException = null;
+        Throwable mainException = null;
 
         try {
             closeResultSet( rs );
@@ -463,7 +464,7 @@ public class OliveUtils {
     public static void close( boolean autoCommit, Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Exception mainException = null;
+        Throwable mainException = null;
 
         try {
             closeStatement( st );
@@ -496,7 +497,7 @@ public class OliveUtils {
     public static void close( ResultSet rs, Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Exception mainException = null;
+        Throwable mainException = null;
 
         try {
             closeResultSet( rs );
@@ -537,7 +538,7 @@ public class OliveUtils {
     public static void close( boolean autoCommit, ResultSet rs, Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Exception mainException = null;
+        Throwable mainException = null;
 
         try {
             setAutoCommit( conn, autoCommit );
@@ -646,19 +647,23 @@ public class OliveUtils {
      * @return the generated key or null if no key was generated
      */
     public static long getGeneratedKey( Statement st ) {
+
+        ResultSet rs = null;
         try {
             long id = 0;
 
-            ResultSet generatedKeys = st.getGeneratedKeys();
+            rs = st.getGeneratedKeys();
 
-            if ( generatedKeys.next() ) {
-                id = generatedKeys.getLong( 1 );
+            if ( rs.next() ) {
+                id = rs.getLong( 1 );
             }
 
             return id;
 
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
+        } finally {
+            close( rs );
         }
     }
 
@@ -673,13 +678,15 @@ public class OliveUtils {
      */
     public static List<Long> getGeneratedKeys( Statement st ) {
 
+        ResultSet rs = null;
+
         try {
-            ResultSet generatedKeys = st.getGeneratedKeys();
+            rs = st.getGeneratedKeys();
 
             List list = new ArrayList();
 
-            while ( generatedKeys.next() ) {
-                long id = generatedKeys.getLong( 1 );
+            while ( rs.next() ) {
+                long id = rs.getLong( 1 );
                 list.add( id );
             }
 
@@ -687,6 +694,9 @@ public class OliveUtils {
 
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
+
+        } finally {
+            close( rs );
         }
     }
 
@@ -737,6 +747,7 @@ public class OliveUtils {
      */
     public static PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams parameters ) {
         String sql = NamedParameterUtils.substituteNamedParameters( parsedSql, parameters );
+
         try {
             PreparedStatement ps = conn.prepareStatement( sql );
             setParams( ps, parsedSql, parameters );
@@ -872,6 +883,7 @@ public class OliveUtils {
              }
              */
         } catch ( SQLException e ) {
+            close( ps );
             throw new RuntimeException( e );
         }
     }
@@ -1268,14 +1280,14 @@ public class OliveUtils {
     }
 
     /**
-     * Adds the given suppressedException to the mainException and returns the mainException, unless it is null, in which case the suppressedException is 
+     * Adds the given suppressedException to the mainException and returns the mainException, unless it is null, in which case the suppressedException is
      * returned.
-     * 
+     *
      * @param mainException the main exception on which to add the suppressedException
      * @param supressedException the exception to add to the mainException
      * @return the mainException or supresesdException if mainException is null
      */
-    public static Exception addSuppressed( Exception mainException, Exception supressedException ) {
+    public static Throwable addSuppressed( Throwable mainException, Throwable supressedException ) {
 
         if ( supressedException == null ) {
             return mainException;
@@ -1291,10 +1303,10 @@ public class OliveUtils {
 
     /**
      * Throws the given exception as a RuntimeException, unless the exception is null, in which case the method simply returns.
-     * 
+     *
      * @param exception the exception to throw as a RuntimeException
      */
-    public static void throwAsRuntimeIfException( Exception exception ) {
+    public static void throwAsRuntimeIfException( Throwable exception ) {
 
         if ( exception == null ) {
             return;
@@ -1308,8 +1320,59 @@ public class OliveUtils {
     }
 
     /**
+     * Closes the given autoCloseabe array and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
+     * if an exception is thrown.
+     * <p/>
+     * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
+     * <p/>
+     *
+     * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
+     * <p/>
+     * This method is null safe, so C;loseables can be null.
+     *
+     * @param closeables the closeable array to close
+     */
+    public static void close( AutoCloseable... closeables ) {
+
+        // Main exception to assign other exceptions to
+        Throwable mainException = null;
+
+        if ( closeables != null && closeables.length > 0 ) {
+
+            for ( final AutoCloseable closeable : closeables ) {
+
+                if ( closeable == null ) {
+                    continue;
+                }
+
+                try {
+                    closeable.close();
+                } catch ( final Exception ex ) {
+                    mainException = addSuppressed( ex, mainException );
+                }
+            }
+        }
+
+        throwAsRuntimeIfException( mainException );
+    }
+
+    public static Connection getConnection( AutoCloseable... closeables ) {
+
+        if ( closeables != null && closeables.length > 0 ) {
+
+            for ( final AutoCloseable closeable : closeables ) {
+                if ( closeable instanceof Connection ) {
+                    return (Connection) closeable;
+                }
+
+            }
+        }
+        return null;
+    }
+
+    /**
      * Converts the given array obj to a list, unless the obj is not an array, in which case an exception is thrown.
-     * 
+     *
      * @param obj the given array to convert to a list
      * @return the obj array as a list
      */
@@ -1569,7 +1632,6 @@ public class OliveUtils {
     }
 
     public static void main( String[] args ) {
-      
         String source = normalize( OliveUtils.class, "queries.xml" );
         InputStream is = getResourceAsStream( OliveUtils.class, source );
         System.out.println( "is" + is );
@@ -1584,4 +1646,78 @@ public class OliveUtils {
             System.out.println( "sql: " + sql );
         }
     }
+//
+//    public static int executeUpdate( Connection conn, PreparedStatementCreator psCreator ) {
+//
+//        int result;
+//
+//        PreparedStatement ps = null;
+//        
+//        try {
+//            ps = psCreator.create( conn );
+//            result = ps.executeUpdate();
+//        } catch ( SQLException ex ) {
+//            throw new RuntimeException( ex );
+//        } finally {
+//            close( ps );
+//        }
+//
+//        return result;
+//    }
+//
+//    public static <T> T queryForObject( Connection conn, PreparedStatementCreator psCreator, RowMapper<T> mapper ) {
+//
+//        ResultSet rs = null;
+//        PreparedStatement ps = null;
+//
+//        try {
+//
+//            ps = psCreator.create( conn );
+//
+//            while ( rs.next() ) {
+//
+//                int rowNum = rs.getRow();
+//
+//                T t = mapper.map( rs, rowNum );
+//                return t;
+//            }
+//
+//        } catch ( SQLException ex ) {
+//            throw new RuntimeException( ex );
+//        } finally {
+//            close( ps, rs );
+//        }
+//
+//        return null;
+//    }
+//
+//    public static <T> List<T> query( Connection conn, PreparedStatementCreator psCreator, RowMapper<T> mapper ) {
+//
+//        ResultSet rs = null;
+//        List<T> list = new ArrayList<>();
+//        PreparedStatement ps = null;
+//
+//        try {
+//            
+//            ps = psCreator.create( conn );
+//
+//            rs = ps.executeQuery();
+//
+//            while ( rs.next() ) {
+//
+//                int rowNum = rs.getRow();
+//
+//                T t = mapper.map( rs, rowNum );
+//                list.add( t );
+//            }
+//
+//        } catch ( SQLException ex ) {
+//            throw new RuntimeException( ex );
+//        } finally {
+//            close( ps, rs );
+//        }
+//
+//        return list;
+//    }
+
 }
