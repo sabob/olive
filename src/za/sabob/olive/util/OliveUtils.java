@@ -29,6 +29,7 @@ import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
 import za.sabob.olive.query.*;
+import za.sabob.olive.transaction.sync.*;
 
 /**
  * Provides common utilities:
@@ -467,10 +468,17 @@ public class OliveUtils {
         Throwable mainException = null;
 
         try {
+            setAutoCommit( conn, autoCommit );
+
+        } catch ( RuntimeException e ) {
+            mainException = e;
+        }
+
+        try {
             closeStatement( st );
         } catch ( RuntimeException e ) {
 
-            mainException = e;
+            mainException = addSuppressed( e, mainException );
         }
 
         try {
@@ -1320,7 +1328,7 @@ public class OliveUtils {
     }
 
     /**
-     * Closes the given autoCloseabe array and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
+     * Closes the given list of autoCloseabes and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
      * if an exception is thrown.
      * <p/>
      * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
@@ -1330,30 +1338,129 @@ public class OliveUtils {
      * <p/>
      * This method is null safe, so C;loseables can be null.
      *
-     * @param closeables the closeable array to close
+     * @param closeables the list of closeables to close
      */
-    public static void close( AutoCloseable... closeables ) {
+    public static void close( Iterable<? extends AutoCloseable> closeables ) {
+
+        if ( closeables == null ) {
+            return;
+        }
 
         // Main exception to assign other exceptions to
         Throwable mainException = null;
 
-        if ( closeables != null && closeables.length > 0 ) {
+        for ( final AutoCloseable closeable : closeables ) {
 
-            for ( final AutoCloseable closeable : closeables ) {
+            if ( closeable == null ) {
+                continue;
+            }
 
-                if ( closeable == null ) {
-                    continue;
-                }
-
-                try {
-                    closeable.close();
-                } catch ( final Exception ex ) {
-                    mainException = addSuppressed( ex, mainException );
-                }
+            try {
+                closeable.close();
+            } catch ( final Exception ex ) {
+                mainException = addSuppressed( ex, mainException );
             }
         }
 
         throwAsRuntimeIfException( mainException );
+    }
+
+    /**
+     * Closes the given list of autoCloseabes and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
+     * if an exception is thrown. Any connections will have their setCommit status set to the given value.
+     * <p/>
+     * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
+     * <p/>
+     *
+     * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
+     * <p/>
+     * This method is null safe, so C;loseables can be null.
+     *
+     * @param autoCommit set the connections autoCommit to the given value
+     * @param closeables the list of closeables to close
+     */
+    public static void close( boolean autoCommit, Iterable<? extends AutoCloseable> closeables ) {
+
+        if ( closeables == null ) {
+            return;
+        }
+
+        // Main exception to assign other exceptions to
+        Throwable mainException = null;
+
+        for ( final AutoCloseable closeable : closeables ) {
+
+            if ( closeable == null ) {
+                continue;
+            }
+
+            if ( closeable instanceof Connection ) {
+                Connection conn = (Connection) closeable;
+
+                try {
+                    conn.setAutoCommit( autoCommit );
+
+                } catch ( Exception ex ) {
+                    mainException = addSuppressed( ex, mainException );
+                }
+
+            }
+
+            try {
+                closeable.close();
+            } catch ( final Exception ex ) {
+                mainException = addSuppressed( ex, mainException );
+            }
+        }
+
+        throwAsRuntimeIfException( mainException );
+    }
+
+    /**
+     * Closes the given autoCloseabe array and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
+     * if an exception is thrown.
+     * <p/>
+     * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
+     * <p/>
+     *
+     * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
+     * <p/>
+     * This method is null safe, so Closeables can be null.
+     *
+     * @param closeables the closeable array to close
+     */
+    public static void close( AutoCloseable... closeables ) {
+
+        if ( closeables == null || closeables.length == 0 ) {
+            return;
+        }
+
+        List list = Arrays.asList( closeables );
+        close( list );
+    }
+
+    /**
+     * Closes the given autoCloseabe array and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
+     * if an exception is thrown.
+     * <p/>
+     * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
+     * <p/>
+     *
+     * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
+     * <p/>
+     * This method is null safe, so Closeables can be null.
+     *
+     * @param autoCommit set the connections autoCommit to the given value
+     * @param closeables the closeable array to close
+     */
+    public static void close( boolean autoCommit, AutoCloseable... closeables ) {
+
+        if ( closeables == null || closeables.length == 0 ) {
+            return;
+        }
+
+        List list = Arrays.asList( closeables );
+        close( autoCommit, list );
     }
 
     public static Connection getConnection( AutoCloseable... closeables ) {
@@ -1647,77 +1754,89 @@ public class OliveUtils {
         }
     }
 //
-//    public static int executeUpdate( Connection conn, PreparedStatementCreator psCreator ) {
+//    public static int executeUpdate( Connection conn, PreparedStatement ps ) {
+//        StatementContainer stContainer = getStatementContainer( conn, ps );
 //
 //        int result;
 //
-//        PreparedStatement ps = null;
-//        
 //        try {
-//            ps = psCreator.create( conn );
+//
 //            result = ps.executeUpdate();
+//
 //        } catch ( SQLException ex ) {
 //            throw new RuntimeException( ex );
-//        } finally {
-//            close( ps );
 //        }
 //
 //        return result;
 //    }
+
+    public static <T> T queryForObject( PreparedStatement ps, RowMapper<T> mapper ) {
+        //StatementContainer stContainer = getStatementContainer( conn, ps );
+
+        ResultSet rs = null;
+
+        try {
+            rs = ps.executeQuery();
+
+            while ( rs.next() ) {
+
+                int rowNum = rs.getRow();
+
+                T t = mapper.map( rs, rowNum );
+                return t;
+            }
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        } finally {
+            close( rs );
+        }
+
+        return null;
+    }
+
+//    public static boolean execute( PreparedStatement ps ) {
 //
-//    public static <T> T queryForObject( Connection conn, PreparedStatementCreator psCreator, RowMapper<T> mapper ) {
+//        //StatementContainer stContainer = getStatementContainer( conn, ps );
 //
 //        ResultSet rs = null;
-//        PreparedStatement ps = null;
 //
 //        try {
 //
-//            ps = psCreator.create( conn );
-//
-//            while ( rs.next() ) {
-//
-//                int rowNum = rs.getRow();
-//
-//                T t = mapper.map( rs, rowNum );
-//                return t;
-//            }
+//            boolean result = ps.execute();
+//            return result;
 //
 //        } catch ( SQLException ex ) {
 //            throw new RuntimeException( ex );
 //        } finally {
-//            close( ps, rs );
+//            close( rs );
 //        }
-//
-//        return null;
 //    }
-//
-//    public static <T> List<T> query( Connection conn, PreparedStatementCreator psCreator, RowMapper<T> mapper ) {
-//
-//        ResultSet rs = null;
-//        List<T> list = new ArrayList<>();
-//        PreparedStatement ps = null;
-//
-//        try {
-//            
-//            ps = psCreator.create( conn );
-//
-//            rs = ps.executeQuery();
-//
-//            while ( rs.next() ) {
-//
-//                int rowNum = rs.getRow();
-//
-//                T t = mapper.map( rs, rowNum );
-//                list.add( t );
-//            }
-//
-//        } catch ( SQLException ex ) {
-//            throw new RuntimeException( ex );
-//        } finally {
-//            close( ps, rs );
-//        }
-//
-//        return list;
-//    }
+
+    public static <T> List<T> query( PreparedStatement ps, RowMapper<T> mapper ) {
+
+        ResultSet rs = null;
+        List<T> list = new ArrayList<>();
+
+        try {
+
+            rs = ps.executeQuery();
+
+            while ( rs.next() ) {
+
+                int rowNum = rs.getRow();
+
+                T t = mapper.map( rs, rowNum );
+                list.add( t );
+            }
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        } finally {
+            close( rs );
+        }
+
+        return list;
+    }
 
 }
