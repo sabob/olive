@@ -2,7 +2,6 @@ package za.sabob.olive.transaction;
 
 import java.sql.*;
 import java.util.logging.*;
-import za.sabob.olive.transaction.sync.*;
 import za.sabob.olive.util.*;
 
 public class OliveTransaction {
@@ -10,18 +9,6 @@ public class OliveTransaction {
     private static final Logger LOGGER = Logger.getLogger( OliveTransaction.class.getName() );
 
     public static Connection begin( Connection conn ) {
-
-        JDBCContainer jdbcContainer = SynchronizedJDBC.getJDBCContainer();
-        ConnectionContainer connContainer = jdbcContainer.getConnectionContainer( conn );
-
-        if ( connContainer != null ) {
-            LOGGER.warning( "OliveTransaction#begin discovered a ConnectionContainer with unclosed connections/statemens or resultSets. Closing them now!" );
-
-            connContainer.close();
-            jdbcContainer.removeContainer( conn );
-        }
-
-        jdbcContainer.createContainer( conn );
 
         OliveUtils.setAutoCommit( conn, false );
         return conn;
@@ -47,11 +34,6 @@ public class OliveTransaction {
         if ( conn == null ) {
             throw new IllegalArgumentException( "At least one of the closables must be a Connection" );
         }
-
-        JDBCContainer container = SynchronizedJDBC.getJDBCContainer();
-        container.close();
-
-        SynchronizedJDBC.unbindJDBCContainer();
 
         Throwable mainException = null;
 
