@@ -22,6 +22,7 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 import za.sabob.olive.loader.*;
 import za.sabob.olive.ps.*;
+import za.sabob.olive.transaction.*;
 import za.sabob.olive.util.*;
 
 /**
@@ -90,7 +91,7 @@ public class Olive {
     /**
      * Logger instance for logging messages.
      */
-    private static final Logger LOGGER = Logger.getLogger(Olive.class.getName());
+    private static final Logger LOGGER = Logger.getLogger( Olive.class.getName() );
 
     private static Map<String, String> fileMap = new ConcurrentHashMap<String, String>();
 
@@ -114,8 +115,8 @@ public class Olive {
      *
      * @param mode the mode for this olive instance
      */
-    public Olive(Mode mode) {
-        this(mode, (ResourceLoader) null);
+    public Olive( Mode mode ) {
+        this( mode, (ResourceLoader) null );
     }
 
     /**
@@ -123,7 +124,7 @@ public class Olive {
      *
      * @param resourceLoader the ResourceLoader for this olive instance
      */
-    public Olive(ResourceLoader resourceLoader) {
+    public Olive( ResourceLoader resourceLoader ) {
         this.resourceLoader = resourceLoader;
     }
 
@@ -133,7 +134,7 @@ public class Olive {
      * @param mode the mode for this olive instance
      * @param resourceLoader the ResourceLoader for this olive instance
      */
-    public Olive(Mode mode, ResourceLoader resourceLoader) {
+    public Olive( Mode mode, ResourceLoader resourceLoader ) {
         Olive.mode = mode;
         this.resourceLoader = resourceLoader;
     }
@@ -144,7 +145,7 @@ public class Olive {
      * @return this olive instance resource loader.
      */
     public ResourceLoader getResourceLoader() {
-        if (resourceLoader == null) {
+        if ( resourceLoader == null ) {
             resourceLoader = new ClasspathResourceLoader();
         }
         return resourceLoader;
@@ -155,7 +156,7 @@ public class Olive {
      *
      * @param resourceLoader the resource loaded where SQL files will be loaded from
      */
-    public void setResourceLoader(ResourceLoader resourceLoader) {
+    public void setResourceLoader( ResourceLoader resourceLoader ) {
         this.resourceLoader = resourceLoader;
     }
 
@@ -173,7 +174,7 @@ public class Olive {
      *
      * @param mode the mode Olive must Run in
      */
-    public void setMode(Mode mode) {
+    public void setMode( Mode mode ) {
         Olive.mode = mode;
     }
 
@@ -197,27 +198,27 @@ public class Olive {
      * @return the content of the SQL filename as a string
      * @throws IllegalStateException if the SQL file could not be found
      */
-    public String loadSql(String filename) {
-        if (filename == null) {
-            throw new IllegalArgumentException("filename cannot be null!");
+    public String loadSql( String filename ) {
+        if ( filename == null ) {
+            throw new IllegalArgumentException( "filename cannot be null!" );
         }
 
-        if (getMode() == Mode.PRODUCTION) {
-            String file = fileMap.get(filename);
-            if (file != null) {
-                if (getMode() == Mode.TRACE) {
-                    LOGGER.info("return the cached sql for filename '" + filename + "'");
+        if ( getMode() == Mode.PRODUCTION ) {
+            String file = fileMap.get( filename );
+            if ( file != null ) {
+                if ( getMode() == Mode.TRACE ) {
+                    LOGGER.info( "return the cached sql for filename '" + filename + "'" );
                 }
                 return file;
             }
         }
 
-        InputStream is = getResourceLoader().getResourceStream(filename);
+        InputStream is = getResourceLoader().getResourceStream( filename );
 
-        String file = OliveUtils.toString(is);
+        String file = OliveUtils.toString( is );
 
-        if (getMode() == Mode.PRODUCTION) {
-            fileMap.put(filename, file);
+        if ( getMode() == Mode.PRODUCTION ) {
+            fileMap.put( filename, file );
         }
         return file;
     }
@@ -236,27 +237,27 @@ public class Olive {
      * @param filename the name of the SQL file to load and parse
      * @return the content of the SQL filename as a {@link ParsedSql} instance
      */
-    public ParsedSql loadParsedSql(String filename) {
-        if (filename == null) {
-            throw new IllegalArgumentException("filename cannot be null!");
+    public ParsedSql loadParsedSql( String filename ) {
+        if ( filename == null ) {
+            throw new IllegalArgumentException( "filename cannot be null!" );
         }
 
-        if (getMode() == Mode.PRODUCTION) {
-            ParsedSql parsedSql = parsedMap.get(filename);
+        if ( getMode() == Mode.PRODUCTION ) {
+            ParsedSql parsedSql = parsedMap.get( filename );
 
-            if (parsedSql != null) {
-                if (getMode() == Mode.TRACE) {
-                    LOGGER.info("return the cached ParsedSql for filename '" + filename + "'");
+            if ( parsedSql != null ) {
+                if ( getMode() == Mode.TRACE ) {
+                    LOGGER.info( "return the cached ParsedSql for filename '" + filename + "'" );
                 }
                 return parsedSql;
             }
         }
 
-        String sql = loadSql(filename);
-        ParsedSql parsedSql = OliveUtils.parseSql(sql);
+        String sql = loadSql( filename );
+        ParsedSql parsedSql = OliveUtils.parseSql( sql );
 
-        if (getMode() == Mode.PRODUCTION) {
-            parsedMap.put(filename, parsedSql);
+        if ( getMode() == Mode.PRODUCTION ) {
+            parsedMap.put( filename, parsedSql );
         }
 
         return parsedSql;
@@ -287,12 +288,11 @@ public class Olive {
      * @param params the params for creating the PreparedStatement with
      * @return the PreparedStatement for the given arguments
      */
-    public PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params) {
-        PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);
+    public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params ) {
+        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params );
         return ps;
     }
-    
-    
+
     /**
      * Creates a PreparedStatement for the given arguments. The named parameters specified in the {@link ParsedSql} will be
      * substituted with given {@link SqlParams}. For example:
@@ -317,16 +317,14 @@ public class Olive {
      * @param parsedSql the ParsedSql for creating the PreparedStatement with
      * @param params the params for creating the PreparedStatement with
      * @param autoGeneratedKeys specifies the autoGenerated keys value of: Statement.RETURN_GENERATED_KEYS or Statement.NO_GENERATED_KEYS
-     * 
+     *
      * @return the PreparedStatement for the given arguments
      */
-    public PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params, int autoGeneratedKeys) {
-        PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params, autoGeneratedKeys);
+    public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params, int autoGeneratedKeys ) {
+        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params, autoGeneratedKeys );
         return ps;
     }
 
-    
-    
     /**
      * Creates a PreparedStatement for the given arguments. The named parameters specified in the {@link ParsedSql} will be
      * substituted with given {@link SqlParams}. For example:
@@ -350,14 +348,15 @@ public class Olive {
      * @param conn the connection for creating the PreparedStatement with
      * @param parsedSql the ParsedSql for creating the PreparedStatement with
      * @param params the params for creating the PreparedStatement with
-     * @param resultSetType - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE 
-     * @param resultSetConcurrency - one of the following ResultSet constants: ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE 
-     * @param resultSetHoldability - one of the following ResultSet constants: ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT     
-     * 
+     * @param resultSetType - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE
+     * @param resultSetConcurrency - one of the following ResultSet constants: ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE
+     * @param resultSetHoldability - one of the following ResultSet constants: ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
+     *
      * @return the PreparedStatement for the given arguments
      */
-    public PreparedStatement prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params, int resultSetType, int resultSetConcurrency, int resultSetHoldability ) {
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params, resultSetType, resultSetConcurrency, resultSetHoldability);
+    public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params, int resultSetType, int resultSetConcurrency,
+        int resultSetHoldability ) {
+        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params, resultSetType, resultSetConcurrency, resultSetHoldability );
         return ps;
     }
 
@@ -385,9 +384,25 @@ public class Olive {
      * @param params the params for creating the PreparedStatement with
      * @return the PreparedStatement for the given arguments
      */
-    public PreparedStatement prepareStatement(Connection conn, String filename, SqlParams params) {
-        ParsedSql parsedSql = loadParsedSql(filename);
-        PreparedStatement ps = prepareStatement(conn, parsedSql, params);
+    public PreparedStatement prepareStatement( Connection conn, String filename, SqlParams params ) {
+        ParsedSql parsedSql = loadParsedSql( filename );
+        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
         return ps;
+    }
+
+    public static Connection BEGIN( Connection conn ) {
+        return OliveTransaction.beginTransaction( conn );
+    }
+
+    public static void COMMIT( Connection conn ) {
+        OliveTransaction.commitTransaction( conn );
+    }
+
+    public static void ROLLBACK_AND_THROW( Connection conn, Exception ex ) {
+        OliveTransaction.rollbackTransaction( conn, ex );
+    }
+
+    public static void CLOSE( AutoCloseable... closeables ) {
+        OliveTransaction.closeTransaction( closeables );
     }
 }

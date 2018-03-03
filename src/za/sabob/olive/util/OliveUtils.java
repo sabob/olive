@@ -29,7 +29,6 @@ import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
 import za.sabob.olive.query.*;
-import za.sabob.olive.transaction.sync.*;
 
 /**
  * Provides common utilities:
@@ -237,6 +236,67 @@ public class OliveUtils {
 
             return conn;
 
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the connection from the DriverManager.class for the given url and wraps any SQLExceptions thrown in RuntimeExcepions.
+     *
+     * @param url - a database url of the form jdbc:subprotocol:subname
+     *
+     * @return a connection to the URL
+     */
+    public static Connection getConnection( String url ) {
+        try {
+            if ( isBlank( url ) ) {
+                throw new IllegalStateException( "url cannot be empty" );
+            }
+
+            return DriverManager.getConnection( url );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the connection from the DriverManager.class for the given url and wraps any SQLExceptions thrown in RuntimeExcepions.
+     *
+     * @param url - a database url of the form jdbc:subprotocol:subname
+     * @param info - a list of arbitrary string tag/value pairs as connection arguments; normally at least a "user" and "password" property
+     * should be included
+     *
+     * @return a connection to the URL
+     */
+    public static Connection getConnection( String url, Properties info ) {
+        try {
+            if ( isBlank( url ) ) {
+                throw new IllegalStateException( "url cannot be empty" );
+            }
+
+            return DriverManager.getConnection( url, info );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Returns the connection from the DriverManager.class for the given url and wraps any SQLExceptions thrown in RuntimeExcepions.
+     *
+     * @param url - a database url of the form jdbc:subprotocol:subname
+     * @param user - the database user on whose behalf the connection is being made
+     * @param password - the user's password
+     *
+     * @return a connection to the URL
+     */
+    public static Connection getConnection( String url, String user, String password ) {
+        try {
+            if ( isBlank( url ) ) {
+                throw new IllegalStateException( "url cannot be empty" );
+            }
+
+            return DriverManager.getConnection( url, user, password );
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
@@ -1812,7 +1872,6 @@ public class OliveUtils {
 //            close( rs );
 //        }
 //    }
-
     public static <T> List<T> query( PreparedStatement ps, RowMapper<T> mapper ) {
 
         ResultSet rs = null;

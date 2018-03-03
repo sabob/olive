@@ -13,7 +13,7 @@ import java.sql.*;
  */
 public class Transactional {
 
-    private Connection conn;
+    final private Connection conn;
 
     public Transactional( Connection conn ) {
         this.conn = conn;
@@ -45,16 +45,16 @@ public class Transactional {
 
         try {
             // TODO bind the conn to a THREAD_LOCAL so that OliveUtils can grab the conn!
-            OliveTransaction.begin( conn );
+            OliveTransaction.beginTransaction( conn );
 
             callback.execute();
 
-            OliveTransaction.commit( conn );
+            OliveTransaction.commitTransaction(  conn );
 
         } catch ( Exception e ) {
-            OliveTransaction.rollback( conn, e );
+            OliveTransaction.rollbackTransaction( conn, e );
         } finally {
-            OliveTransaction.close( conn );
+            OliveTransaction.closeTransaction( conn );
         }
     }
 
