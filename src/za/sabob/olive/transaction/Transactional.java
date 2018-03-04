@@ -45,16 +45,16 @@ public class Transactional {
 
         try {
             // TODO bind the conn to a THREAD_LOCAL so that OliveUtils can grab the conn!
-            OliveTransaction.beginTransaction( conn );
+            TX.beginTransaction( conn );
 
             callback.execute();
 
-            OliveTransaction.commitTransaction(  conn );
+            TX.commitTransaction(  conn );
 
         } catch ( Exception e ) {
-            OliveTransaction.rollbackTransaction( conn, e );
+            TX.rollbackTransactionAndThrow(conn, e );
         } finally {
-            OliveTransaction.closeTransaction( conn );
+            TX.cleanupTransaction( conn );
         }
     }
 

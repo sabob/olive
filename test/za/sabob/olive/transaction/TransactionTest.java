@@ -1,10 +1,6 @@
 package za.sabob.olive.transaction;
 
 import java.sql.*;
-import static za.sabob.olive.Olive.BEGIN;
-import static za.sabob.olive.Olive.CLOSE;
-import static za.sabob.olive.Olive.COMMIT;
-import static za.sabob.olive.Olive.ROLLBACK_AND_THROW;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
@@ -18,7 +14,7 @@ public class TransactionTest {
 
         try {
 
-            BEGIN( conn );
+            TX.beginTransaction( conn );
 
             SqlParams params = new SqlParams();
             ps = OliveUtils.prepareStatement( conn, "select * from information_schema.catalogs c", params );
@@ -33,14 +29,14 @@ public class TransactionTest {
                 System.out.println( "Row:" + rs.getString( "CATALOG_NAME" ) );
             }
 
-            COMMIT( conn );
+            TX.commitTransaction(  conn );
 
         } catch ( SQLException ex ) {
 
-            ROLLBACK_AND_THROW( conn, ex );
+            TX.rollbackTransactionAndThrow( conn, ex );
 
         } finally {
-            CLOSE( conn, ps, rs );
+            TX.cleanupTransaction(conn, ps, rs );
 
         }
     }

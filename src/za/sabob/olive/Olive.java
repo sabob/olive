@@ -22,7 +22,6 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 import za.sabob.olive.loader.*;
 import za.sabob.olive.ps.*;
-import za.sabob.olive.transaction.*;
 import za.sabob.olive.util.*;
 
 /**
@@ -388,21 +387,5 @@ public class Olive {
         ParsedSql parsedSql = loadParsedSql( filename );
         PreparedStatement ps = prepareStatement( conn, parsedSql, params );
         return ps;
-    }
-
-    public static Connection BEGIN( Connection conn ) {
-        return OliveTransaction.beginTransaction( conn );
-    }
-
-    public static void COMMIT( Connection conn ) {
-        OliveTransaction.commitTransaction( conn );
-    }
-
-    public static void ROLLBACK_AND_THROW( Connection conn, Exception ex ) {
-        OliveTransaction.rollbackTransaction( conn, ex );
-    }
-
-    public static void CLOSE( AutoCloseable... closeables ) {
-        OliveTransaction.closeTransaction( closeables );
     }
 }

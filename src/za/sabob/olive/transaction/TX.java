@@ -4,9 +4,9 @@ import java.sql.*;
 import java.util.logging.*;
 import za.sabob.olive.util.*;
 
-public class OliveTransaction {
+public class TX {
 
-    private static final Logger LOGGER = Logger.getLogger( OliveTransaction.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger( TX.class.getName() );
 
     public static Connection beginTransaction( Connection conn ) {
         OliveUtils.setAutoCommit( conn, false );
@@ -17,11 +17,19 @@ public class OliveTransaction {
         OliveUtils.commit( conn );
     }
 
+    public static void rollbackTransaction( Connection conn ) {
+        OliveUtils.rollback( conn );
+    }
+    
+    public static void rollbackTransactionAndThrow( Connection conn, Throwable ex ) {
+        rollbackTransaction( conn, ex );
+    }
+    
     public static void rollbackTransaction( Connection conn, Throwable ex ) {
         OliveUtils.rollback( conn, ex );
     }
 
-    public static void closeTransaction( AutoCloseable... autoClosables ) {
+    public static void cleanupTransaction( AutoCloseable... autoClosables ) {
 
         Connection conn = OliveUtils.getConnection( autoClosables );
         if ( conn == null ) {

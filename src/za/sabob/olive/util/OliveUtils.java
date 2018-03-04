@@ -343,7 +343,7 @@ public class OliveUtils {
      * </pre>
      *
      * @param conn the connection to rollback
-     * @param exception the Exception that is causing the transaction to be rolled backs
+     * @param exception the Exception that is causing the transaction to be rolled back
      */
     public static void rollback( Connection conn, Throwable exception ) {
 
@@ -358,6 +358,26 @@ public class OliveUtils {
         }
 
         throwAsRuntimeIfException( exception );
+    }
+    
+    /**
+     * Rollback the given connection and throws any exception that occurs while rolling back as a RuntimeException.
+     * <p/>
+     * This method is null safe, so the connection and sqlException can be null.
+     * 
+     * @param conn the connection to rollback
+     */
+    public static void rollback( Connection conn ) {
+
+        try {
+
+            if ( conn != null ) {
+                conn.rollback();
+            }
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
