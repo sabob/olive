@@ -23,7 +23,7 @@
     <property file="ant/build.properties"/>
     <xmlproperty file="ant/javascript-syntax-highlighter.xml"/>
     <property name="jar.junit" value="junit-${junit.version}.jar"/>
-    <property name="javac.source" value="1.6"/>
+    <property name="javac.source" value="1.7"/>
     <property name="repository" value="http://repo1.maven.org"/>
     <property name="maven-bundle" value="../maven-upload"/>
 
@@ -69,7 +69,7 @@
                      charset="UTF-8"
                      excludepackagenames="@{excludes}">
                 <classpath refid="@{classpath}"/>
-                <link href="http://download.oracle.com/javase/1.6.0/docs/api/"/>
+                <link href="https://docs.oracle.com/javase/7/docs/api/"/>
                 <link href="http://docs.oracle.com/javaee/5/api/"/>
             </javadoc>
 
@@ -120,7 +120,7 @@
     
     
     <target name="compile" description="compile Olive source code" depends="init">
-        <javac destdir="build/classes" debug="true" srcdir="src" target="1.6" source="${javac.source}">
+        <javac destdir="build/classes" debug="true" srcdir="src" target="1.7" source="${javac.source}">
             <classpath refid="classpath"/>
         </javac>
         
