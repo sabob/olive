@@ -33,7 +33,7 @@ public class TransactionTest {
 
         } catch ( SQLException ex ) {
 
-            TX.rollbackTransactionAndThrow( conn, ex );
+            throw TX.rollbackTransaction( conn, ex );
 
         } finally {
             TX.cleanupTransaction(conn, ps, rs );

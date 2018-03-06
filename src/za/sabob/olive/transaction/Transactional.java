@@ -52,7 +52,9 @@ public class Transactional {
             TX.commitTransaction(  conn );
 
         } catch ( Exception e ) {
-            TX.rollbackTransactionAndThrow(conn, e );
+
+            throw TX.rollbackTransaction(conn, e );
+
         } finally {
             TX.cleanupTransaction( conn );
         }

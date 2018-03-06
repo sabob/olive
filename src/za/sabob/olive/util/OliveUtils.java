@@ -136,7 +136,20 @@ public class OliveUtils {
      * </pre>
      *
      * @param conn the connection to commit
+     * @return RuntimeException
      */
+    public static RuntimeException commitSilently( Connection conn ) {
+        try {
+            if ( conn != null ) {
+                conn.commit();
+            }
+        } catch ( SQLException e ) {
+            return toRuntimeException( e );
+        }
+
+        return null;
+    }
+
     public static void commit( Connection conn ) {
         try {
             if ( conn != null ) {
@@ -303,7 +316,7 @@ public class OliveUtils {
     }
 
     /**
-     * Rollback the given connection and throw the given exception as a RuntimeException.
+     * Rollback the given connection and return the given exception as a RuntimeException.
      * <p/>
      * This method is null safe, so the connection and sqlException can be null.
      *
@@ -333,7 +346,7 @@ public class OliveUtils {
      *
      * } catch (Exception e) {
      *     // Rollback the transaction
-     * OliveUtils.rollback(conn, e);
+     * throw OliveUtils.rollback(conn, e);
      * } finally {
      *
      *     // Close resources and switch autoCommit back to true
@@ -344,8 +357,9 @@ public class OliveUtils {
      *
      * @param conn the connection to rollback
      * @param exception the Exception that is causing the transaction to be rolled back
+     * @return RuntimeException
      */
-    public static void rollback( Connection conn, Throwable exception ) {
+    public static RuntimeException rollback( Connection conn, Exception exception ) {
 
         try {
 
@@ -357,14 +371,14 @@ public class OliveUtils {
             exception = addSuppressed( e, exception );
         }
 
-        throwAsRuntimeIfException( exception );
+        return toRuntimeException( exception );
     }
-    
+
     /**
      * Rollback the given connection and throws any exception that occurs while rolling back as a RuntimeException.
      * <p/>
      * This method is null safe, so the connection and sqlException can be null.
-     * 
+     *
      * @param conn the connection to rollback
      */
     public static void rollback( Connection conn ) {
@@ -376,8 +390,57 @@ public class OliveUtils {
             }
 
         } catch ( SQLException e ) {
-            throw new RuntimeException(e);
+            throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * Rollback the given connection and logs any exception that occurs while rolling back without throwing an exception.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * @param conn the connection to rollback
+     *
+     * @return the given exception and any exception that occurred while rolling back the connection
+     */
+    public static RuntimeException rollbackSilently( Connection conn ) {
+
+        try {
+
+            if ( conn != null ) {
+                conn.rollback();
+            }
+
+        } catch ( SQLException e ) {
+            return toRuntimeException( e );
+        }
+
+        return null;
+    }
+
+    /**
+     * Rollback the given connection and returns any exception that occurs while rolling back without throwing an exception.
+     * <p/>
+     * This method is null safe, so the connection can be null.
+     *
+     * @param conn the connection to rollback
+     * @param exception the Exception that is causing the transaction to be rolled back
+     *
+     * @return the given exception and any exception that occurred while rolling back the connection
+     */
+    public static RuntimeException rollbackSilently( Connection conn, Exception exception ) {
+
+        try {
+
+            if ( conn != null ) {
+                conn.rollback();
+            }
+
+        } catch ( SQLException e ) {
+            exception = addSuppressed( e, exception );
+        }
+
+        return toRuntimeException( exception );
     }
 
     /**
@@ -443,7 +506,7 @@ public class OliveUtils {
     public static void closeConnection( boolean autoCommit, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         try {
             setAutoCommit( conn, autoCommit );
@@ -476,7 +539,7 @@ public class OliveUtils {
     public static void close( Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         try {
             closeStatement( st );
@@ -508,7 +571,7 @@ public class OliveUtils {
     public static void close( ResultSet rs, Statement st ) {
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         try {
             closeResultSet( rs );
@@ -545,7 +608,7 @@ public class OliveUtils {
     public static void close( boolean autoCommit, Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         try {
             setAutoCommit( conn, autoCommit );
@@ -585,7 +648,7 @@ public class OliveUtils {
     public static void close( ResultSet rs, Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         try {
             closeResultSet( rs );
@@ -626,7 +689,7 @@ public class OliveUtils {
     public static void close( boolean autoCommit, ResultSet rs, Statement st, Connection conn ) {
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         try {
             setAutoCommit( conn, autoCommit );
@@ -1375,7 +1438,7 @@ public class OliveUtils {
      * @param supressedException the exception to add to the mainException
      * @return the mainException or supresesdException if mainException is null
      */
-    public static Throwable addSuppressed( Throwable mainException, Throwable supressedException ) {
+    public static Exception addSuppressed( Exception mainException, Exception supressedException ) {
 
         if ( supressedException == null ) {
             return mainException;
@@ -1394,7 +1457,7 @@ public class OliveUtils {
      *
      * @param exception the exception to throw as a RuntimeException
      */
-    public static void throwAsRuntimeIfException( Throwable exception ) {
+    public static void throwAsRuntimeIfException( Exception exception ) {
 
         if ( exception == null ) {
             return;
@@ -1405,6 +1468,18 @@ public class OliveUtils {
         }
 
         throw new RuntimeException( exception );
+    }
+
+    public static RuntimeException toRuntimeException( Exception exception ) {
+        if ( exception == null ) {
+            return null;
+        }
+
+        if ( exception instanceof RuntimeException ) {
+            throw (RuntimeException) exception;
+        }
+        throw new RuntimeException( exception );
+
     }
 
     /**
@@ -1427,7 +1502,7 @@ public class OliveUtils {
         }
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         for ( final AutoCloseable closeable : closeables ) {
 
@@ -1454,7 +1529,7 @@ public class OliveUtils {
      *
      * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
      * <p/>
-     * This method is null safe, so C;loseables can be null.
+     * This method is null safe, so Closeables can be null.
      *
      * @param autoCommit set the connections autoCommit to the given value
      * @param closeables the list of closeables to close
@@ -1466,7 +1541,7 @@ public class OliveUtils {
         }
 
         // Main exception to assign other exceptions to
-        Throwable mainException = null;
+        Exception mainException = null;
 
         for ( final AutoCloseable closeable : closeables ) {
 
