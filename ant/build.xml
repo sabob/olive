@@ -22,7 +22,10 @@
     
     <property file="ant/build.properties"/>
     <xmlproperty file="ant/javascript-syntax-highlighter.xml"/>
-    <property name="jar.junit" value="junit-${junit.version}.jar"/>
+    <property name="jar.testng" value="testng-${testng.version}.jar"/>
+    <property name="jar.jcommander" value="jcommander-${jcommander.version}.jar"/>
+    <property name="jar.h2" value="h2-${h2.version}.jar"/>
+    <property name="jar.servlet" value="servlet-api-${servlet.version}.jar"/>
     <property name="javac.source" value="1.7"/>
     <property name="repository" value="http://repo1.maven.org"/>
     <property name="maven-bundle" value="../maven-upload"/>
@@ -112,7 +115,7 @@
         <delete dir="build" />
     </target>
     
-    <target name="init" description="Initialize folders">
+    <target name="init" description="Initialize folders" depends="get-deps, repackage-mustache">
         <mkdir dir="build/classes"/>
         <mkdir dir="dist" />
         <mkdir dir="lib" />
@@ -176,6 +179,21 @@
 
     <target name="get-deps" description="download JAR dependencies">
         <mkdir dir="lib" />
+          <downloadMacro name="${jar.testng}"       path="org/testng/testng/${testng.version}"/>
+          <downloadMacro name="${jar.jcommander}"       path="com/beust/jcommander/${jcommander.version}"/>
+          <downloadMacro name="${jar.h2}"       path="com/h2database/h2/${h2.version}"/>
+          <downloadMacro name="${jar.servlet}"       path="javax/servlet/servlet-api/${servlet.version}"/>
+    </target>
+
+    <target name="repackage-mustache" description="Move mustache into za.sabob.olive package to remove external dependency">
+        <move todir="src/za/sabob/olive" failonerror="false">
+            <fileset dir="src/com/samskivert" />
+            
+            <filterchain>
+                <replacestring from="com.samskivert" to="za.sabob.olive"/>
+            </filterchain>
+        </move >       
+        <delete dir="src/com"/>
     </target>
     
     <target name="javadoc" description="create Javadoc HTML files">

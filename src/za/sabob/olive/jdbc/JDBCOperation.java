@@ -1,9 +1,7 @@
-package za.sabob.olive.transaction;
+package za.sabob.olive.jdbc;
 
-import za.sabob.olive.jdbc.DataSourceContainer;
 import java.sql.*;
 import javax.sql.*;
-import za.sabob.olive.jdbc.*;
 
 /**
  * There are two ways to run in a transaction.
@@ -14,35 +12,35 @@ import za.sabob.olive.jdbc.*;
  * Transaction.on(Connection).execute(callback);
  *
  */
-public class Transactional {
+public class JDBCOperation {
 
     //final private Connection conn;
     final private DataSource ds;
 
-    public Transactional() {
+    public JDBCOperation() {
         DataSourceContainer container = JDBCContext.getDataSourceContainer();
         this.ds = container.getActiveDataSource();
     }
 
-    public Transactional( DataSource ds ) {
+    public JDBCOperation( DataSource ds ) {
         this.ds = ds;
     }
 
-//    public Transactional( Connection conn ) {
+//    public JDBCOperation( Connection conn ) {
 //        this.conn = conn;
 //    }
-    public static Transactional on( DataSource ds ) {
+    public static JDBCOperation on( DataSource ds ) {
 //        Transactional.on( dataSource ).do( new TransactionCallback() {
 //        @Override
 //        public void doInTransaction() {            
 //        }
 //    });
 
-        return new Transactional( ds );
+        return new JDBCOperation( ds );
     }
 
-    public void execute( TransactionCallback callback ) {
-        Transactional( this.ds, callback );
+    public void execute( OperationCallback callback ) {
+        JDBCOperation( this.ds, callback );
     }
 
     // Don't pass in DataSource?
@@ -52,25 +50,23 @@ public class Transactional {
 //        Transactional( conn, callback );
 //
 //    }
-    public static void Transactional( DataSource ds, TransactionCallback callback ) {
+
+    public static void JDBCOperation( DataSource ds, OperationCallback callback ) {
 
         Connection conn = null;
 
         try {
-            // TODO bind the conn to a THREAD_LOCAL so that OliveUtils can grab the conn!
-            conn = TX.beginTransaction( ds );
+            conn = JDBC.beginOperation( ds );
 
             callback.execute( conn );
 
-            TX.commitTransaction( conn );
-
         } catch ( Exception e ) {
 
-            throw TX.rollbackTransaction( conn, e );
+            throw new RuntimeException( e );
 
         } finally {
 
-            TX.cleanupTransaction( conn );
+            JDBC.cleanupOperation( conn );
 
         }
     }
@@ -105,7 +101,7 @@ public class Transactional {
 //        Transactional(conn, () -> {
 //          PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, parameters );
 //          
-//          JDBCOperation (ps, () -> {
+//          Block (ps, () -> {
 //              OliveUtils.executeUpdate( ps, newParams );
 //              OliveUtils.executeUpdate( conn, ps, newParams );
 //              OliveUtils.executeUpdate( conn, ps, newParams );              

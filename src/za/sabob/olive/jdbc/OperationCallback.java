@@ -1,8 +1,8 @@
-package za.sabob.olive.transaction;
+package za.sabob.olive.jdbc;
 
 import java.sql.*;
 
-public interface TransactionCallback {
+public interface OperationCallback {
     
     public void execute( Connection conn ) throws Exception;
 

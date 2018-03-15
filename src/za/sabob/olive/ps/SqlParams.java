@@ -52,7 +52,7 @@ public class SqlParams {
     /**
      * The map of named parameters keyed on named parameter which value is a {@link SqlParam}.
      */
-    protected Map<String, SqlParam> paramMap = new HashMap<String, SqlParam>();
+    protected Map<String, SqlParam> paramMap = new HashMap<>();
 
     /**
      * Creates a new default SqlParams instance.
@@ -67,8 +67,8 @@ public class SqlParams {
      *
      * @param paramMap the map of value to populate the SqlParams with
      */
-    public SqlParams(Map<String, ?> paramMap) {
-        set(paramMap);
+    public SqlParams( Map<String, ?> paramMap ) {
+        set( paramMap );
     }
 
     /**
@@ -95,8 +95,8 @@ public class SqlParams {
      * @param name the name whose presence in this SqlParams is to be tested
      * @return true if the name is contained by this SqlParams instance
      */
-    public boolean containsKey(String name) {
-        return paramMap.containsKey(name);
+    public boolean containsKey( String name ) {
+        return paramMap.containsKey( name );
     }
 
     /**
@@ -105,8 +105,8 @@ public class SqlParams {
      * @param value the value whose presence in this SqlParams is to be tested
      * @return true if the value is contained by this SqlParams instance
      */
-    public boolean containsValue(SqlParam value) {
-        return paramMap.containsValue(value);
+    public boolean containsValue( SqlParam value ) {
+        return paramMap.containsValue( value );
     }
 
     /**
@@ -115,8 +115,8 @@ public class SqlParams {
      * @param name the name of the SqlParam to return
      * @return the SqlParam for the given name
      */
-    public SqlParam get(String name) {
-        return paramMap.get(name);
+    public SqlParam get( String name ) {
+        return paramMap.get( name );
     }
 
     /**
@@ -130,11 +130,11 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the {@link SqlParam#getName() name} is not defined
      */
-    public SqlParams set(SqlParam sqlParam) {
-        if (sqlParam.getName() == null) {
-            throw new IllegalArgumentException("SqlParam name is required!");
+    public SqlParams set( SqlParam sqlParam ) {
+        if ( sqlParam.getName() == null ) {
+            throw new IllegalArgumentException( "SqlParam name is required!" );
         }
-        paramMap.put(sqlParam.getName(), sqlParam);
+        paramMap.put( sqlParam.getName(), sqlParam );
         return this;
     }
 
@@ -151,11 +151,11 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the sqlParam name is not defined
      */
-    public SqlParams set(SqlParam sqlParam, Object defaultIfNull) {
-        if (sqlParam.getValue() == null) {
-            sqlParam.setValue(defaultIfNull);
+    public SqlParams set( SqlParam sqlParam, Object defaultIfNull ) {
+        if ( sqlParam.getValue() == null ) {
+            sqlParam.setValue( defaultIfNull );
         }
-        set(sqlParam);
+        set( sqlParam );
         return this;
     }
 
@@ -169,8 +169,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value) {
-        return set(name, value, null);
+    public SqlParams set( String name, Object value ) {
+        return set( name, value, null );
     }
 
     /**
@@ -185,18 +185,18 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, Object defaultIfNull) {
-        if (value instanceof SqlParam) {
+    public SqlParams set( String name, Object value, Object defaultIfNull ) {
+        if ( value instanceof SqlParam ) {
             SqlParam sqlParam = (SqlParam) value;
-            sqlParam.setName(name);
-            set(sqlParam, defaultIfNull);
+            sqlParam.setName( name );
+            set( sqlParam, defaultIfNull );
 
         } else {
-            if (value == null) {
+            if ( value == null ) {
                 value = defaultIfNull;
             }
-            SqlParam param = new SqlParam(name, value);
-            set(param);
+            SqlParam param = new SqlParam( name, value );
+            set( param );
         }
         return this;
 
@@ -215,8 +215,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, int sqlType) {
-        return set(name, value, null, sqlType);
+    public SqlParams set( String name, Object value, int sqlType ) {
+        return set( name, value, null, sqlType );
     }
 
     /**
@@ -233,8 +233,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, Object defaultIfNull, int sqlType) {
-        return set(name, value, defaultIfNull, sqlType, 0);
+    public SqlParams set( String name, Object value, Object defaultIfNull, int sqlType ) {
+        return set( name, value, defaultIfNull, sqlType, 0 );
     }
 
     /**
@@ -251,8 +251,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, int sqlType, Integer scaleOrLength) {
-        return set(name, value, null, sqlType, scaleOrLength);
+    public SqlParams set( String name, Object value, int sqlType, Integer scaleOrLength ) {
+        return set( name, value, null, sqlType, scaleOrLength );
     }
 
     /**
@@ -270,20 +270,20 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, Object defaultIfNull, int sqlType, Integer scaleOrLength) {
-        if (value instanceof SqlParam) {
+    public SqlParams set( String name, Object value, Object defaultIfNull, int sqlType, Integer scaleOrLength ) {
+        if ( value instanceof SqlParam ) {
             SqlParam param = (SqlParam) value;
-            param.setSqlType(sqlType);
-            param.setScale(scaleOrLength);
-            param.setName(name);
-            set(param, defaultIfNull);
+            param.setSqlType( sqlType );
+            param.setScale( scaleOrLength );
+            param.setName( name );
+            set( param, defaultIfNull );
 
         } else {
-            if (value == null) {
+            if ( value == null ) {
                 value = defaultIfNull;
             }
-            SqlParam param = new SqlParam(name, value, sqlType, scaleOrLength);
-            set(param);
+            SqlParam param = new SqlParam( name, value, sqlType, scaleOrLength );
+            set( param );
         }
         return this;
     }
@@ -302,17 +302,17 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, int sqlType, String typeName) {
-        if (value instanceof SqlParam) {
+    public SqlParams set( String name, Object value, int sqlType, String typeName ) {
+        if ( value instanceof SqlParam ) {
             SqlParam param = (SqlParam) value;
-            param.setName(name);
-            param.setSqlType(sqlType);
-            param.setTypeName(typeName);
-            set(param);
+            param.setName( name );
+            param.setSqlType( sqlType );
+            param.setTypeName( typeName );
+            set( param );
 
         } else {
-            SqlParam param = new SqlParam(name, value, sqlType, typeName);
-            set(param);
+            SqlParam param = new SqlParam( name, value, sqlType, typeName );
+            set( param );
         }
         return this;
     }
@@ -332,21 +332,21 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Object value, Object defaultIfNull, int sqlType, String typeName) {
-        if (value instanceof SqlParam) {
+    public SqlParams set( String name, Object value, Object defaultIfNull, int sqlType, String typeName ) {
+        if ( value instanceof SqlParam ) {
             SqlParam param = (SqlParam) value;
 
-            param.setName(name);
-            param.setSqlType(sqlType);
-            param.setTypeName(typeName);
-            set(param, defaultIfNull);
+            param.setName( name );
+            param.setSqlType( sqlType );
+            param.setTypeName( typeName );
+            set( param, defaultIfNull );
 
         } else {
-            if (value == null) {
+            if ( value == null ) {
                 value = defaultIfNull;
             }
-            SqlParam param = new SqlParam(name, value, sqlType, typeName);
-            set(param);
+            SqlParam param = new SqlParam( name, value, sqlType, typeName );
+            set( param );
         }
         return this;
     }
@@ -361,9 +361,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Collection<?> value) {
-        SqlParam param = new SqlParam(name, value);
-        set(param);
+    public SqlParams set( String name, Collection<?> value ) {
+        SqlParam param = new SqlParam( name, value );
+        set( param );
 
         return this;
     }
@@ -380,9 +380,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams set(String name, Collection<?> value, int sqlType) {
-        SqlParam param = new SqlParam(name, value, sqlType);
-        set(param);
+    public SqlParams set( String name, Collection<?> value, int sqlType ) {
+        SqlParam param = new SqlParam( name, value, sqlType );
+        set( param );
 
         return this;
     }
@@ -396,9 +396,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if a name on the map is not defined
      */
-    public SqlParams set(Map<String, ?> paramMap) {
-        for (Entry<String, ?> entry : paramMap.entrySet()) {
-            set(entry.getKey(), entry.getValue());
+    public SqlParams set( Map<String, ?> paramMap ) {
+        for ( Entry<String, ?> entry : paramMap.entrySet() ) {
+            set( entry.getKey(), entry.getValue() );
         }
         return this;
     }
@@ -413,8 +413,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setObject(String name, Object value) {
-        return set(name, value);
+    public SqlParams setObject( String name, Object value ) {
+        return set( name, value );
     }
 
     /**
@@ -429,8 +429,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setObject(String name, Object value, Object defaultIfNull) {
-        return set(name, value, defaultIfNull);
+    public SqlParams setObject( String name, Object value, Object defaultIfNull ) {
+        return set( name, value, defaultIfNull );
     }
 
     /**
@@ -446,8 +446,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setObject(String name, Object value, int sqlType) {
-        return set(name, value, sqlType);
+    public SqlParams setObject( String name, Object value, int sqlType ) {
+        return set( name, value, sqlType );
     }
 
     /**
@@ -464,8 +464,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setObject(String name, Object value, Object defaultIfNull, int sqlType) {
-        return set(name, value, defaultIfNull, sqlType);
+    public SqlParams setObject( String name, Object value, Object defaultIfNull, int sqlType ) {
+        return set( name, value, defaultIfNull, sqlType );
     }
 
     /**
@@ -482,8 +482,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setObject(String name, Object value, int sqlType, int scaleOrLength) {
-        return set(name, value, sqlType, (Integer) scaleOrLength);
+    public SqlParams setObject( String name, Object value, int sqlType, int scaleOrLength ) {
+        return set( name, value, sqlType, (Integer) scaleOrLength );
     }
 
     /**
@@ -501,8 +501,8 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setObject(String name, Object value, Object defaultIfNull, int sqlType, int scaleOrLength) {
-        return set(name, value, defaultIfNull, sqlType, (Integer) scaleOrLength);
+    public SqlParams setObject( String name, Object value, Object defaultIfNull, int sqlType, int scaleOrLength ) {
+        return set( name, value, defaultIfNull, sqlType, (Integer) scaleOrLength );
     }
 
     /**
@@ -522,12 +522,12 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setString(String name, String value, String defaultIfNull, int maxLength) {
-        if (value == null) {
+    public SqlParams setString( String name, String value, String defaultIfNull, int maxLength ) {
+        if ( value == null ) {
             value = defaultIfNull;
         }
-        value = OliveUtils.truncate(value, maxLength);
-        return setString(name, value);
+        value = OliveUtils.truncate( value, maxLength );
+        return setString( name, value );
     }
 
     /**
@@ -545,9 +545,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setString(String name, String value, int maxLength) {
-        value = OliveUtils.truncate(value, maxLength);
-        return setString(name, value);
+    public SqlParams setString( String name, String value, int maxLength ) {
+        value = OliveUtils.truncate( value, maxLength );
+        return setString( name, value );
     }
 
     /**
@@ -564,9 +564,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setString(String name, String value, String defaultIfNull) {
-        SqlParam param = new SqlParam(name, value, Types.VARCHAR);
-        return set(param, defaultIfNull);
+    public SqlParams setString( String name, String value, String defaultIfNull ) {
+        SqlParam param = new SqlParam( name, value, Types.VARCHAR );
+        return set( param, defaultIfNull );
     }
 
     /**
@@ -581,9 +581,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setString(String name, String value) {
-        SqlParam param = new SqlParam(name, value, Types.VARCHAR);
-        return set(param);
+    public SqlParams setString( String name, String value ) {
+        SqlParam param = new SqlParam( name, value, Types.VARCHAR );
+        return set( param );
     }
 
     /**
@@ -598,9 +598,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setInt(String name, int value) {
-        SqlParam param = new SqlParam(name, value, Types.INTEGER);
-        return set(param);
+    public SqlParams setInt( String name, int value ) {
+        SqlParam param = new SqlParam( name, value, Types.INTEGER );
+        return set( param );
     }
 
     /**
@@ -615,9 +615,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setLong(String name, long value) {
-        SqlParam param = new SqlParam(name, value, Types.BIGINT);
-        return set(param);
+    public SqlParams setLong( String name, long value ) {
+        SqlParam param = new SqlParam( name, value, Types.BIGINT );
+        return set( param );
     }
 
     /**
@@ -632,9 +632,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setDouble(String name, double value) {
-        SqlParam param = new SqlParam(name, value, Types.DOUBLE);
-        return set(param);
+    public SqlParams setDouble( String name, double value ) {
+        SqlParam param = new SqlParam( name, value, Types.DOUBLE );
+        return set( param );
     }
 
     /**
@@ -649,9 +649,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setNull(String name, int sqlType) {
-        SqlParam param = new SqlParam(name, null, sqlType);
-        return set(param);
+    public SqlParams setNull( String name, int sqlType ) {
+        SqlParam param = new SqlParam( name, null, sqlType );
+        return set( param );
     }
 
     /**
@@ -667,9 +667,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setNull(String name, int sqlType, String typeName) {
-        SqlParam param = new SqlParam(name, null, sqlType, typeName);
-        return set(param);
+    public SqlParams setNull( String name, int sqlType, String typeName ) {
+        SqlParam param = new SqlParam( name, null, sqlType, typeName );
+        return set( param );
     }
 
     /**
@@ -684,9 +684,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setBigDecimal(String name, BigDecimal value) {
-        SqlParam param = new SqlParam(name, value, Types.DECIMAL);
-        return set(param);
+    public SqlParams setBigDecimal( String name, BigDecimal value ) {
+        SqlParam param = new SqlParam( name, value, Types.DECIMAL );
+        return set( param );
     }
 
     /**
@@ -701,9 +701,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setFloat(String name, float value) {
-        SqlParam param = new SqlParam(name, value, Types.FLOAT);
-        return set(param);
+    public SqlParams setFloat( String name, float value ) {
+        SqlParam param = new SqlParam( name, value, Types.FLOAT );
+        return set( param );
     }
 
     /**
@@ -718,9 +718,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setBoolean(String name, boolean value) {
-        SqlParam param = new SqlParam(name, value, Types.BOOLEAN);
-        return set(param);
+    public SqlParams setBoolean( String name, boolean value ) {
+        SqlParam param = new SqlParam( name, value, Types.BOOLEAN );
+        return set( param );
     }
 
     /**
@@ -735,10 +735,10 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setChar(String name, char value) {
-        String str = String.valueOf(value);
-        SqlParam param = new SqlParam(name, str, Types.CHAR);
-        return set(param);
+    public SqlParams setChar( String name, char value ) {
+        String str = String.valueOf( value );
+        SqlParam param = new SqlParam( name, str, Types.CHAR );
+        return set( param );
     }
 
     /**
@@ -753,9 +753,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setByte(String name, byte value) {
-        SqlParam param = new SqlParam(name, value, Types.TINYINT);
-        return set(param);
+    public SqlParams setByte( String name, byte value ) {
+        SqlParam param = new SqlParam( name, value, Types.TINYINT );
+        return set( param );
     }
 
     /**
@@ -770,9 +770,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setBytes(String name, byte[] value) {
-        SqlParam param = new SqlParam(name, value, Types.VARBINARY);
-        return set(param);
+    public SqlParams setBytes( String name, byte[] value ) {
+        SqlParam param = new SqlParam( name, value, Types.VARBINARY );
+        return set( param );
     }
 
     /**
@@ -787,9 +787,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setShort(String name, short value) {
-        SqlParam param = new SqlParam(name, value, Types.SMALLINT);
-        return set(param);
+    public SqlParams setShort( String name, short value ) {
+        SqlParam param = new SqlParam( name, value, Types.SMALLINT );
+        return set( param );
     }
 
     /**
@@ -804,9 +804,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setClob(String name, Clob value) {
-        SqlParam param = new SqlParam(name, value, Types.CLOB);
-        return set(param);
+    public SqlParams setClob( String name, Clob value ) {
+        SqlParam param = new SqlParam( name, value, Types.CLOB );
+        return set( param );
     }
 
     /**
@@ -821,9 +821,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setClob(String name, Reader value) {
-        SqlParam param = new SqlParam(name, value, Types.CLOB);
-        return set(param);
+    public SqlParams setClob( String name, Reader value ) {
+        SqlParam param = new SqlParam( name, value, Types.CLOB );
+        return set( param );
     }
 
     /*
@@ -845,9 +845,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setBlob(String name, Blob value) {
-        SqlParam param = new SqlParam(name, value, Types.BLOB);
-        return set(param);
+    public SqlParams setBlob( String name, Blob value ) {
+        SqlParam param = new SqlParam( name, value, Types.BLOB );
+        return set( param );
     }
 
     /**
@@ -862,9 +862,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setBlob(String name, InputStream value) {
-        SqlParam param = new SqlParam(name, value, Types.BLOB);
-        return set(param);
+    public SqlParams setBlob( String name, InputStream value ) {
+        SqlParam param = new SqlParam( name, value, Types.BLOB );
+        return set( param );
     }
 
     /*
@@ -885,9 +885,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setDate(String name, java.sql.Date value) {
-        SqlParam param = new SqlParam(name, value, Types.DATE);
-        return set(param);
+    public SqlParams setDate( String name, java.sql.Date value ) {
+        SqlParam param = new SqlParam( name, value, Types.DATE );
+        return set( param );
     }
 
     /**
@@ -902,9 +902,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setDate(String name, java.util.Date value) {
-        SqlParam param = new SqlParam(name, value, Types.DATE);
-        return set(param);
+    public SqlParams setDate( String name, java.util.Date value ) {
+        SqlParam param = new SqlParam( name, value, Types.DATE );
+        return set( param );
     }
 
     /**
@@ -919,9 +919,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setTime(String name, Time value) {
-        SqlParam param = new SqlParam(name, value, Types.TIME);
-        return set(param);
+    public SqlParams setTime( String name, Time value ) {
+        SqlParam param = new SqlParam( name, value, Types.TIME );
+        return set( param );
     }
 
     /**
@@ -936,9 +936,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setTimestamp(String name, Timestamp value) {
-        SqlParam param = new SqlParam(name, value, Types.TIMESTAMP);
-        return set(param);
+    public SqlParams setTimestamp( String name, Timestamp value ) {
+        SqlParam param = new SqlParam( name, value, Types.TIMESTAMP );
+        return set( param );
     }
 
     /**
@@ -953,9 +953,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setAsciiStream(String name, InputStream value) {
-        SqlParam param = new SqlParam(name, value, Types.LONGVARCHAR);
-        return set(param);
+    public SqlParams setAsciiStream( String name, InputStream value ) {
+        SqlParam param = new SqlParam( name, value, Types.LONGVARCHAR );
+        return set( param );
     }
 
     /* Need a way to store the length param before exposing this method
@@ -980,9 +980,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setBinaryStream(String name, InputStream value) {
-        SqlParam param = new SqlParam(name, value, Types.LONGVARBINARY);
-        return set(param);
+    public SqlParams setBinaryStream( String name, InputStream value ) {
+        SqlParam param = new SqlParam( name, value, Types.LONGVARBINARY );
+        return set( param );
     }
 
     /*
@@ -1009,9 +1009,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setCharacterStream(String name, Reader value) {
-        SqlParam param = new SqlParam(name, value, Types.LONGVARCHAR);
-        return set(param);
+    public SqlParams setCharacterStream( String name, Reader value ) {
+        SqlParam param = new SqlParam( name, value, Types.LONGVARCHAR );
+        return set( param );
     }
 
     /*
@@ -1037,9 +1037,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setRef(String name, Ref value) {
-        SqlParam param = new SqlParam(name, value, Types.REF);
-        return set(param);
+    public SqlParams setRef( String name, Ref value ) {
+        SqlParam param = new SqlParam( name, value, Types.REF );
+        return set( param );
     }
 
     /**
@@ -1054,9 +1054,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setArray(String name, Array value) {
-        SqlParam param = new SqlParam(name, value, Types.ARRAY);
-        return set(param);
+    public SqlParams setArray( String name, Array value ) {
+        SqlParam param = new SqlParam( name, value, Types.ARRAY );
+        return set( param );
     }
 
     /**
@@ -1071,9 +1071,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setURL(String name, URL value) {
-        SqlParam param = new SqlParam(name, value, Types.DATALINK);
-        return set(param);
+    public SqlParams setURL( String name, URL value ) {
+        SqlParam param = new SqlParam( name, value, Types.DATALINK );
+        return set( param );
     }
 
     /**
@@ -1088,9 +1088,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setRowId(String name, RowId value) {
-        SqlParam param = new SqlParam(name, value, Types.ROWID);
-        return set(param);
+    public SqlParams setRowId( String name, RowId value ) {
+        SqlParam param = new SqlParam( name, value, Types.ROWID );
+        return set( param );
     }
 
     /**
@@ -1105,9 +1105,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setNString(String name, String value) {
-        SqlParam param = new SqlParam(name, value, Types.NVARCHAR);
-        return set(param);
+    public SqlParams setNString( String name, String value ) {
+        SqlParam param = new SqlParam( name, value, Types.NVARCHAR );
+        return set( param );
     }
 
     /**
@@ -1122,9 +1122,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setNCharacterStream(String name, Reader value) {
-        SqlParam param = new SqlParam(name, value, Types.LONGNVARCHAR);
-        return set(param);
+    public SqlParams setNCharacterStream( String name, Reader value ) {
+        SqlParam param = new SqlParam( name, value, Types.LONGNVARCHAR );
+        return set( param );
     }
 
     /*
@@ -1145,9 +1145,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setNClob(String name, NClob value) {
-        SqlParam param = new SqlParam(name, value, Types.NCLOB);
-        return set(param);
+    public SqlParams setNClob( String name, NClob value ) {
+        SqlParam param = new SqlParam( name, value, Types.NCLOB );
+        return set( param );
     }
 
     /**
@@ -1162,9 +1162,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setNClob(String name, Reader value) {
-        SqlParam param = new SqlParam(name, value, Types.NCLOB);
-        return set(param);
+    public SqlParams setNClob( String name, Reader value ) {
+        SqlParam param = new SqlParam( name, value, Types.NCLOB );
+        return set( param );
     }
 
     /*
@@ -1185,9 +1185,9 @@ public class SqlParams {
      * @return this SqlParams instance to enable chained calls
      * @throws IllegalArgumentException if the name is not defined
      */
-    public SqlParams setSQLXML(String name, SQLXML value) {
-        SqlParam param = new SqlParam(name, value, Types.SQLXML);
-        return set(param);
+    public SqlParams setSQLXML( String name, SQLXML value ) {
+        SqlParam param = new SqlParam( name, value, Types.SQLXML );
+        return set( param );
     }
 
     /**
@@ -1196,8 +1196,8 @@ public class SqlParams {
      * @param name the name of the SqlParam to remove
      * @return the SqlParam that was removed
      */
-    public Object remove(String name) {
-        return paramMap.remove(name);
+    public Object remove( String name ) {
+        return paramMap.remove( name );
     }
 
     /**
@@ -1235,6 +1235,27 @@ public class SqlParams {
      */
     public Set<Entry<String, SqlParam>> entrySet() {
         return paramMap.entrySet();
+    }
+
+    /**
+     * Converts the SqlParams to a {@link java.util.Map} where the {@link za.sabob.olive.ps.SqlParam#name} is the key and {@link za.sabob.olive.ps.SqlParam#value}
+     * is the value.
+     *
+     * @return the SqlParams as a map
+     */
+    public Map<String, Object> toMap() {
+
+        Map map = new HashMap();
+
+        for ( Entry<String, SqlParam> entry : paramMap.entrySet() ) {
+
+            SqlParam sqlParam = entry.getValue();
+            Object value = sqlParam.getValue();
+
+            map.put( entry.getKey(), value );
+        }
+
+        return map;
     }
 
 }

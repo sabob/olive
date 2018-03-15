@@ -788,6 +788,20 @@ public class OliveUtils {
         }
     }
 
+    public static boolean getAutoCommit( Connection conn ) {
+
+        try {
+            if ( conn == null ) {
+                return false;
+            }
+
+            return conn.getAutoCommit();
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
     /**
      * Returns the generated key and wraps any SQLExceptions thrown as a RuntimeExcepion.
      *
@@ -902,6 +916,17 @@ public class OliveUtils {
         try {
             PreparedStatement ps = conn.prepareStatement( sql );
             setParams( ps, parsedSql, parameters );
+            return ps;
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static PreparedStatement prepareStatement( Connection conn, String sql ) {
+
+        try {
+            PreparedStatement ps = conn.prepareStatement( sql );
             return ps;
 
         } catch ( SQLException ex ) {
@@ -1183,7 +1208,7 @@ public class OliveUtils {
      * @param filename the filename to normalize, null returns null
      * @return the normalized filename, or null if invalid
      */
-    public static String normalize( final String filename ) {
+    public static String normalize( String filename ) {
         return doNormalize( filename, CLASSPATH_SEPARATOR, true );
     }
 
@@ -1209,12 +1234,12 @@ public class OliveUtils {
      *
      * The result of the above <code>println</code> statement will be: <code>/com/mycorp/dao/person/insert_person.sql</code>.
      *
-     * @param cls the class to create an absolute filename from
+     * @param relative the class to create an absolute filename from
      * @param filename the filename to create an absolute filename relative to the class
      * @return the absolute filenames relative to the given class
      */
-    public static String normalize( Class cls, final String filename ) {
-        if ( cls == null ) {
+    public static String normalize( Class relative, String filename ) {
+        if ( relative == null ) {
             throw new IllegalArgumentException( "class is required!" );
         }
         if ( filename == null ) {
@@ -1223,11 +1248,59 @@ public class OliveUtils {
         if ( filename.startsWith( "/" ) ) {
             return filename;
         }
-        String pkg = cls.getPackage().getName();
+        String pkg = relative.getPackage().getName();
         pkg = pkg.replace( ".", "/" );
         String fullname = '/' + pkg + '/' + filename;
 
         return doNormalize( fullname, '/', true );
+    }
+
+    /**
+     * Create absolute filenames relative to the given object' class.
+     * <p/>
+     * This method delegates to {@link #normalize(java.lang.Class, java.lang.String)}.
+     *
+     * @param relative the object which class to use to create an absolute filename from
+     * @param filename the filename to create an absolute filename relative to the class
+     * @return the absolute filenames relative to the given class
+     */
+    public static String normalize( Object relative, String filename ) {
+        if ( relative == null ) {
+            throw new IllegalArgumentException( "relative object cannot be null" );
+        }
+
+        String normalizedFilename = normalize( relative.getClass(), filename );
+
+        return normalizedFilename;
+
+    }
+
+    /**
+     * Create absolute filenames relative to the given class.
+     * <p/>
+     * This method delegates to {@link #normalize(java.lang.Class, java.lang.String)}.
+     *
+     * @param relative the class to create an absolute filename from
+     * @param filename the filename to create an absolute filename relative to the class
+     * @return the absolute filenames relative to the given class
+     */
+    public static String path( Class relative, String filename ) {
+        String normalizedFilename = normalize( relative, filename );
+        return normalizedFilename;
+    }
+
+    /**
+     * Create absolute filenames relative to the given object' class.
+     * <p/>
+     * This method delegates to {@link #normalize(java.lang.Object, java.lang.String)}.
+     *
+     * @param relative the object which class to use to create an absolute filename from
+     * @param filename the filename to create an absolute filename relative to the class
+     * @return the absolute filenames relative to the given class
+     */
+    public static String path( Object relative, String filename ) {
+        String normalizedFilename = normalize( relative, filename );
+        return normalizedFilename;
     }
 
     /**

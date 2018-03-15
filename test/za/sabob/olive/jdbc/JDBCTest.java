@@ -1,4 +1,4 @@
-package za.sabob.olive.transaction;
+package za.sabob.olive.jdbc;
 
 import java.sql.*;
 import javax.sql.*;
@@ -8,7 +8,7 @@ import org.testng.annotations.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
-public class TransactionTest {
+public class JDBCTest {
 
     JdbcDataSource ds;
 
@@ -30,7 +30,7 @@ public class TransactionTest {
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            conn = JDBC.beginOperation( ds );
 
             nested( ds );
 
@@ -45,21 +45,17 @@ public class TransactionTest {
                 Assert.assertEquals( name, "TEST" );
             }
 
-            TX.commitTransaction();
-
-        } catch ( Exception ex ) {
-            System.out.println( "ERR" );
-
-            throw TX.rollbackTransaction( ex );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
 
         } finally {
-            boolean isAtRoot = TX.isAtRootConnection();
-            Assert.assertTrue( isAtRoot );
 
-            TX.cleanupTransaction( ps, rs );
+            Assert.assertTrue( JDBC.isAtRootConnection() );
+            JDBC.cleanupOperation( ps, rs );
 
-            isAtRoot = TX.isAtRootConnection();
-            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the TX" );
+            boolean isAtRoot = JDBC.isAtRootConnection();
+            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+
         }
     }
 
@@ -71,7 +67,7 @@ public class TransactionTest {
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            conn = JDBC.beginOperation( ds );
 
             nested( ds );
 
@@ -85,20 +81,15 @@ public class TransactionTest {
                 Assert.assertEquals( name, "TEST" );
             }
 
-            TX.commitTransaction();
-
-        } catch ( SQLException ex ) {
-
-            throw TX.rollbackTransaction( ex );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
 
         } finally {
-            boolean isAtRoot = TX.isAtRootConnection();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( JDBC.isAtRootConnection() );
+            JDBC.cleanupOperation( ps, rs );
 
-            TX.cleanupTransaction( ps, rs );
-
-            isAtRoot = TX.isAtRootConnection();
-            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the TX" );
+            boolean isAtRoot = JDBC.isAtRootConnection();
+            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
         }
 
     }
@@ -110,7 +101,7 @@ public class TransactionTest {
 
         try {
 
-            Connection conn = TX.beginTransaction( ds );
+            Connection conn = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
             ps = OliveUtils.prepareStatement( conn, "select * from information_schema.catalogs c", params );
@@ -122,16 +113,13 @@ public class TransactionTest {
                 Assert.assertEquals( name, "TEST" );
             }
 
-            TX.commitTransaction( conn );
-
-        } catch ( SQLException ex ) {
-
-            throw TX.rollbackTransaction( ex );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
 
         } finally {
-            Assert.assertFalse( TX.isAtRootConnection() );
-            TX.cleanupTransaction( ps, rs );
-            Assert.assertTrue( TX.isAtRootConnection() );
+            Assert.assertFalse( JDBC.isAtRootConnection() );
+            JDBC.cleanupOperation( ps, rs );
+            Assert.assertTrue( JDBC.isAtRootConnection() );
         }
 
     }

@@ -25,7 +25,7 @@ import za.sabob.olive.ps.SqlParams;
 /**
  *
  */
-public class Test {
+public class OliveTest {
 
     public static void main(String[] args) {
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement("select * from information_schema.catalogs c where c.CATALOG_NAME = :name and c.CATALOG_NAME in (:names)");
@@ -54,7 +54,7 @@ public class Test {
                 System.out.println("Row:" + rs.getString("CATALOG_NAME"));
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OliveTest.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
