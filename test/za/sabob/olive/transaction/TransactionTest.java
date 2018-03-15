@@ -2,22 +2,22 @@ package za.sabob.olive.transaction;
 
 import java.sql.*;
 import javax.sql.*;
-import org.h2.jdbcx.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import za.sabob.olive.jdbc.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
 public class TransactionTest {
 
-    JdbcDataSource ds;
+    DataSource ds;
 
     @BeforeClass
     public void beforeClass() {
-        ds = new JdbcDataSource();
-        ds.setURL( "jdbc:h2:~/test" );
-        ds.setUser( "sa" );
-        ds.setPassword( "sa" );
+        ds = DBTestUtils.createDataSource(DBTestUtils.H2);
+        //ds.setURL( "jdbc:h2:~/test" );
+
+        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
 
     }
 

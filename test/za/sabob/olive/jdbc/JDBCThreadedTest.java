@@ -3,7 +3,6 @@ package za.sabob.olive.jdbc;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
-import org.h2.jdbcx.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.ps.*;
@@ -19,10 +18,10 @@ public class JDBCThreadedTest {
     @BeforeClass
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource();
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2);
         //ds.setURL( "jdbc:h2:~/test" );
 
-        DBTestUtils.createPersonTable( ds );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
     @AfterClass
@@ -30,7 +29,7 @@ public class JDBCThreadedTest {
 
         //ds = DBTestUtils.createDataSource();
         ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        Assert.assertEquals( 200, personsCount );
+        Assert.assertEquals( personsCount, 200 );
     }
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
@@ -59,7 +58,7 @@ public class JDBCThreadedTest {
 
             personsCount = persons.size();
 
-        } catch ( SQLException e ) {
+        } catch ( Throwable e ) {
             throw new RuntimeException( e );
 
         } finally {

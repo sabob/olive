@@ -21,10 +21,10 @@ public class TX_JDBCTest {
     @BeforeClass
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( 5 );
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 );
 
         //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
     @AfterClass

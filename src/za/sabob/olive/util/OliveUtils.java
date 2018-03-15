@@ -29,6 +29,7 @@ import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
 import za.sabob.olive.query.*;
+import za.sabob.olive.transaction.*;
 
 /**
  * Provides common utilities:
@@ -174,8 +175,8 @@ public class OliveUtils {
             }
 
             return ds.getConnection();
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
         }
     }
 
@@ -796,6 +797,34 @@ public class OliveUtils {
             }
 
             return conn.getAutoCommit();
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static void setTransactionIsolation( Connection conn, int level ) {
+
+        try {
+            if ( conn == null ) {
+                return;
+            }
+
+            conn.setTransactionIsolation( level );
+
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static int getTransactionIsolation( Connection conn ) {
+
+        try {
+            if ( conn == null ) {
+                return -1;
+            }
+
+            return conn.getTransactionIsolation( );
 
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );

@@ -21,10 +21,10 @@ public class TX_JDBCThreadedTest {
     @BeforeClass
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( 2 );
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 20 );
 
         //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
     @AfterClass
@@ -36,7 +36,7 @@ public class TX_JDBCThreadedTest {
         //Assert.assertEquals( personsCount, 200 );
     }
 
-    @Test(successPercentage = 100, threadPoolSize = 10, invocationCount = 100, timeOut = 1110000)
+    @Test(successPercentage = 0, threadPoolSize = 20, invocationCount = 200, timeOut = 1110000)
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         Connection conn = null;
@@ -45,7 +45,12 @@ public class TX_JDBCThreadedTest {
 
         try {
 
+            boolean isRoot = JDBC.isAtRootConnection();
+            Assert.assertFalse( isRoot, "CLEAN: " );
+
             conn = JDBC.beginOperation( ds );
+            isRoot = JDBC.isAtRootConnection();
+            Assert.assertTrue( isRoot, "CLEAN:" );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
@@ -62,7 +67,8 @@ public class TX_JDBCThreadedTest {
 
             personsCount = persons.size();
 
-        } catch ( SQLException e ) {
+        } catch ( Throwable e ) {
+            System.out.println( "WHY 2? " + e.getMessage() );
             //throw new RuntimeException( e );
 
         } finally {
@@ -73,8 +79,8 @@ public class TX_JDBCThreadedTest {
                 boolean connectionCreated = conn != null;
 
                 if ( connectionCreated ) {
+
                     Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
-                    //JDBC.isAtRootConnection();
 
                 } else {
                     if ( isRoot ) {
@@ -90,8 +96,9 @@ public class TX_JDBCThreadedTest {
                     System.out.println( "BUG 2" );
                 }
 
-            } catch ( Exception e ) {
+            } catch ( Throwable e ) {
                 System.out.println( "WHY: " + e.getMessage() );
+                JDBC.cleanupOperation( conn );
             }
 
             //Assert.assertTrue( isAtRoot );
@@ -112,16 +119,25 @@ public class TX_JDBCThreadedTest {
             List<Person> persons = getPersons( conn );
             System.out.println( "PERSONS " + persons.size() );
 
-        } catch ( Exception e ) {
-            //System.out.println( "Whats this? " + e.getMessage() );
+        } catch ( Throwable e ) {
+            System.out.println( "SERIOUS PROBLEM 1? " + e.getMessage() );
 
         } finally {
             try {
 
                 boolean isRoot = JDBC.isAtRootConnection();
-                if ( isRoot ) {
-                    System.out.println( "BUG 1.1" );
+                boolean connectionCreated = conn != null;
+
+                if ( connectionCreated ) {
+                    Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
+                    //JDBC.isAtRootConnection();
+
+                } else {
+                    if ( isRoot ) {
+                        System.out.println( "BUG JDBC 1.1, conn: " + connectionCreated + ", isRoot: " + isRoot );
+                    }
                 }
+
                 //Assert.assertFalse(  );
                 JDBC.cleanupOperation( conn );
                 //Assert.assertTrue( JDBC.isAtRootConnection() );
@@ -129,16 +145,17 @@ public class TX_JDBCThreadedTest {
                 if ( !isRoot ) {
                     System.out.println( "BUG 1.2" );
                 }
-            } catch ( Exception e ) {
-                System.out.println( "SERIOUS PROBLEM" );
+            } catch ( Throwable e ) {
+                System.out.println( "SERIOUS PROBLEM 1.1" + e.getMessage());
+                JDBC.cleanupOperation( conn );
             }
         }
-
     }
 
     public void nestedTX( DataSource ds ) {
 
         Connection conn = null;
+        Throwable err = null;
 
         try {
 
@@ -147,19 +164,33 @@ public class TX_JDBCThreadedTest {
             List<Person> persons = getPersons( conn );
 
         } catch ( Throwable throwable ) {
-            System.out.println( "ERR: " + throwable.getMessage() );
+            err = throwable;
+            System.out.println( "SERIOUS PROBLEM 2" + throwable.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: " + Thread.currentThread().getId());
+            
 
         } finally {
-            boolean isRoot = TX.isAtRootConnection();
-            boolean connectionCreated = conn != null;
 
-            if ( connectionCreated ) {
-                Assert.assertTrue( isRoot, "TX Connection was created, we must be root" );
-
-            } else {
-                if ( isRoot ) {
-                    System.out.println( "BUG TX, conn creted?: " + connectionCreated + ", isRoot: " + isRoot );
+            try {
+                
+                if (err != null) {
+                    System.out.println( "..." );
                 }
+
+                boolean isRoot = TX.isAtRootConnection();
+                boolean connectionCreated = conn != null;
+
+                TX.cleanupTransaction( conn );
+
+                if ( connectionCreated ) {
+                    Assert.assertTrue( isRoot, "TX Connection was created, we must be root" );
+
+                } else {
+                    if ( isRoot ) {
+                        System.out.println( "BUG TX, conn creted?: " + connectionCreated + ", isRoot: " + isRoot );
+                    }
+                }
+            } catch ( Exception e ) {
+                System.out.println( "SERIOUS PROBLEM 2.2" + e.getMessage() );
             }
         }
     }

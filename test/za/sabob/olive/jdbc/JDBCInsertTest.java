@@ -3,7 +3,6 @@ package za.sabob.olive.jdbc;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
-import org.h2.jdbcx.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.ps.*;
@@ -17,10 +16,10 @@ public class JDBCInsertTest {
     @BeforeClass
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource();
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
         //ds.setURL( "jdbc:h2:~/test" );
 
-        DBTestUtils.createPersonTable( ds );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
     @AfterClass
@@ -59,18 +58,18 @@ public class JDBCInsertTest {
             throw new RuntimeException( e );
 
         } finally {
-boolean isAtRoot = JDBC.isAtRootConnection();
+            boolean isAtRoot = JDBC.isAtRootConnection();
             Assert.assertTrue( isAtRoot );
 
-            JDBC.cleanupOperation(ps, rs );
+            JDBC.cleanupOperation( ps, rs );
 
             isAtRoot = JDBC.isAtRootConnection();
-            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation");
+            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
         }
     }
 
     public void nested( DataSource ds ) {
-        
+
         Connection conn = null;
 
         try {

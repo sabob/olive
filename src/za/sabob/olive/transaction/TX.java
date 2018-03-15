@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.logging.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc.*;
+import static za.sabob.olive.jdbc.JDBC.isAtRootConnection;
 import za.sabob.olive.util.*;
 
 public class TX {
