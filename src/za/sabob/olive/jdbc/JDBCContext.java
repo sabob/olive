@@ -1,5 +1,6 @@
 package za.sabob.olive.jdbc;
 
+import java.sql.*;
 import javax.sql.*;
 
 public class JDBCContext {
@@ -37,6 +38,12 @@ public class JDBCContext {
             throw new IllegalStateException("DataSourceContainer should be empty, but contains an active DataSource. Make sure you cleanup all transactions with TX.cleanupTransaction()");
         }
         HOLDER.set( null );
+    }
+    
+    public static Connection getCurrentConnection() {
+        DataSourceContainer container = getDataSourceContainer();
+        Connection conn = container.getLatestConnection();
+        return conn;
     }
     
     public static boolean hasDefaultDataSource() {

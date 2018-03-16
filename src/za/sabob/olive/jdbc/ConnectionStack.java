@@ -24,6 +24,17 @@ public class ConnectionStack {
         return connections.remove( connections.size() - 1 );
     }
 
+    public Connection peekTop() {
+        if ( connections.isEmpty() ) {
+            return null;
+        }
+
+        int start = connections.size() - 1;
+        Connection conn = connections.get( start );
+
+        return conn;
+    }
+
     public Connection peekTop( boolean transactional ) {
         if ( connections.isEmpty() ) {
             return null;

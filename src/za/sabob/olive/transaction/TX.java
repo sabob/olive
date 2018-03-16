@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.logging.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc.*;
-import static za.sabob.olive.jdbc.JDBC.isAtRootConnection;
 import za.sabob.olive.util.*;
 
 public class TX {
@@ -39,6 +38,7 @@ public class TX {
         //if ( hasConnection ) {
         //validateConnection( conn );
         //}
+        //OliveUtils.setTransactionIsolation( conn, Connection.TRANSACTION_READ_UNCOMMITTED);
         if ( OliveUtils.getAutoCommit( conn ) ) {
             OliveUtils.setAutoCommit( conn, false );
         }
@@ -168,12 +168,17 @@ public class TX {
 
         DataSource ds = container.getActiveDataSource();
 
-        //boolean isAtRootConnection = isAtRootConnection( ds );
+        boolean isAtRootConnection = isAtRootConnection( ds );
 
         boolean success = container.removeConnection( ds, conn );
+        
+        boolean hasConnections = container.hasConnections();
 
-        if ( !container.hasConnections() ) {
+        if ( !hasConnections ) {
             JDBCContext.unbindDataSourceContainer();
+        }
+        
+        if ( isAtRootConnection ) {
 
             boolean autoCommit = true;
             OliveUtils.close( autoCommit, autoClosables );
@@ -236,7 +241,9 @@ public class TX {
     public static void assertPreviousConnectionRegisterNotFaulty() {
         if ( isFaultRegisteringDS() ) {
             throw new IllegalStateException(
-                "TX.beginTransaction was invoked and failed to retrieve a connection and was invoked AGAIN without first calling TX.cleanupTransaction." );
+                "Seems that TX.beginTransaction was previously invoked and failed to retrieve a connection and placed in an inconsistent state. TX.beginTransaction "
+                    + "was invoked again without first calling TX.cleanupTransaction. TX.cleanupTransaction is required to cleanup resources and put the TX operations "
+                    + " in a consistent state." );
         }
     }
 }

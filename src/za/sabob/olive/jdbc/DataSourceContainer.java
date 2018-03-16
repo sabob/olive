@@ -107,6 +107,26 @@ public class DataSourceContainer { // implements AutoCloseable {
 //        boolean transactional = false;
 //        return getConnection( ds, transactional );
 //    }
+    
+    public Connection getLatestConnection( ) {
+        DataSource ds = getActiveDataSource();
+        
+        ConnectionStack connections = getConnections( ds );
+
+        if ( connections == null ) {
+            connections = addDataSource( ds );
+        }
+
+        Connection conn = connections.peekTop( );
+        
+        if (conn == null) {
+            throw new IllegalStateException("There is no connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection.");
+        }
+
+        return conn;        
+    }
+    
+    
     public Connection getLatestConnection( DataSource ds, boolean transactional ) {
         ConnectionStack connections = getConnections( ds );
         return connections.peekTop( transactional );

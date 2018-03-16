@@ -96,13 +96,16 @@ public class JDBC {
 
         DataSource ds = container.getActiveDataSource();
 
-        //boolean isAtRootConnection = isAtRootConnection( ds );
+        boolean isAtRootConnection = isAtRootConnection( ds );
 
         boolean success = container.removeConnection( ds, conn );
+        boolean hasConnections = container.hasConnections();
 
-        if ( !container.hasConnections() ) {
-        //if ( isAtRootConnection ) {
+        if ( !hasConnections ) {
             JDBCContext.unbindDataSourceContainer();
+        }
+
+        if ( isAtRootConnection ) {
 
             boolean autoCommit = true;
             OliveUtils.close( autoCommit, autoClosables );
@@ -157,7 +160,9 @@ public class JDBC {
     public static void assertPreviousConnectionRegisterNotFaulty() {
         if ( isFaultRegisteringDS() ) {
             throw new IllegalStateException(
-                "JDBC.beginOperation was invoked and failed to retrieve a connection and was invoked AGAIN without first calling JDBC.cleanupOperation." );
+                "Seems that JDBC.beginOperation was previously invoked and failed to retrieve a connection and placed in an inconsistent state. JDBC.beginOperation "
+                    + "was invoked again without first calling JDBC.cleanupOperation. JDBC.cleanupOperation is required to cleanup resources and put the JDBC operations "
+                    + " in a consistent state." );
         }
     }
 }
