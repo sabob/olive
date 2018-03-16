@@ -21,7 +21,8 @@ public class ForceTimeoutTest {
     @BeforeClass
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 );
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 ); // Use small pool so that retrieving connections from large amount of threads leads to deadlocks
+        // that are resolved only through connection timeouts.
 
         //ds.setURL( "jdbc:h2:~/test" );
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
