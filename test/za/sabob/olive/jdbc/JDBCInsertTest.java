@@ -1,5 +1,6 @@
 package za.sabob.olive.jdbc;
 
+import za.sabob.olive.util.DBTestUtils;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
@@ -13,7 +14,7 @@ public class JDBCInsertTest {
 
     DataSource ds;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
         ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
@@ -22,10 +23,9 @@ public class JDBCInsertTest {
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
-        //ds = new JdbcDataSource();
-        //ds = DBTestUtils.createDataSource();
+        ds.getConnection().createStatement().execute( "SHUTDOWN" );
     }
 
     @Test

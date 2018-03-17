@@ -1,10 +1,11 @@
-package za.sabob.olive.jdbc;
+package za.sabob.olive.util;
 
 import java.sql.*;
 import javax.sql.*;
 import org.h2.jdbcx.*;
 import org.hsqldb.jdbc.*;
 import za.sabob.olive.util.*;
+import za.sabob.olive.util.OliveUtils;
 
 public class DBTestUtils {
 
@@ -80,5 +81,12 @@ public class DBTestUtils {
 
             update( ds, "create table if not exists person (id bigint IDENTITY, name varchar(100), primary key (id));" );
         }
+    }
+    
+    public static boolean isTimeout(Exception ex) {
+        if (ex.getMessage().contains( "Login timeout") || ex.getMessage().contains("Invalid argument in JDBC call")) {
+            return true;
+        }
+        return false;
     }
 }

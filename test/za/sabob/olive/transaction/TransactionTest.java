@@ -1,10 +1,10 @@
 package za.sabob.olive.transaction;
 
+import za.sabob.olive.util.DBTestUtils;
 import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 

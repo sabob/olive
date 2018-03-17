@@ -1,12 +1,14 @@
 // TODO mix jdbc and tx test
 package za.sabob.olive.jdbc.mixed;
 
+import za.sabob.olive.util.DBTestUtils;
 import za.sabob.olive.jdbc.*;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import static za.sabob.olive.util.DBTestUtils.isTimeout;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.transaction.*;
@@ -18,7 +20,7 @@ public class TX_JDBCThreadedTest {
 
     int personsCount = 0;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
         ds = DBTestUtils.createDataSource( DBTestUtils.H2, 20 );
@@ -27,11 +29,11 @@ public class TX_JDBCThreadedTest {
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        //boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
+        boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
         //System.out.println( "SHUTDOWN? " + success );
         Assert.assertEquals( personsCount, 400 );
     }
@@ -108,7 +110,7 @@ public class TX_JDBCThreadedTest {
             nestedTX( ds );
 
             List<Person> persons = getJDBCPersons();
-            System.out.println( "PERSONS " + persons.size() );
+            //System.out.println( "PERSONS " + persons.size() );
 
         } catch ( Throwable e ) {
             System.out.println( "SERIOUS PROBLEM 1? " + e.getMessage() );
@@ -150,9 +152,14 @@ public class TX_JDBCThreadedTest {
 
             List<Person> persons = getTXPersons();
 
-        } catch ( Throwable throwable ) {
-            System.out.println( "SERIOUS PROBLEM 2" + throwable.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
-                + Thread.currentThread().getId() );
+        } catch ( Exception ex ) {
+            if ( isTimeout( ex )) {
+                // ignore
+            } else {
+                throw new RuntimeException(ex);
+            }
+//            System.out.println( "SERIOUS PROBLEM 2" + throwable.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
+//                + Thread.currentThread().getId() );
 
         } finally {
 

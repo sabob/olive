@@ -1,6 +1,7 @@
 // TODO mix jdbc and tx test
 package za.sabob.olive.jdbc.mixed;
 
+import za.sabob.olive.util.DBTestUtils;
 import za.sabob.olive.jdbc.*;
 import java.sql.*;
 import java.util.*;
@@ -18,19 +19,19 @@ public class TXCommitTest {
 
     int personsCount = 0;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
 
         ds = DBTestUtils.createDataSource( DBTestUtils.HSQLDB, 15 );
         DBTestUtils.createPersonTable( ds, DBTestUtils.HSQLDB );
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
         boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        System.out.println( "SHUTDOWN? " + success );
+        //System.out.println( "SHUTDOWN? " + success );
     }
 
     @Test
@@ -98,8 +99,8 @@ public class TXCommitTest {
 
             conn = TX.beginTransaction( ds );
             //conn.setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED);
-            System.out.println( "In Transaction? " + !conn.getAutoCommit() );
-            System.out.println( "Isolation level? " + OliveUtils.getTransactionIsolation( conn ) );
+            //System.out.println( "In Transaction? " + !conn.getAutoCommit() );
+            //System.out.println( "Isolation level? " + OliveUtils.getTransactionIsolation( conn ) );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );

@@ -1,6 +1,7 @@
 // TODO mix jdbc and tx test
 package za.sabob.olive.jdbc.mixed;
 
+import za.sabob.olive.util.DBTestUtils;
 import za.sabob.olive.jdbc.*;
 import java.sql.*;
 import java.util.*;
@@ -18,7 +19,7 @@ public class TX_JDBCTest {
 
     int personsCount = 0;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
         ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 );
@@ -27,12 +28,12 @@ public class TX_JDBCTest {
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
         boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        System.out.println( "SHUTDOWN? " + success );
+        //System.out.println( "SHUTDOWN? " + success );
         Assert.assertEquals( personsCount, 2 );
     }
 

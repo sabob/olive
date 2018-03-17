@@ -1,12 +1,14 @@
 // TODO mix jdbc and tx test
 package za.sabob.olive.jdbc.mixed;
 
+import za.sabob.olive.util.DBTestUtils;
 import za.sabob.olive.jdbc.*;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import static za.sabob.olive.util.DBTestUtils.isTimeout;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.transaction.*;
@@ -18,7 +20,7 @@ public class ForceTimeoutTest {
 
     int personsCount = 0;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
         ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 ); // Use small pool so that retrieving connections from large amount of threads leads to deadlocks
@@ -28,11 +30,11 @@ public class ForceTimeoutTest {
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        //boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
+        boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
         //System.out.println( "SHUTDOWN? " + success );
         //Assert.assertEquals( personsCount, 200 );
     }
@@ -68,8 +70,14 @@ public class ForceTimeoutTest {
 
             personsCount = persons.size();
 
-        } catch ( Throwable e ) {
-            System.out.println( "WHY 2? " + e.getMessage() );
+        } catch ( Exception e ) {
+            if ( isTimeout( e )) {
+                // ignore
+            } else {
+                throw new RuntimeException(e);
+            }
+            
+            //System.out.println( "WHY 2? " + e.getMessage() );
             //throw new RuntimeException( e );
 
         } finally {
@@ -118,7 +126,7 @@ public class ForceTimeoutTest {
             nestedTX( ds );
 
             List<Person> persons = getJDBCPersons();
-            System.out.println( "PERSONS " + persons.size() );
+            //System.out.println( "PERSONS " + persons.size() );
 
         } catch ( Throwable e ) {
             System.out.println( "SERIOUS PROBLEM 1? " + e.getMessage() );
@@ -158,7 +166,7 @@ public class ForceTimeoutTest {
     public void nestedTX( DataSource ds ) {
 
         Connection conn = null;
-        Throwable err = null;
+        //Throwable err = null;
 
         try {
 
@@ -166,18 +174,25 @@ public class ForceTimeoutTest {
 
             List<Person> persons = getTXPersons();
 
-        } catch ( Throwable throwable ) {
-            err = throwable;
-            System.out.println( "SERIOUS PROBLEM 2" + throwable.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
-                + Thread.currentThread().getId() );
+        } catch ( Exception ex ) {
+            
+            if ( isTimeout( ex )) {
+                //ignore
+            } else {
+                throw new RuntimeException(ex);
+                
+            }
+//            err = ex;
+//            System.out.println( "SERIOUS PROBLEM 2" + ex.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
+//                + Thread.currentThread().getId() );
 
         } finally {
 
             try {
 
-                if ( err != null ) {
-                    System.out.println( "..." );
-                }
+//                if ( err != null ) {
+//                    System.out.println( "..." );
+//                }
 
                 boolean isRoot = TX.isAtRootConnection();
                 boolean connectionCreated = conn != null;

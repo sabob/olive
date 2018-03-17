@@ -1,5 +1,6 @@
 package za.sabob.olive.jdbc;
 
+import za.sabob.olive.util.DBTestUtils;
 import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
@@ -11,13 +12,17 @@ public class JDBCTest {
 
     DataSource ds;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         ds = DBTestUtils.createDataSource(DBTestUtils.H2);
         //ds.setURL( "jdbc:h2:~/test" );
 
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-
+    }
+    
+    @AfterClass(alwaysRun = true)
+    public void afterClass() throws Exception {
+        ds.getConnection().createStatement().execute( "SHUTDOWN" );
     }
 
     @Test
@@ -40,7 +45,6 @@ public class JDBCTest {
 //
             while ( rs.next() ) {
                 String name = rs.getString( "name" );
-                System.out.println( "Name:" + name );
                 Assert.assertEquals( name, "Bob" );
             }
 
@@ -59,7 +63,7 @@ public class JDBCTest {
     }
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
-    public void threadTest() {
+    public void basicThreadTest() {
         Connection conn;
         PreparedStatement ps = null;
         ResultSet rs = null;

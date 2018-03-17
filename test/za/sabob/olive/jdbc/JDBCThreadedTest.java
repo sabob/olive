@@ -1,5 +1,6 @@
 package za.sabob.olive.jdbc;
 
+import za.sabob.olive.util.DBTestUtils;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
@@ -15,16 +16,25 @@ public class JDBCThreadedTest {
 
     int personsCount = 0;
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2);
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
         //ds.setURL( "jdbc:h2:~/test" );
 
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
+
+        try {
+            Connection conn = JDBC.beginOperation( ds );
+            List<Person> persons = getPersons( conn );
+            //System.out.println( "INITIAL PERSONS "  + persons.size() );
+
+        } catch ( Exception e ) {
+        }
+
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
 
         //ds = DBTestUtils.createDataSource();
@@ -57,6 +67,7 @@ public class JDBCThreadedTest {
             List<Person> persons = getPersons( conn );
 
             personsCount = persons.size();
+            //System.out.println( "PERSONS: " + personsCount );
 
         } catch ( Throwable e ) {
             throw new RuntimeException( e );
@@ -66,10 +77,10 @@ public class JDBCThreadedTest {
             boolean isAtRoot = JDBC.isAtRootConnection();
             Assert.assertTrue( isAtRoot );
 
-            JDBC.cleanupOperation(ps, rs );
+            JDBC.cleanupOperation( ps, rs );
 
             isAtRoot = JDBC.isAtRootConnection();
-            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation");
+            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
         }
     }
 
