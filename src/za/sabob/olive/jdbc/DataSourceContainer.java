@@ -8,11 +8,9 @@ import za.sabob.olive.util.*;
 
 public class DataSourceContainer { // implements AutoCloseable {
 
-    // TODO ensure Deque is what we need to push/pop connections NB NB NB
     final private Map<DataSource, ConnectionStack> dataSourceMap = new LinkedHashMap<>();
 
-    //final private Map<Connection, DataSource> connectionMap = new HashMap<>();
-    final private Deque<DataSource> activeDataSourceStack = new ArrayDeque<>();
+    final private Stack<DataSource> activeDataSourceStack = new Stack<>();
 
     private boolean faultRegisteringDS;
 
@@ -169,7 +167,7 @@ public class DataSourceContainer { // implements AutoCloseable {
 //    }
     public DataSource getActiveDataSource() {
 
-        DataSource ds = activeDataSourceStack.peek();
+        DataSource ds = activeDataSourceStack.peekTop();
 
         if ( ds == null ) {
             return JDBCContext.getDefaultDataSource();
@@ -179,7 +177,7 @@ public class DataSourceContainer { // implements AutoCloseable {
     }
 
     public void setActiveDataSource( DataSource activeDataSource ) {
-        activeDataSourceStack.push( activeDataSource );
+        activeDataSourceStack.add( activeDataSource );
     }
 
     public boolean hasActiveOrDefaultDataSource() {
@@ -214,7 +212,7 @@ public class DataSourceContainer { // implements AutoCloseable {
     }
 
     public DataSource popActiveDataSource() {
-        DataSource ds = activeDataSourceStack.poll();
+        DataSource ds = activeDataSourceStack.pop();
         return ds;
     }
 

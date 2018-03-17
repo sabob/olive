@@ -21,7 +21,7 @@ public class JDBCContext {
         return container;
     }
 
-    public static boolean hasJDBCContainer() {
+    public static boolean hasDataSourceContainer() {
         return HOLDER.get() != null;
     }
 
@@ -41,6 +41,11 @@ public class JDBCContext {
     }
     
     public static Connection getCurrentConnection() {
+
+        if (! hasDataSourceContainer()) {
+            throw new IllegalStateException("There is no connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection.");
+        }
+
         DataSourceContainer container = getDataSourceContainer();
         Connection conn = container.getLatestConnection();
         return conn;

@@ -30,8 +30,7 @@ public class TXCommitTest {
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        //System.out.println( "SHUTDOWN? " + success );
+        DBTestUtils.shutdown( ds );
     }
 
     @Test
@@ -58,12 +57,12 @@ public class TXCommitTest {
         } finally {
 
             boolean isAtRoot = JDBC.isAtRootConnection();
-            //Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( isAtRoot );
 
             JDBC.cleanupOperation( ps, rs );
 
             isAtRoot = JDBC.isAtRootConnection();
-            //Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
         }
     }
 
@@ -135,7 +134,7 @@ public class TXCommitTest {
     }
 
     public List<Person> getPersons() {
-        Connection conn = JDBC.beginOperation( ds );
+        Connection conn = JDBCContext.getCurrentConnection();
         return getPersons( conn );
     }
 

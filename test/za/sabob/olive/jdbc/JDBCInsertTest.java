@@ -25,7 +25,7 @@ public class JDBCInsertTest {
 
     @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
-        ds.getConnection().createStatement().execute( "SHUTDOWN" );
+        DBTestUtils.shutdown( ds );        
     }
 
     @Test

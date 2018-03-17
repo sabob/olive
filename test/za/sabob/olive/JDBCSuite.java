@@ -38,6 +38,12 @@ public class JDBCSuite {
 
         testNG.addListener( tla );
         testNG.run();
+        
+        try {
+            Thread.sleep(999999999);
+        } catch ( Exception ex ) {
+            Logger.getLogger( JDBCSuite.class.getName() ).log( Level.SEVERE, null, ex );
+        }
     }
 
     public static class MyListener extends TestListenerAdapter {

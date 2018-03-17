@@ -23,23 +23,14 @@ public class JDBCThreadedTest {
         //ds.setURL( "jdbc:h2:~/test" );
 
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-
-        try {
-            Connection conn = JDBC.beginOperation( ds );
-            List<Person> persons = getPersons( conn );
-            //System.out.println( "INITIAL PERSONS "  + persons.size() );
-
-        } catch ( Exception e ) {
-        }
-
     }
 
     @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
 
         //ds = DBTestUtils.createDataSource();
-        ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        Assert.assertEquals( personsCount, 200 );
+        DBTestUtils.shutdown( ds );
+        //Assert.assertEquals( personsCount, 200 );
     }
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)

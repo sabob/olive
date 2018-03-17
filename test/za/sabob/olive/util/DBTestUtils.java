@@ -1,11 +1,12 @@
 package za.sabob.olive.util;
 
 import java.sql.*;
+import java.util.logging.*;
 import javax.sql.*;
 import org.h2.jdbcx.*;
 import org.hsqldb.jdbc.*;
-import za.sabob.olive.util.*;
-import za.sabob.olive.util.OliveUtils;
+import org.testng.*;
+import za.sabob.olive.jdbc.*;
 
 public class DBTestUtils {
 
@@ -18,16 +19,16 @@ public class DBTestUtils {
     }
 
     public static DataSource createDataSource( int db, int poolSize ) {
-        
+
         DataSource ds = null;
-        
+
         if ( db == H2 ) {
             ds = getH2DataSource( poolSize );
-            
-        } else if (db == HSQLDB) {
+
+        } else if ( db == HSQLDB ) {
             ds = getHSQLDataSource( poolSize );
         }
-        
+
         return ds;
     }
 
@@ -82,11 +83,22 @@ public class DBTestUtils {
             update( ds, "create table if not exists person (id bigint IDENTITY, name varchar(100), primary key (id));" );
         }
     }
-    
-    public static boolean isTimeout(Exception ex) {
-        if (ex.getMessage().contains( "Login timeout") || ex.getMessage().contains("Invalid argument in JDBC call")) {
+
+    public static boolean isTimeout( Exception ex ) {
+        if ( ex.getMessage().contains( "Login timeout" ) || ex.getMessage().contains( "Invalid argument in JDBC call" ) ) {
             return true;
         }
         return false;
+    }
+
+    public static void shutdown( DataSource ds ) {
+        try {
+            ds.getConnection().createStatement().execute( "SHUTDOWN" );
+            Assert.assertFalse( JDBCContext.hasDataSourceContainer() );
+            
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+
     }
 }

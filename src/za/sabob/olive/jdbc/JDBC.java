@@ -34,7 +34,6 @@ public class JDBC {
         container.setFaultRegisteringDS( false );
 
         //validateConnection( conn );
-
         // Switch on autocommit in case it is off
         if ( !OliveUtils.getAutoCommit( conn ) ) {
             OliveUtils.setAutoCommit( conn, true );
@@ -44,9 +43,15 @@ public class JDBC {
     }
 
     public static boolean isAtRootConnection() {
+        
+        if (! JDBCContext.hasDataSourceContainer()) {
+            return false;
+        }
+        
         if ( isFaultRegisteringDS() ) {
             return false;
         }
+
 
         DataSourceContainer container = JDBCContext.getDataSourceContainer();
 
@@ -59,8 +64,18 @@ public class JDBC {
     }
 
     public static boolean isAtRootConnection( DataSource ds ) {
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
         
+        if (! JDBCContext.hasDataSourceContainer()) {
+            return false;
+        }
+        
+        if ( isFaultRegisteringDS() ) {
+            return false;
+        }
+
+        
+        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+
         boolean transactional = false;
         return container.isAtRootConnection( ds, transactional );
     }
@@ -113,6 +128,16 @@ public class JDBC {
         }
     }
 
+    public static RuntimeException cleanupOperation( Exception exception, List<AutoCloseable> closeables ) {
+
+        if ( closeables != null && closeables.size() > 0 ) {
+            AutoCloseable[] autoCloseables = closeables.toArray( new AutoCloseable[closeables.size()] );
+            return cleanupOperation( exception, autoCloseables );
+        }
+
+        return OliveUtils.toRuntimeException( exception );
+    }
+
     public static RuntimeException cleanupOperation( Exception exception, AutoCloseable... autoClosables ) {
         try {
             cleanupOperation( autoClosables );
@@ -148,6 +173,11 @@ public class JDBC {
     }
 
     public static boolean isFaultRegisteringDS() {
+
+        if (! JDBCContext.hasDataSourceContainer()) {
+            return false;
+        }
+
         DataSourceContainer container = JDBCContext.getDataSourceContainer();
         return container.isFaultRegisteringDS();
     }
@@ -161,8 +191,8 @@ public class JDBC {
         if ( isFaultRegisteringDS() ) {
             throw new IllegalStateException(
                 "Seems that JDBC.beginOperation was previously invoked and failed to retrieve a connection and placed in an inconsistent state. JDBC.beginOperation "
-                    + "was invoked again without first calling JDBC.cleanupOperation. JDBC.cleanupOperation is required to cleanup resources and put the JDBC operations "
-                    + " in a consistent state." );
+                + "was invoked again without first calling JDBC.cleanupOperation. JDBC.cleanupOperation is required to cleanup resources and put the JDBC operations "
+                + " in a consistent state." );
         }
     }
 }

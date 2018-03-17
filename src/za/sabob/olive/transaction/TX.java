@@ -48,9 +48,15 @@ public class TX {
     }
 
     public static boolean isAtRootConnection() {
+
+        if (! JDBCContext.hasDataSourceContainer()) {
+            return false;
+        }
+
         if ( isFaultRegisteringDS() ) {
             return false;
         }
+        
 
         DataSourceContainer container = JDBCContext.getDataSourceContainer();
         if ( !container.hasActiveDataSource() ) {
@@ -62,6 +68,16 @@ public class TX {
     }
 
     public static boolean isAtRootConnection( DataSource ds ) {
+        
+        if (! JDBCContext.hasDataSourceContainer()) {
+            return false;
+        }
+
+        if ( isFaultRegisteringDS() ) {
+            return false;
+        }
+
+
         DataSourceContainer container = JDBCContext.getDataSourceContainer();
 
         boolean transactional = true;
@@ -229,6 +245,11 @@ public class TX {
     }
 
     public static boolean isFaultRegisteringDS() {
+
+        if (! JDBCContext.hasDataSourceContainer()) {
+            return false;
+        }
+
         DataSourceContainer container = JDBCContext.getDataSourceContainer();
         return container.isFaultRegisteringDS();
     }

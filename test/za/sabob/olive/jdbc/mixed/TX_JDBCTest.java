@@ -32,8 +32,7 @@ public class TX_JDBCTest {
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        //System.out.println( "SHUTDOWN? " + success );
+        DBTestUtils.shutdown( ds );
         Assert.assertEquals( personsCount, 2 );
     }
 

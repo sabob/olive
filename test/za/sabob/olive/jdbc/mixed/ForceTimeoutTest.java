@@ -34,9 +34,7 @@ public class ForceTimeoutTest {
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        boolean success = ds.getConnection().createStatement().execute( "SHUTDOWN" );
-        //System.out.println( "SHUTDOWN? " + success );
-        //Assert.assertEquals( personsCount, 200 );
+        DBTestUtils.shutdown( ds );
     }
 
     @Test(successPercentage = 0, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
