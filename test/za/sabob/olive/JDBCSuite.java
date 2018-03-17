@@ -40,7 +40,7 @@ public class JDBCSuite {
         testNG.run();
         
         try {
-            Thread.sleep(999999999);
+            //Thread.sleep(999999999);
         } catch ( Exception ex ) {
             Logger.getLogger( JDBCSuite.class.getName() ).log( Level.SEVERE, null, ex );
         }

@@ -20,6 +20,17 @@ public class JDBCContext {
 
         return container;
     }
+    
+    public static boolean hasConnections( DataSource ds ) {
+        if (! hasDataSourceContainer()) {
+            return false;
+        }
+        
+        DataSourceContainer container = getDataSourceContainer();
+
+        boolean hasConnecions = container.hasConnection( ds );
+        return hasConnecions;
+    }
 
     public static boolean hasDataSourceContainer() {
         return HOLDER.get() != null;
@@ -33,24 +44,41 @@ public class JDBCContext {
         DataSourceContainer container = getDataSourceContainer();
 
         //container.popActiveDataSource(); // Not needed since cleanupTransaction should do this
-
-        if (container.hasActiveDataSource()) {
-            throw new IllegalStateException("DataSourceContainer should be empty, but contains an active DataSource. Make sure you cleanup all transactions with TX.cleanupTransaction()");
+        if ( container.hasActiveDataSource() ) {
+            throw new IllegalStateException( 
+                "DataSourceContainer should be empty, but contains an active DataSource. Make sure you cleanup all transactions with TX.cleanupTransaction()" );
         }
         HOLDER.set( null );
     }
-    
-    public static Connection getCurrentConnection() {
 
-        if (! hasDataSourceContainer()) {
-            throw new IllegalStateException("There is no connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection.");
+    public static Connection getLatestConnection() {
+
+        if ( !hasDataSourceContainer() ) {
+            throw new IllegalStateException( "There is no Connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection." );
         }
 
         DataSourceContainer container = getDataSourceContainer();
         Connection conn = container.getLatestConnection();
         return conn;
     }
-    
+
+    public static DataSource getLatestDataSource() {
+
+        if ( !hasDataSourceContainer() ) {
+            throw new IllegalStateException( "There is no DataSource registered. Use TX.beginTransaction or JDBC.beginOperation to register a dataSource." );
+        }
+
+        DataSourceContainer container = getDataSourceContainer();
+
+        boolean hasActiveDS = container.hasActiveDataSource();
+        
+        if ( hasActiveDS ) {
+            return container.getActiveDataSource();
+        }
+
+        return null;
+    }
+
     public static boolean hasDefaultDataSource() {
         return defaultDataSource != null;
     }
