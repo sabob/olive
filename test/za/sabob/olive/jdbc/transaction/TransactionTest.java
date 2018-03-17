@@ -1,4 +1,4 @@
-package za.sabob.olive.transaction;
+package za.sabob.olive.jdbc.transaction;
 
 import za.sabob.olive.util.DBTestUtils;
 import java.sql.*;
@@ -6,6 +6,7 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.ps.*;
+import za.sabob.olive.transaction.TX;
 import za.sabob.olive.util.*;
 
 public class TransactionTest {
