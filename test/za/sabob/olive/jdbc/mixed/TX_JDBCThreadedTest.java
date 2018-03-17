@@ -205,7 +205,7 @@ public class TX_JDBCThreadedTest {
     }
 
     public List<Person> getJDBCPersons() {
-        Connection conn = JDBCContext.getCurrentConnection();
+        Connection conn = JDBCContext.getLatestConnection();
             boolean isAutoCommit = OliveUtils.getAutoCommit( conn );
             Assert.assertTrue( isAutoCommit, " Connection should not be a transactional connection." );
             
@@ -214,7 +214,7 @@ public class TX_JDBCThreadedTest {
     }
 
     public List<Person> getTXPersons() {
-        Connection conn = JDBCContext.getCurrentConnection();
+        Connection conn = JDBCContext.getLatestConnection();
             boolean isTransaction = !OliveUtils.getAutoCommit( conn );
             Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );
             

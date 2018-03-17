@@ -134,7 +134,7 @@ public class TXCommitTest {
     }
 
     public List<Person> getPersons() {
-        Connection conn = JDBCContext.getCurrentConnection();
+        Connection conn = JDBCContext.getLatestConnection();
         return getPersons( conn );
     }
 

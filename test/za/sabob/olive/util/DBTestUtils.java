@@ -94,6 +94,7 @@ public class DBTestUtils {
     public static void shutdown( DataSource ds ) {
         try {
             ds.getConnection().createStatement().execute( "SHUTDOWN" );
+            Assert.assertFalse( JDBCContext.hasConnections( ds ));
             Assert.assertFalse( JDBCContext.hasDataSourceContainer() );
             
         } catch ( SQLException ex ) {
