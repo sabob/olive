@@ -36,13 +36,13 @@ public class TXCommitTest {
     @Test
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             nestedJDBC( ds );
 
@@ -68,11 +68,11 @@ public class TXCommitTest {
 
     public void nestedJDBC( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             nestedTX( ds );
 
@@ -83,27 +83,27 @@ public class TXCommitTest {
 
         } finally {
             //Assert.assertFalse( JDBC.isAtRootConnection() );
-            JDBC.cleanupOperation( conn );
+            JDBC.cleanupOperation( ctx );
             //Assert.assertTrue( JDBC.isAtRootConnection() );
         }
     }
 
     public void nestedTX( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         Exception ex = null;
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
             //conn.setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED);
             //System.out.println( "In Transaction? " + !conn.getAutoCommit() );
             //System.out.println( "Isolation level? " + OliveUtils.getTransactionIsolation( conn ) );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( conn, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
             Assert.assertEquals( count, 1 );
@@ -124,7 +124,7 @@ public class TXCommitTest {
 
         } finally {
             //Assert.assertTrue( TX.isAtRootConnection() );
-            RuntimeException result = TX.cleanupTransaction( ex, conn, ps );
+            RuntimeException result = TX.cleanupTransaction( ex, ctx.getConnection(), ps );
 
             if ( result != null ) {
                 throw result;
@@ -134,7 +134,7 @@ public class TXCommitTest {
     }
 
     public List<Person> getPersons() {
-        Connection conn = JDBCContext.getLatestConnection();
+        Connection conn = JDBCLookup.getLatestConnection( ds );
         return getPersons( conn );
     }
 

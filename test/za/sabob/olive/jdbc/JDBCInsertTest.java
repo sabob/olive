@@ -31,17 +31,17 @@ public class JDBCInsertTest {
     @Test
     public void basicTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn;
+JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( conn, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -50,7 +50,7 @@ public class JDBCInsertTest {
 
             nested( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
 
             Assert.assertEquals( persons.size(), 2 );
 
@@ -70,26 +70,26 @@ public class JDBCInsertTest {
 
     public void nested( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
             Assert.assertEquals( persons.size(), 2 );
 
         } finally {
             Assert.assertFalse( JDBC.isAtRootConnection() );
-            JDBC.cleanupOperation( conn );
+            JDBC.cleanupOperation( ctx );
             Assert.assertTrue( JDBC.isAtRootConnection() );
         }
 
     }
 
-    public List<Person> getPersons( Connection conn ) {
+    public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
+        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
         List<Person> persons = OliveUtils.query( ps, new RowMapper<Person>() {
                                                  @Override

@@ -62,14 +62,16 @@ public class MultipleDataSourcesTest {
     public void insertPersons( DataSource ds ) {
 
         PreparedStatement ps = null;
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( conn, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+            
+            ctx.add(ps);
 
             int count = ps.executeUpdate();
 
@@ -84,7 +86,7 @@ public class MultipleDataSourcesTest {
             throw new RuntimeException( e );
 
         } finally {
-            TX.cleanupTransaction( conn, ps );
+            TX.cleanupTransaction( ctx );
         }
     }
 
@@ -92,13 +94,13 @@ public class MultipleDataSourcesTest {
 
         try {
 
-            Connection h2Conn = TX.beginTransaction(H2_DS );
-            List persons = getLatestPersons();
+            JDBCContext h2Ctx = TX.beginTransaction(H2_DS );
+            List persons = getLatestPersons( H2_DS );
             Assert.assertEquals( persons.size(), 2 );
 
             try {
-                Connection hsqlConn = TX.beginTransaction(HSQL_DS );
-                persons = getLatestPersons();
+                JDBCContext hsqlCtx = TX.beginTransaction(HSQL_DS );
+                persons = getLatestPersons( HSQL_DS);
                 Assert.assertEquals( persons.size(), 0 );
             } finally {
                 TX.cleanupTransaction();
@@ -109,9 +111,9 @@ public class MultipleDataSourcesTest {
         }
     }
 
-    public List<Person> getLatestPersons() {
+    public List<Person> getLatestPersons( DataSource ds ) {
 
-        Connection conn = JDBCContext.getLatestConnection();
+        Connection conn = JDBCLookup.getLatestConnection( ds );
 
         PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
 

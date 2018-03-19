@@ -15,6 +15,7 @@
  */
 package za.sabob.olive.util;
 
+import com.sun.javafx.scene.control.skin.*;
 import java.io.*;
 import za.sabob.olive.ps.SqlParam;
 import za.sabob.olive.ps.ParsedSql;
@@ -824,7 +825,7 @@ public class OliveUtils {
                 return -1;
             }
 
-            return conn.getTransactionIsolation( );
+            return conn.getTransactionIsolation();
 
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
@@ -1549,6 +1550,10 @@ public class OliveUtils {
         if ( mainException == null ) {
             return supressedException;
         }
+        
+        if (mainException == supressedException) {
+            return mainException;
+        }
 
         mainException.addSuppressed( supressedException );
         return mainException;
@@ -1578,9 +1583,9 @@ public class OliveUtils {
         }
 
         if ( exception instanceof RuntimeException ) {
-            throw (RuntimeException) exception;
+            return (RuntimeException) exception;
         }
-        throw new RuntimeException( exception );
+        return new RuntimeException( exception );
 
     }
 
@@ -1621,6 +1626,59 @@ public class OliveUtils {
 
         throwAsRuntimeIfException( mainException );
     }
+    
+    public static RuntimeException closeSilently( boolean autoCommit, Exception exception, AutoCloseable... closeables ) {
+
+        List list = Arrays.asList( closeables );
+        return closeSilently( autoCommit, exception, list );
+    }
+    
+    public static RuntimeException closeSilently( boolean autoCommit, Exception exception, Iterable<? extends AutoCloseable> closeables ) {
+        
+        try {
+            close(autoCommit, closeables);
+            return OliveUtils.toRuntimeException( exception );
+
+        } catch ( RuntimeException ex ) {
+            exception = OliveUtils.addSuppressed( ex, exception );
+            return OliveUtils.toRuntimeException( exception );
+        }
+    }
+    
+    public static RuntimeException closeSilently( Exception exception, Iterable<? extends AutoCloseable> closeables ) {
+        
+        try {
+            close(closeables);
+            return OliveUtils.toRuntimeException( exception );
+
+        } catch ( RuntimeException ex ) {
+            exception = OliveUtils.addSuppressed( ex, exception );
+            return OliveUtils.toRuntimeException( exception );
+        }
+    }
+    
+    public static RuntimeException closeSilently( boolean autoCommit, Iterable<? extends AutoCloseable> closeables ) {
+        return closeSilently( autoCommit, null, closeables );
+    }
+    
+    public static RuntimeException closeSilently( boolean autoCommit, AutoCloseable... closeables ) {
+        return closeSilently( autoCommit, null, closeables );
+    }
+
+    public static RuntimeException closeSilently( Iterable<? extends AutoCloseable> closeables ) {
+        return closeSilently( null, closeables );
+    }
+    
+    public static RuntimeException closeSilently( Exception exception, AutoCloseable... closeables ) {
+        
+        List list = Arrays.asList( closeables );
+        return closeSilently( exception, list );
+    }
+    
+    public static RuntimeException closeSilently( AutoCloseable... closeables ) {
+        
+        return closeSilently( null,  closeables);
+    }
 
     /**
      * Closes the given list of autoCloseabes and wraps any Exceptions thrown as RuntimeExcepions. Every closeable will have its #close method called, regardless
@@ -1657,7 +1715,7 @@ public class OliveUtils {
                 try {
                     conn.setAutoCommit( autoCommit );
 
-                } catch ( Exception ex ) {
+                } catch ( SQLException ex ) {
                     mainException = addSuppressed( ex, mainException );
                 }
 
@@ -1732,6 +1790,50 @@ public class OliveUtils {
             }
         }
         return null;
+    }
+    
+    public static List<Connection> getConnections( Iterable<? extends AutoCloseable> closeables ) {
+        
+          List<Connection> connections = new ArrayList();
+
+        if ( closeables != null ) {
+
+            for ( final AutoCloseable closeable : closeables ) {
+
+                if ( closeable instanceof Connection  ) {
+                    connections.add( (Connection) closeable );
+                }
+            }
+        }
+        
+        return connections;
+    }
+
+    public static List<Connection> getConnections( AutoCloseable... closeables ) {
+        List list = Arrays.asList( closeables );
+        return getConnections( list );
+    }
+    
+    public static List<AutoCloseable> removeConnections( Iterable<? extends AutoCloseable> closeables ) {   
+
+          List connections = new ArrayList();
+
+        if ( closeables != null ) {
+
+            for ( final AutoCloseable closeable : closeables ) {
+
+                if ( ! (closeable instanceof Connection )) {
+                    connections.add( closeable );
+                }
+            }
+        }
+        
+        return connections;
+    }
+    
+    public static List<AutoCloseable> removeConnections( AutoCloseable... closeables ) {
+        List list = Arrays.asList( closeables );
+        return removeConnections( list );        
     }
 
     /**

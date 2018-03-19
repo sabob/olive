@@ -28,18 +28,18 @@ public class JDBCTest {
     @Test
     public void basicTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             nested( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( conn, "select * from person p", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
 
             rs = ps.executeQuery();
 //
@@ -64,18 +64,18 @@ public class JDBCTest {
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void basicThreadTest() {
-        Connection conn;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             nested( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( conn, "select * from person p", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
 
             rs = ps.executeQuery();
 //
@@ -104,10 +104,10 @@ public class JDBCTest {
 
         try {
 
-            Connection conn = JDBC.beginOperation( ds );
+            JDBCContext ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( conn, "select * from person p", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
 
             rs = ps.executeQuery();
 //

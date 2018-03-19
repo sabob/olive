@@ -10,50 +10,70 @@ public class JDBC {
 
     private static final Logger LOGGER = Logger.getLogger( JDBC.class.getName() );
 
-    public static Connection beginOperation() {
+    public static JDBCContext beginOperation() {
 
         assertPreviousConnectionRegisterNotFaulty();
 
-        DataSource ds = JDBCContext.getDefaultDataSource();
-        Connection conn = beginOperation( ds );
-        return conn;
+        DataSource ds = JDBCLookup.getDefaultDataSource();
+        JDBCContext context = beginOperation( ds );
+
+        return context;
     }
 
-    public static Connection beginOperation( DataSource ds ) {
+    public static JDBCContext beginOperation( DataSource ds ) {
 
-        assertPreviousConnectionRegisterNotFaulty();
+        boolean hasConnection = false;
+        Connection conn = null;
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        try {
 
-        container.setFaultRegisteringDS( true );
+            assertPreviousConnectionRegisterNotFaulty();
 
-        boolean transactional = false;
-        Connection conn = container.getConnection( ds, transactional );
-        container.setActiveDataSource( ds );
+            DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
-        container.setFaultRegisteringDS( false );
+            container.setFaultRegisteringDS( true );
 
-        //validateConnection( conn );
-        // Switch on autocommit in case it is off
-        if ( !OliveUtils.getAutoCommit( conn ) ) {
-            OliveUtils.setAutoCommit( conn, true );
+            boolean isTransactional = false;
+            hasConnection = container.hasConnection( ds, isTransactional );
+
+            boolean transactional = false;
+            conn = container.getConnection( ds, transactional );
+            container.setActiveDataSource( ds );
+
+            container.setFaultRegisteringDS( false );
+
+            //validateConnection( conn );
+            // Switch on autocommit in case it is off
+            if ( !OliveUtils.getAutoCommit( conn ) ) {
+                OliveUtils.setAutoCommit( conn, true );
+            }
+
+            boolean isRoot = !hasConnection; // if there is no existing conn, this conn is newly created, thus root
+            JDBCContext context = new JDBCContext( conn, isRoot );
+            return context;
+
+        } catch ( Exception e ) {
+
+            if ( hasConnection ) {
+                throw e;
+            }
+
+            boolean autoCommit = true;
+            throw OliveUtils.closeSilently( autoCommit, e, conn );
         }
-
-        return conn;
     }
 
     public static boolean isAtRootConnection() {
-        
-        if (! JDBCContext.hasDataSourceContainer()) {
+
+        if ( !JDBCLookup.hasDataSourceContainer() ) {
             return false;
         }
-        
+
         if ( isFaultRegisteringDS() ) {
             return false;
         }
 
-
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
         if ( !container.hasActiveDataSource() ) {
             return false;
@@ -64,34 +84,36 @@ public class JDBC {
     }
 
     public static boolean isAtRootConnection( DataSource ds ) {
-        
-        if (! JDBCContext.hasDataSourceContainer()) {
+
+        if ( !JDBCLookup.hasDataSourceContainer() ) {
             return false;
         }
-        
+
         if ( isFaultRegisteringDS() ) {
             return false;
         }
 
-        
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
         boolean transactional = false;
         return container.isAtRootConnection( ds, transactional );
     }
 
-    public static void cleanupOperation( AutoCloseable... autoClosables ) {
+    public static void cleanupOperation( AutoCloseable... closeables ) {
 
-        boolean isFaultRegisteringDS = isFaultRegisteringDS();
+        boolean isConnectionRegisterFaulty = isFaultRegisteringDS();
         clearConnectionRegisterFault();
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
-        Connection conn = OliveUtils.getConnection( autoClosables );
+        Connection conn;
 
-        if ( conn == null ) {
+        List<Connection> conns = OliveUtils.getConnections( closeables );
 
-            if ( isFaultRegisteringDS ) {
+        if ( conns.isEmpty() ) {
+
+            if ( isConnectionRegisterFaulty ) {
+                JDBCLookup.cleanup( closeables );
                 return;
             }
 
@@ -103,10 +125,16 @@ public class JDBC {
                     "No connection was found to clean up. Either pass a Connection as a parameter or use begin to register a connection with the operation." );
             }
 
-            List<AutoCloseable> list = Arrays.asList( autoClosables );
+            List<AutoCloseable> list = Arrays.asList( closeables );
             list = new ArrayList<>( list );
             list.add( conn );
-            autoClosables = list.toArray( new AutoCloseable[list.size()] );
+            closeables = list.toArray( new AutoCloseable[list.size()] );
+
+        } else {
+            if ( conns.size() > 1 ) {
+                throw new IllegalArgumentException( " Only 1 Connection can be passed to cleanupOperation" );
+            }
+            conn = conns.get( 0 );
         }
 
         DataSource ds = container.getActiveDataSource();
@@ -114,18 +142,28 @@ public class JDBC {
         boolean isAtRootConnection = isAtRootConnection( ds );
 
         boolean success = container.removeConnection( ds, conn );
+
         boolean hasConnections = container.hasConnections();
 
         if ( !hasConnections ) {
-            JDBCContext.unbindDataSourceContainer();
+            JDBCLookup.unbindDataSourceContainer();
         }
+
+        List resources = OliveUtils.removeConnections( closeables );
+        Exception ex1 = JDBCLookup.cleanupSilently( resources );
 
         if ( isAtRootConnection ) {
 
             boolean autoCommit = true;
-            OliveUtils.close( autoCommit, autoClosables );
 
+            List<Connection> connections = OliveUtils.getConnections( closeables );
+
+            RuntimeException ex2 = OliveUtils.closeSilently( autoCommit, connections );
+
+            ex1 = OliveUtils.addSuppressed( ex2, ex1 );
         }
+
+        OliveUtils.throwAsRuntimeIfException( ex1 );
     }
 
     public static RuntimeException cleanupOperation( Exception exception, List<AutoCloseable> closeables ) {
@@ -174,16 +212,16 @@ public class JDBC {
 
     public static boolean isFaultRegisteringDS() {
 
-        if (! JDBCContext.hasDataSourceContainer()) {
+        if ( !JDBCLookup.hasDataSourceContainer() ) {
             return false;
         }
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
         return container.isFaultRegisteringDS();
     }
 
     public static void clearConnectionRegisterFault() {
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
         container.setFaultRegisteringDS( false );
     }
 

@@ -14,7 +14,10 @@ public class ConnectionStack {
 
     public boolean remove( Connection conn ) {
         return connections.remove( conn );
+    }
 
+    public boolean contains( Connection conn ) {
+        return connections.contains(conn );
     }
 
     public Connection pop() {

@@ -5,6 +5,7 @@ import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import za.sabob.olive.jdbc.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.transaction.TX;
 import za.sabob.olive.util.*;
@@ -25,18 +26,18 @@ public class TransactionTest {
     @Test
     public void basicTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
 
             nested( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( conn, "select * from information_schema.catalogs c", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from information_schema.catalogs c", params );
 
             rs = ps.executeQuery();
 //
@@ -66,18 +67,18 @@ public class TransactionTest {
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void threadTest() {
-        Connection conn;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
 
             nested( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( conn, "select * from information_schema.catalogs c", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from information_schema.catalogs c", params );
 
             rs = ps.executeQuery();
 //
@@ -111,10 +112,10 @@ public class TransactionTest {
 
         try {
 
-            Connection conn = TX.beginTransaction( ds );
+            JDBCContext ctx = TX.beginTransaction( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( conn, "select * from information_schema.catalogs c", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from information_schema.catalogs c", params );
 
             rs = ps.executeQuery();
 //
@@ -123,7 +124,7 @@ public class TransactionTest {
                 Assert.assertEquals( name, "TEST" );
             }
 
-            TX.commitTransaction( conn );
+            TX.commitTransaction( ctx );
 
         } catch ( SQLException ex ) {
 

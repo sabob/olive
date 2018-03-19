@@ -39,17 +39,17 @@ public class TX_JDBCTest {
     @Test
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn;
+        JDBCContext ctx;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( conn, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -58,7 +58,7 @@ public class TX_JDBCTest {
 
             nestedJDBC( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
 
             personsCount = persons.size();
 
@@ -79,48 +79,48 @@ public class TX_JDBCTest {
 
     public void nestedJDBC( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             nestedTX( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
             
         } catch (Exception e) {
             //e.printStackTrace();
 
         } finally {
             Assert.assertFalse( JDBC.isAtRootConnection() );
-            JDBC.cleanupOperation( conn );
+            JDBC.cleanupOperation( ctx );
             Assert.assertTrue( JDBC.isAtRootConnection() );
         }
     }
 
     public void nestedTX( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
 
         } finally {
             boolean isAtRoot = TX.isAtRootConnection();
             Assert.assertTrue( isAtRoot );
-            TX.cleanupTransaction( conn );
+            TX.cleanupTransaction( ctx );
             Assert.assertFalse( TX.isAtRootConnection() );
         }
 
     }
 
-    public List<Person> getPersons( Connection conn ) {
+    public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
+        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
         List<Person> persons = OliveUtils.query( ps, new RowMapper<Person>() {
                                                  @Override

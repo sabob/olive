@@ -40,7 +40,7 @@ public class TX_JDBCThreadedTest {
     @Test(successPercentage = 0, threadPoolSize = 20, invocationCount = 200, timeOut = 1110000)
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn = null;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
@@ -49,14 +49,14 @@ public class TX_JDBCThreadedTest {
             boolean isRoot = JDBC.isAtRootConnection();
             Assert.assertFalse( isRoot, "CLEAN: " );
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
             
             isRoot = JDBC.isAtRootConnection();
             Assert.assertTrue( isRoot, "CLEAN:" );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( conn, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -76,7 +76,7 @@ public class TX_JDBCThreadedTest {
         } finally {
 
             boolean isRoot = JDBC.isAtRootConnection();
-            boolean connectionCreated = conn != null;
+            boolean connectionCreated = ctx != null;
 
             if ( connectionCreated ) {
 
@@ -100,11 +100,11 @@ public class TX_JDBCThreadedTest {
 
     public void nestedJDBC( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             nestedTX( ds );
 
@@ -117,7 +117,7 @@ public class TX_JDBCThreadedTest {
         } finally {
 
             boolean isRoot = JDBC.isAtRootConnection();
-            boolean connectionCreated = conn != null;
+            boolean connectionCreated = ctx != null;
 
             if ( connectionCreated ) {
                 //Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
@@ -143,11 +143,11 @@ public class TX_JDBCThreadedTest {
 
     public void nestedTX( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
 
             List<Person> persons = getTXPersons();
 
@@ -165,7 +165,7 @@ public class TX_JDBCThreadedTest {
             try {
 
                 boolean isRoot = TX.isAtRootConnection();
-                boolean connectionCreated = conn != null;
+                boolean connectionCreated = ctx != null;
 
                 TX.cleanupTransaction();
 
@@ -205,7 +205,7 @@ public class TX_JDBCThreadedTest {
     }
 
     public List<Person> getJDBCPersons() {
-        Connection conn = JDBCContext.getLatestConnection();
+        Connection conn = JDBCLookup.getLatestConnection( ds );
             boolean isAutoCommit = OliveUtils.getAutoCommit( conn );
             Assert.assertTrue( isAutoCommit, " Connection should not be a transactional connection." );
             
@@ -214,7 +214,7 @@ public class TX_JDBCThreadedTest {
     }
 
     public List<Person> getTXPersons() {
-        Connection conn = JDBCContext.getLatestConnection();
+        Connection conn = JDBCLookup.getLatestConnection( ds );
             boolean isTransaction = !OliveUtils.getAutoCommit( conn );
             Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );
             

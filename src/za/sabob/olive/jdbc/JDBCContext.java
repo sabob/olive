@@ -1,144 +1,97 @@
 package za.sabob.olive.jdbc;
 
 import java.sql.*;
-import javax.sql.*;
+import java.util.*;
+import za.sabob.olive.util.*;
 
-public class JDBCContext {
+public class JDBCContext implements AutoCloseable {
 
-    private static DataSource defaultDataSource;
+    private Connection connection;
 
-    private static final ThreadLocal<DataSourceContainer> HOLDER = new ThreadLocal<DataSourceContainer>();
+    final private boolean rootConnection;
 
-    public static DataSourceContainer getDataSourceContainer() {
+    private final List<Statement> statements = new ArrayList<>();
 
-        DataSourceContainer container = HOLDER.get();
+    private final List<ResultSet> resultSets = new ArrayList<>();
 
-        if ( container == null ) {
-            container = new DataSourceContainer();
-            bindDataSourceContainer( container );
+    public JDBCContext( Connection conn, boolean isRoot ) {
+        this.connection = conn;
+        rootConnection = isRoot;
+    }
+
+    public List<Statement> getStatements() {
+        return Collections.unmodifiableList( statements );
+    }
+
+    public List<ResultSet> getResultSets() {
+        return Collections.unmodifiableList( resultSets );
+    }
+
+    public boolean isRootConnection() {
+        return rootConnection;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void add( Statement statement ) {
+
+        if ( statements.contains( statement ) ) {
+            return;
         }
 
-        return container;
-    }
-    
-    public static boolean hasConnections( DataSource ds ) {
-        if (! hasDataSourceContainer()) {
-            return false;
-        }
-        
-        DataSourceContainer container = getDataSourceContainer();
-
-        boolean hasConnecions = container.hasConnection( ds );
-        return hasConnecions;
+        this.statements.add( statement );
     }
 
-    public static boolean hasDataSourceContainer() {
-        return HOLDER.get() != null;
-    }
+    public void add( ResultSet rs ) {
 
-    public static void bindDataSourceContainer( DataSourceContainer container ) {
-        HOLDER.set( container );
-    }
-
-    public static void unbindDataSourceContainer() {
-        DataSourceContainer container = getDataSourceContainer();
-
-        //container.popActiveDataSource(); // Not needed since cleanupTransaction should do this
-        if ( container.hasActiveDataSource() ) {
-            throw new IllegalStateException( 
-                "DataSourceContainer should be empty, but contains an active DataSource. Make sure you cleanup all transactions with TX.cleanupTransaction()" );
-        }
-        HOLDER.set( null );
-    }
-
-    public static Connection getLatestConnection() {
-
-        if ( !hasDataSourceContainer() ) {
-            throw new IllegalStateException( "There is no Connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection." );
+        if ( resultSets.contains( rs ) ) {
+            return;
         }
 
-        DataSourceContainer container = getDataSourceContainer();
-        Connection conn = container.getLatestConnection();
-        return conn;
+        this.resultSets.add( rs );
     }
 
-    public static DataSource getLatestDataSource() {
+    public void clear() {
+        this.resultSets.clear();
+        this.statements.clear();
+        this.connection = null;
+    }
 
-        if ( !hasDataSourceContainer() ) {
-            throw new IllegalStateException( "There is no DataSource registered. Use TX.beginTransaction or JDBC.beginOperation to register a dataSource." );
+    @Override
+    public void close() {
+        List<AutoCloseable> closeables = gatherResources();
+
+        RuntimeException exception = null;
+
+        if ( isRootConnection() ) {
+            boolean autoCommit = true;
+            exception = OliveUtils.closeSilently( autoCommit, closeables );
+
+        } else {
+            // Dont close the connection since we aren't referencing the root connection
+            closeables.remove( connection );
+            boolean autoCommit = true;
+            exception = OliveUtils.closeSilently( autoCommit, closeables );
         }
 
-        DataSourceContainer container = getDataSourceContainer();
-
-        boolean hasActiveDS = container.hasActiveDataSource();
-        
-        if ( hasActiveDS ) {
-            return container.getActiveDataSource();
-        }
-
-        return null;
+        OliveUtils.throwAsRuntimeIfException( exception );
     }
 
-    public static boolean hasDefaultDataSource() {
-        return defaultDataSource != null;
+    public List<AutoCloseable> gatherResources() {
+
+        List<AutoCloseable> resources = new ArrayList();
+
+        List<ResultSet> resultSets = getResultSets();
+        resources.addAll( resultSets );
+
+        List<Statement> statements = getStatements();
+        resources.addAll( statements );
+
+        resources.add( connection );
+
+        return resources;
     }
 
-    public static DataSource getDefaultDataSource() {
-        if ( defaultDataSource == null ) {
-            throw new IllegalStateException(
-                "You did not provide a DataSource, so attempting to use JDBCContext.getDefaultDataSource() but no default DataSource is specified. Either pass a DataSource with your calls, or use JDBCContext.setDefaultDataSource() to set a default DataSource" );
-        }
-        return defaultDataSource;
-    }
-
-    public static void setDefaultDataSource( DataSource defaultDataSource ) {
-        JDBCContext.defaultDataSource = defaultDataSource;
-    }
-
-//    
-//    public void saveInServiceTX( Object o ) {
-//
-//        doTransactional( new TransactionCallback() {
-//            @Override
-//            public void execute() throws Exception {
-//                
-//                saveInDao( o );
-//                
-//            }
-//        } );
-//    }
-//
-//    public void saveInServiceNOTX( Object o ) {
-//
-//        doJDBCOperation( new JDBCCallback() {
-//            @Override
-//            public void execute() throws Exception {
-//                
-//                saveInDao( o );
-//                
-//            }
-//        } );
-//    }
-//
-//    public void saveInService2( Object o ) {
-//
-//        try {
-//            TX.beginTransaction( ds );
-//
-//            saveInDao( o );
-//
-//            TX.commitTransaction();
-//
-//        } catch ( Exception e ) {
-//            throw TX.rollbackTransaction();
-//
-//        } finally {
-//            TX.cleanupTransaction( autoClosables );
-//        }
-//    }
-//
-//    public void saveInDao( Object o ) {
-//
-//        //TX.beginTransaction( conn );
-//    }
 }

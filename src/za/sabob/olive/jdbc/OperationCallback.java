@@ -1,9 +1,8 @@
 package za.sabob.olive.jdbc;
 
-import java.sql.*;
-
+@FunctionalInterface
 public interface OperationCallback {
     
-    public void execute( Connection conn ) throws Exception;
+    public void execute( JDBCContext ctx ) throws Exception;
 
 }

@@ -20,7 +20,7 @@ public class Transactional {
     final private DataSource ds;
 
     public Transactional() {
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
         this.ds = container.getActiveDataSource();
     }
 
@@ -54,23 +54,23 @@ public class Transactional {
 //    }
     public static void Transactional( DataSource ds, TransactionCallback callback ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
             // TODO bind the conn to a THREAD_LOCAL so that OliveUtils can grab the conn!
-            conn = TX.beginTransaction( ds );
+            ctx = TX.beginTransaction( ds );
 
-            callback.execute( conn );
+            callback.execute( ctx );
 
-            TX.commitTransaction( conn );
+            TX.commitTransaction( ctx );
 
         } catch ( Exception e ) {
 
-            throw TX.rollbackTransaction( conn, e );
+            throw TX.rollbackTransaction( ctx, e );
 
         } finally {
 
-            TX.cleanupTransaction( conn );
+            TX.cleanupTransaction( ctx );
 
         }
     }

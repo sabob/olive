@@ -61,6 +61,45 @@ public class DataSourceContainer { // implements AutoCloseable {
         return conn;
     }
 
+    public boolean containsConnection( DataSource ds, Connection conn ) {
+        if ( dataSourceMap.isEmpty() ) {
+            return false;
+        }
+        
+        ConnectionStack stack = getConnections( ds );
+        if (stack == null) {
+            return false;
+        }
+        
+        return stack.contains( conn );
+    }
+
+    public boolean containsConnection( Connection conn ) {
+        if ( dataSourceMap.isEmpty() ) {
+            return false;
+        }
+
+        for ( Entry<DataSource, ConnectionStack> entry : dataSourceMap.entrySet() ) {
+
+            ConnectionStack stack = entry.getValue();
+
+            if ( !stack.isEmpty() ) {
+                return true;
+            }
+
+            if ( stack.contains( conn ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    public boolean hasConnection( DataSource ds, boolean transactional ) {
+        Connection conn = getLatestConnection( ds, transactional );
+        return conn != null;
+    }
+
     public boolean hasConnection( DataSource ds ) {
         ConnectionStack stack = getConnections( ds );
 
@@ -105,28 +144,30 @@ public class DataSourceContainer { // implements AutoCloseable {
 //        boolean transactional = false;
 //        return getConnection( ds, transactional );
 //    }
-    
-    public Connection getLatestConnection( ) {
-        DataSource ds = getActiveDataSource();
-        
+    public Connection getLatestConnection( DataSource ds ) {
+
         ConnectionStack connections = getConnections( ds );
 
         if ( connections == null ) {
             connections = addDataSource( ds );
         }
 
-        Connection conn = connections.peekTop( );
-        
-        if (conn == null) {
-            throw new IllegalStateException("There is no connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection.");
+        Connection conn = connections.peekTop();
+
+        if ( conn == null ) {
+            throw new IllegalStateException( "There is no connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection." );
         }
 
-        return conn;        
+        return conn;
     }
-    
-    
+
     public Connection getLatestConnection( DataSource ds, boolean transactional ) {
         ConnectionStack connections = getConnections( ds );
+        
+        if(connections == null) {
+            return null;
+        }
+
         return connections.peekTop( transactional );
     }
 
@@ -170,7 +211,7 @@ public class DataSourceContainer { // implements AutoCloseable {
         DataSource ds = activeDataSourceStack.peekTop();
 
         if ( ds == null ) {
-            return JDBCContext.getDefaultDataSource();
+            return JDBCLookup.getDefaultDataSource();
         }
 
         return ds;
@@ -185,7 +226,7 @@ public class DataSourceContainer { // implements AutoCloseable {
             return true;
         }
 
-        if ( JDBCContext.hasDefaultDataSource() ) {
+        if ( JDBCLookup.hasDefaultDataSource() ) {
             return true;
         }
         return false;

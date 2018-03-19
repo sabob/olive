@@ -36,17 +36,17 @@ public class JDBCThreadedTest {
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        Connection conn;
+        JDBCContext ctx = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( conn, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -55,7 +55,7 @@ public class JDBCThreadedTest {
 
             nested( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
 
             personsCount = persons.size();
             //System.out.println( "PERSONS: " + personsCount );
@@ -77,25 +77,25 @@ public class JDBCThreadedTest {
 
     public void nested( DataSource ds ) {
 
-        Connection conn = null;
+        JDBCContext ctx = null;
 
         try {
 
-            conn = JDBC.beginOperation( ds );
+            ctx = JDBC.beginOperation( ds );
 
-            List<Person> persons = getPersons( conn );
+            List<Person> persons = getPersons( ctx );
 
         } finally {
             Assert.assertFalse( JDBC.isAtRootConnection() );
-            JDBC.cleanupOperation( conn );
+            JDBC.cleanupOperation( ctx );
             Assert.assertTrue( JDBC.isAtRootConnection() );
         }
 
     }
 
-    public List<Person> getPersons( Connection conn ) {
+    public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
+        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
         List<Person> persons = OliveUtils.query( ps, new RowMapper<Person>() {
                                                  @Override

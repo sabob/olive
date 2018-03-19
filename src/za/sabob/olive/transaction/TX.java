@@ -11,54 +11,73 @@ public class TX {
 
     private static final Logger LOGGER = Logger.getLogger( TX.class.getName() );
 
-    public static Connection beginTransaction() {
+    public static JDBCContext beginTransaction() {
 
         assertPreviousConnectionRegisterNotFaulty();
 
-        DataSource ds = JDBCContext.getDefaultDataSource();
-        Connection conn = beginTransaction( ds );
-        return conn;
+        DataSource ds = JDBCLookup.getDefaultDataSource();
+        JDBCContext context = beginTransaction( ds );
+        return context;
     }
 
-    public static Connection beginTransaction( DataSource ds ) {
+    public static JDBCContext beginTransaction( DataSource ds ) {
 
-        assertPreviousConnectionRegisterNotFaulty();
+        boolean hasConnection = false;
+        Connection conn = null;
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        try {
 
-        container.setFaultRegisteringDS( true );
-        //boolean hasConnection = container.hasConnection( ds );
+            assertPreviousConnectionRegisterNotFaulty();
 
-        boolean transactional = true;
-        Connection conn = container.getConnection( ds, transactional );
-        container.setActiveDataSource( ds );
+            DataSourceContainer container = JDBCLookup.getDataSourceContainer();
+            container.setFaultRegisteringDS( true );
 
-        container.setFaultRegisteringDS( false );
+            boolean isTransactional = true;
+            hasConnection = container.hasConnection( ds, isTransactional );
 
-        //if ( hasConnection ) {
-        //validateConnection( conn );
-        //}
-        //OliveUtils.setTransactionIsolation( conn, Connection.TRANSACTION_READ_UNCOMMITTED);
-        if ( OliveUtils.getAutoCommit( conn ) ) {
-            OliveUtils.setAutoCommit( conn, false );
+            boolean transactional = true;
+
+            conn = container.getConnection( ds, transactional );
+
+            container.setActiveDataSource( ds );
+
+            container.setFaultRegisteringDS( false );
+
+            //if ( hasConnection ) {
+            //validateConnection( conn );
+            //}
+            //OliveUtils.setTransactionIsolation( conn, Connection.TRANSACTION_READ_UNCOMMITTED);
+            if ( OliveUtils.getAutoCommit( conn ) ) {
+                OliveUtils.setAutoCommit( conn, false );
+            }
+
+            boolean isRoot = !hasConnection; // if there is no existing conn, this conn is newly created, thus root
+            JDBCContext context = new JDBCContext( conn, isRoot );
+            return context;
+
+        } catch ( RuntimeException e ) {
+
+            if ( hasConnection ) {
+                throw e;
+            }
+
+            boolean autoCommit = true;
+            throw OliveUtils.closeSilently( autoCommit, e, conn );
         }
-
-        return conn;
 
     }
 
     public static boolean isAtRootConnection() {
 
-        if (! JDBCContext.hasDataSourceContainer()) {
+        if ( !JDBCLookup.hasDataSourceContainer() ) {
             return false;
         }
 
         if ( isFaultRegisteringDS() ) {
             return false;
         }
-        
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
         if ( !container.hasActiveDataSource() ) {
             return false;
         }
@@ -68,8 +87,8 @@ public class TX {
     }
 
     public static boolean isAtRootConnection( DataSource ds ) {
-        
-        if (! JDBCContext.hasDataSourceContainer()) {
+
+        if ( !JDBCLookup.hasDataSourceContainer() ) {
             return false;
         }
 
@@ -77,8 +96,7 @@ public class TX {
             return false;
         }
 
-
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
         boolean transactional = true;
         return container.isAtRootConnection( ds, transactional );
@@ -102,6 +120,11 @@ public class TX {
         OliveUtils.commit( conn );
     }
 
+    public static void commitTransaction( JDBCContext ctx ) {
+        Connection conn = ctx.getConnection();
+        commitTransaction( conn );
+    }
+
     public static void rollbackTransaction() {
         if ( isFaultRegisteringDS() ) {
             return;
@@ -115,7 +138,17 @@ public class TX {
         OliveUtils.rollback( conn );
     }
 
+    public static void rollbackTransaction( JDBCContext ctx ) {
+        Connection conn = ctx.getConnection();
+        rollbackTransaction( conn );
+    }
+
     public static RuntimeException rollbackTransactionSilently( Connection conn ) {
+        return OliveUtils.rollbackSilently( conn );
+    }
+
+    public static RuntimeException rollbackTransactionSilently( JDBCContext ctx ) {
+        Connection conn = ctx.getConnection();
         return OliveUtils.rollbackSilently( conn );
     }
 
@@ -126,6 +159,11 @@ public class TX {
 
         Connection conn = getLatestConnection();
         return rollbackTransactionSilently( conn );
+    }
+
+    public static RuntimeException rollbackTransaction( JDBCContext ctx, Exception ex ) {
+        Connection conn = ctx.getConnection();
+        return rollbackTransaction( conn, ex );
     }
 
     public static RuntimeException rollbackTransaction( Connection conn, Exception ex ) {
@@ -145,6 +183,11 @@ public class TX {
         return OliveUtils.rollbackSilently( conn, ex );
     }
 
+    public static RuntimeException rollbackTransactionSilently( JDBCContext ctx, Exception ex ) {
+        Connection conn = ctx.getConnection();
+        return rollbackTransactionSilently( conn, ex );
+    }
+
     public static RuntimeException rollbackTransactionSilently( Exception ex ) {
         if ( isFaultRegisteringDS() ) {
             return null;
@@ -154,17 +197,37 @@ public class TX {
         return rollbackTransactionSilently( conn, ex );
     }
 
-    public static void cleanupTransaction( AutoCloseable... autoClosables ) {
+    public static void cleanupTransaction( JDBCContext ctx ) {
+
+        if ( ctx == null ) {
+            return;
+        }
+        
+        List list = ctx.gatherResources();
+        cleanupTransaction( list );
+
+    }
+
+    public static void cleanupTransaction( AutoCloseable... closeables ) {
+        List<AutoCloseable> list = new ArrayList( Arrays.asList( closeables ));
+        cleanupTransaction( list );
+    }
+
+    public static void cleanupTransaction( List<AutoCloseable> closeables ) {
 
         boolean isConnectionRegisterFaulty = isFaultRegisteringDS();
         clearConnectionRegisterFault();
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
-        Connection conn = OliveUtils.getConnection( autoClosables );
-        if ( conn == null ) {
+        Connection conn;
+
+        List<Connection> conns = OliveUtils.getConnections( closeables );
+
+        if ( conns.isEmpty() ) {
 
             if ( isConnectionRegisterFaulty ) {
+                JDBCLookup.cleanup( closeables );
                 return;
             }
 
@@ -176,10 +239,13 @@ public class TX {
                     "No connection was found to clean up. Either pass a Connection as a parameter or use beginTransaction to register a connection with the transaction." );
             }
 
-            List<AutoCloseable> list = Arrays.asList(autoClosables );
-            list = new ArrayList<>( list );
-            list.add( conn );
-            autoClosables = list.toArray( new AutoCloseable[list.size()] );
+            closeables.add( conn );
+
+        } else {
+            if ( conns.size() > 1 ) {
+                throw new IllegalArgumentException( " Only 1 Connection can be passed to cleanupTransaction" );
+            }
+            conn = conns.get( 0 );
         }
 
         DataSource ds = container.getActiveDataSource();
@@ -187,19 +253,28 @@ public class TX {
         boolean isAtRootConnection = isAtRootConnection( ds );
 
         boolean success = container.removeConnection( ds, conn );
-        
+
         boolean hasConnections = container.hasConnections();
 
         if ( !hasConnections ) {
-            JDBCContext.unbindDataSourceContainer();
+            JDBCLookup.unbindDataSourceContainer();
         }
-        
+
+        List resources = OliveUtils.removeConnections( closeables );
+        Exception ex1 = JDBCLookup.cleanupSilently( resources );
+
         if ( isAtRootConnection ) {
 
             boolean autoCommit = true;
-            OliveUtils.close( autoCommit, autoClosables );
 
+            List<Connection> connections = OliveUtils.getConnections( closeables );
+
+            RuntimeException ex2 = OliveUtils.closeSilently( autoCommit, connections );
+
+            ex1 = OliveUtils.addSuppressed( ex2, ex1 );
         }
+
+        OliveUtils.throwAsRuntimeIfException( ex1 );
     }
 
     public static RuntimeException cleanupTransaction( Exception exception, AutoCloseable... autoClosables ) {
@@ -229,7 +304,7 @@ public class TX {
     }
 
     public static Connection getLatestConnection() {
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
 
         boolean transactional = true;
         Connection conn = container.getLatestConnection( transactional );
@@ -246,16 +321,16 @@ public class TX {
 
     public static boolean isFaultRegisteringDS() {
 
-        if (! JDBCContext.hasDataSourceContainer()) {
+        if ( !JDBCLookup.hasDataSourceContainer() ) {
             return false;
         }
 
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
         return container.isFaultRegisteringDS();
     }
 
     public static void clearConnectionRegisterFault() {
-        DataSourceContainer container = JDBCContext.getDataSourceContainer();
+        DataSourceContainer container = JDBCLookup.getDataSourceContainer();
         container.setFaultRegisteringDS( false );
     }
 
@@ -263,8 +338,8 @@ public class TX {
         if ( isFaultRegisteringDS() ) {
             throw new IllegalStateException(
                 "Seems that TX.beginTransaction was previously invoked and failed to retrieve a connection and placed in an inconsistent state. TX.beginTransaction "
-                    + "was invoked again without first calling TX.cleanupTransaction. TX.cleanupTransaction is required to cleanup resources and put the TX operations "
-                    + " in a consistent state." );
+                + "was invoked again without first calling TX.cleanupTransaction. TX.cleanupTransaction is required to cleanup resources and put the TX operations "
+                + " in a consistent state." );
         }
     }
 }
