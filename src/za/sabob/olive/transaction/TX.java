@@ -222,7 +222,7 @@ public class TX {
 
         Connection conn;
 
-        List<Connection> conns = OliveUtils.getConnections( closeables );
+        List<Connection> conns = OliveUtils.findConnections( closeables );
 
         if ( conns.isEmpty() ) {
 
@@ -267,7 +267,7 @@ public class TX {
 
             boolean autoCommit = true;
 
-            List<Connection> connections = OliveUtils.getConnections( closeables );
+            List<Connection> connections = OliveUtils.findConnections( closeables );
 
             RuntimeException ex2 = OliveUtils.closeSilently( autoCommit, connections );
 
