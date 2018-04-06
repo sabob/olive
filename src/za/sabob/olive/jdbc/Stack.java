@@ -44,13 +44,17 @@ public class Stack<E> {
     public boolean isEmpty() {
         return list.isEmpty();
     }
+    
+    public int size() {
+        return list.size();
+    }
 
     public boolean isAtRoot() {
         return list.size() == 1;
     }
-
+    
     @Override
     public String toString() {
-        return list.toString();
+        return getClass().getName() + "@" + Integer.toHexString(hashCode()) + ", size: " + list.size();
     }
 }

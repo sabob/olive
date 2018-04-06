@@ -139,7 +139,7 @@ public class JDBCLookup {
 
     public static void cleanup( Iterable<AutoCloseable> closeables ) {
         try {
-            List<Connection> connections = OliveUtils.getConnections( closeables );
+            List<Connection> connections = OliveUtils.findConnections( closeables );
             List resources = OliveUtils.removeConnections( closeables );
 
             OliveUtils.close( resources );
