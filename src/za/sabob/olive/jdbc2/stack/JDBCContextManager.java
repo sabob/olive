@@ -6,7 +6,7 @@ import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.jdbc2.listener.*;
 import za.sabob.olive.util.*;
 
-public class JDBCContextPipeline {
+public class JDBCContextManager {
 
     //private JDBCContext mostRecentCtx;
     //private JDBCContext mostRecentNonTxCtx;
@@ -18,7 +18,7 @@ public class JDBCContextPipeline {
 
     private Connection txConn;
 
-    private JDBCContextListener contextListener = new PipelineContextListener();
+    private JDBCContextListener contextListener = new ManagerListener();
 
 //    private JDBCContextStack stack = new JDBCContextStack();
 //
@@ -190,7 +190,7 @@ public class JDBCContextPipeline {
 //    public String toString() {
 //        return getClass().getName() + "@" + Integer.toHexString( hashCode() ) + ", TxStack size: " + txStack.size() + ", TxStack size: " + stack.size();
 //    }
-    private class PipelineContextListener extends JDBCContextListener {
+    private class ManagerListener extends JDBCContextListener {
 
         @Override
         public void onBeforeContextDetach( JDBCContext ctx ) {

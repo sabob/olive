@@ -58,7 +58,7 @@ public class JDBCLookup {
         }
 
         DataSourceContainer container = getDataSourceContainer();
-        JDBCContext ctx = container.getPipeline( ds ).getMostRecentContext();
+        JDBCContext ctx = container.getManager( ds ).getMostRecentContext();
 
         if ( ctx == null ) {
             throw new IllegalStateException(

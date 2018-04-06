@@ -6,7 +6,7 @@ import za.sabob.olive.jdbc2.stack.*;
 
 public class DataSourceContainer {
 
-    final private Map<DataSource, JDBCContextPipeline> pipelinesByDS = new LinkedHashMap<>();
+    final private Map<DataSource, JDBCContextManager> managerByDS = new LinkedHashMap<>();
 
     public JDBCContext createTXContext( DataSource ds ) {
         return createContext( ds, true );
@@ -17,14 +17,14 @@ public class DataSourceContainer {
     }
 
     public JDBCContext getMostRecentContext( DataSource ds ) {
-        JDBCContextPipeline pipeline = getOrCreatePipeline( ds );
-        return pipeline.getMostRecentContext();
+        JDBCContextManager manager = getOrCreateManager( ds );
+        return manager.getMostRecentContext();
     }
 
     protected JDBCContext createContext( DataSource ds, boolean transactional ) {
-        JDBCContextPipeline pipeline = getOrCreatePipeline( ds );
+        JDBCContextManager manager = getOrCreateManager( ds );
 
-        JDBCContext ctx = pipeline.createContext( ds, transactional );
+        JDBCContext ctx = manager.createContext( ds, transactional );
         return ctx;
     }
 
@@ -33,33 +33,33 @@ public class DataSourceContainer {
 //        ctx.detach( );
 //    }
     public boolean isEmpty() {
-        return pipelinesByDS.isEmpty();
+        return managerByDS.isEmpty();
     }
 
     public boolean isEmpty( DataSource ds ) {
-        JDBCContextPipeline pipeline = getPipeline( ds );
-        if ( pipeline == null ) {
+        JDBCContextManager manager = getManager( ds );
+        if ( manager == null ) {
             return true;
         }
 
-        return pipeline.isEmpty();
+        return manager.isEmpty();
     }
 
-    protected JDBCContextPipeline getOrCreatePipeline( DataSource ds ) {
+    protected JDBCContextManager getOrCreateManager( DataSource ds ) {
 
-        JDBCContextPipeline pipeline = getPipeline( ds );
+        JDBCContextManager manager = getManager( ds );
 
-        if ( pipeline == null ) {
-            JDBCFactory.getInstance().createPipeline();
-            pipeline = new JDBCContextPipeline();
-            pipelinesByDS.put( ds, pipeline );
+        if ( manager == null ) {
+            JDBCFactory.getInstance().createManager();
+            manager = new JDBCContextManager();
+            managerByDS.put( ds, manager );
         }
 
-        return pipeline;
+        return manager;
     }
 
-    protected JDBCContextPipeline getPipeline( DataSource ds ) {
-        return pipelinesByDS.get( ds );
+    protected JDBCContextManager getManager( DataSource ds ) {
+        return managerByDS.get( ds );
     }
 
 }
