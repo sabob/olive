@@ -4,7 +4,8 @@ import java.util.*;
 import java.util.logging.*;
 import org.testng.*;
 import org.testng.xml.*;
-import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc2.*;
+import za.sabob.olive.jdbc2.threads.JDBCThreadedTest;
 
 public class JDBCSuite {
 
@@ -20,7 +21,7 @@ public class JDBCSuite {
         //listnerClasses.add( org.wso2.platform.test.core.PlatformSuiteManager.class );
         testNG.setDefaultSuiteName( "JDBC suite" );
 
-        XmlPackage xmlPackage = new XmlPackage( "za.sabob.olive.jdbc.*" );
+        XmlPackage xmlPackage = new XmlPackage( "za.sabob.olive.jdbc2.*" );
         //xmlPackage.setInclude(Arrays.asList( "*.*" ) );
         List<XmlPackage> xmlPackages = new ArrayList<>();
         xmlPackages.add( xmlPackage );

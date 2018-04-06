@@ -217,7 +217,7 @@ public class ForceTimeoutTest {
         try {
             PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
 
-            List<Person> persons = OliveUtils.query( ps, new RowMapper<Person>() {
+            List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
                                                      @Override
                                                      public Person map( ResultSet rs, int rowNum ) throws SQLException {
                                                          Person person = new Person();

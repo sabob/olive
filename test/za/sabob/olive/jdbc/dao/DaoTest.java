@@ -9,6 +9,17 @@ public class DaoTest {
 
     public void someLogic( Object o ) {
 
+/*        
+        Requirements            
+        ------------
+        
+        Cannot mix transactional and non-transactional connections
+        Can only create one connection and other calls reuse that connection. Cannot start another connection!
+        
+*/
+                
+
+
         // TODO how to ensure transaction is passed to other methods now that we have a JDBCContext
         //JDBCContext ctx = null;
         try ( JDBCContext ctx = TX.beginTransaction() ) {

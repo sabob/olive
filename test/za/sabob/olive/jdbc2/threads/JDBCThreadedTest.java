@@ -1,19 +1,17 @@
-// TODO mix jdbc and tx test
-package za.sabob.olive.jdbc.mixed;
+package za.sabob.olive.jdbc2.threads;
 
 import za.sabob.olive.util.DBTestUtils;
-import za.sabob.olive.jdbc.*;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
-import za.sabob.olive.transaction.*;
 import za.sabob.olive.util.*;
 
-public class TX_JDBCTest {
+public class JDBCThreadedTest {
 
     DataSource ds;
 
@@ -22,26 +20,24 @@ public class TX_JDBCTest {
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 );
-
+        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
         //ds.setURL( "jdbc:h2:~/test" );
+
         DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
     @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
-        //ds = new JdbcDataSource();
-        //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
+
+        //ds = DBTestUtils.createDataSource();
         DBTestUtils.shutdown( ds );
-        Assert.assertEquals( personsCount, 2 );
+        //Assert.assertEquals( personsCount, 200 );
     }
 
-    @Test
+    @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        JDBCContext ctx;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        JDBCContext ctx = null;
 
         try {
 
@@ -49,35 +45,36 @@ public class TX_JDBCTest {
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
             params.set( "name", "John" );
             count = ps.executeUpdate();
 
-            nestedJDBC( ds );
+            nested( ds );
 
             List<Person> persons = getPersons( ctx );
 
             personsCount = persons.size();
+            //System.out.println( "PERSONS: " + personsCount );
 
-        } catch ( SQLException e ) {
+        } catch ( Throwable e ) {
             throw new RuntimeException( e );
 
         } finally {
 
-            boolean isAtRoot = JDBC.isAtRootConnection();
+            boolean isAtRoot = ctx.isRootContext();
             Assert.assertTrue( isAtRoot );
 
-            JDBC.cleanupOperation( ps, rs );
+            JDBC.cleanupOperation( ctx );
 
-            isAtRoot = JDBC.isAtRootConnection();
-            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+            isAtRoot = ctx.isRootContext();
+            Assert.assertTrue( isAtRoot );
         }
     }
 
-    public void nestedJDBC( DataSource ds ) {
+    public void nested( DataSource ds ) {
 
         JDBCContext ctx = null;
 
@@ -85,35 +82,12 @@ public class TX_JDBCTest {
 
             ctx = JDBC.beginOperation( ds );
 
-            nestedTX( ds );
-
             List<Person> persons = getPersons( ctx );
-            
-        } catch (Exception e) {
-            //e.printStackTrace();
 
         } finally {
-            Assert.assertFalse( JDBC.isAtRootConnection() );
+            Assert.assertFalse( ctx.isRootContext() );
             JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( JDBC.isAtRootConnection() );
-        }
-    }
-
-    public void nestedTX( DataSource ds ) {
-
-        JDBCContext ctx = null;
-
-        try {
-
-            ctx = TX.beginTransaction( ds );
-
-            List<Person> persons = getPersons( ctx );
-
-        } finally {
-            boolean isAtRoot = TX.isAtRootConnection();
-            Assert.assertTrue( isAtRoot );
-            TX.cleanupTransaction( ctx );
-            Assert.assertFalse( TX.isAtRootConnection() );
+            Assert.assertTrue( ctx.isRootContext());
         }
 
     }
@@ -122,7 +96,7 @@ public class TX_JDBCTest {
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+        List<Person> persons = OliveUtils.mapToBeans(ps, new RowMapper<Person>() {
                                                  @Override
                                                  public Person map( ResultSet rs, int rowNum ) throws SQLException {
                                                      Person person = new Person();

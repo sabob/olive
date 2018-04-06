@@ -1,7 +1,8 @@
 package za.sabob.olive.util;
 
+import com.mchange.v2.c3p0.*;
 import java.sql.*;
-import java.util.logging.*;
+import java.sql.Statement;
 import javax.sql.*;
 import org.h2.jdbcx.*;
 import org.hsqldb.jdbc.*;
@@ -14,26 +15,38 @@ public class DBTestUtils {
 
     public static int HSQLDB = 2;
 
+    public static int POSTGRES = 4;
+
     public static DataSource createDataSource( int db ) {
         return createDataSource( db, 10 );
     }
 
     public static DataSource createDataSource( int db, int poolSize ) {
+        boolean multiThreaded = true;
+        return createDataSource( db, 10, multiThreaded );
+    }
+
+    public static DataSource createDataSource( int db, int poolSize, boolean multiThreaded ) {
+
+        int multiThreadedAsInt = multiThreaded ? 1 : 0;
 
         DataSource ds = null;
 
         if ( db == H2 ) {
-            ds = getH2DataSource( poolSize );
+            ds = getH2DataSource( poolSize, multiThreadedAsInt );
 
         } else if ( db == HSQLDB ) {
             ds = getHSQLDataSource( poolSize );
+
+        } else if ( db == POSTGRES ) {
+            ds = getPostGresDataSource( poolSize );
         }
 
         return ds;
     }
 
-    public static DataSource getH2DataSource( int poolSize ) {
-        JdbcConnectionPool pool = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
+    public static DataSource getH2DataSource( int poolSize, int multiThreadedInt ) {
+        JdbcConnectionPool pool = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=" + multiThreadedInt, "sa", "sa" );
         pool.setMaxConnections( poolSize );
         pool.setLoginTimeout( 1 );
         return pool;
@@ -51,6 +64,31 @@ public class DBTestUtils {
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
         }
+        return ds;
+    }
+
+    public static void clearPersonTable( DataSource ds ) {
+        update( ds, "delete from person" );
+    }
+
+    public static DataSource getPostGresDataSource( int poolSize ) {
+        ComboPooledDataSource ds = new ComboPooledDataSource();
+
+        try {
+
+            ds.setDriverClass( "org.postgresql.Driver" );
+            ds.setLoginTimeout( 1 );
+
+        } catch ( Exception ex ) {
+            throw new RuntimeException( ex );
+        }
+
+        ds.setJdbcUrl( "jdbc:postgresql://localhost:5432/olivedb" );
+        ds.setUser( "sa" );
+        ds.setPassword( "sa" );
+        ds.setInitialPoolSize( poolSize );
+        ds.setMinPoolSize( poolSize );
+        ds.setMaxPoolSize( poolSize );
         return ds;
     }
 
@@ -94,9 +132,9 @@ public class DBTestUtils {
     public static void shutdown( DataSource ds ) {
         try {
             ds.getConnection().createStatement().execute( "SHUTDOWN" );
-            Assert.assertFalse( JDBCLookup.hasConnections( ds ));
+            Assert.assertFalse( JDBCLookup.hasConnections( ds ) );
             Assert.assertFalse( JDBCLookup.hasDataSourceContainer() );
-            
+
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
         }
