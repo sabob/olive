@@ -15,6 +15,7 @@
  */
 package za.sabob.olive.util;
 
+import za.sabob.olive.jdbc2.context.JDBCContext;
 import java.io.*;
 import java.math.*;
 import za.sabob.olive.ps.SqlParam;

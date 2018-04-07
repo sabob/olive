@@ -1,9 +1,9 @@
-package za.sabob.olive.jdbc2;
+package za.sabob.olive.jdbc2.context;
 
+import za.sabob.olive.jdbc2.context.listener.JDBCContextListener;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
-import za.sabob.olive.jdbc2.listener.*;
 import za.sabob.olive.util.*;
 import static za.sabob.olive.util.OliveUtils.toRuntimeException;
 

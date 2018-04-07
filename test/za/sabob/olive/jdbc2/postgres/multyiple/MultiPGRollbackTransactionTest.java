@@ -1,5 +1,6 @@
 package za.sabob.olive.jdbc2.postgres.multyiple;
 
+import za.sabob.olive.jdbc2.context.JDBCContext;
 import java.util.*;
 import org.testng.*;
 import org.testng.annotations.*;

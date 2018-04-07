@@ -1,5 +1,6 @@
-package za.sabob.olive.jdbc2.listener;
+package za.sabob.olive.jdbc2.context.listener;
 
+import za.sabob.olive.jdbc2.context.JDBCContext;
 import za.sabob.olive.jdbc2.*;
 
 public abstract class JDBCContextListener {

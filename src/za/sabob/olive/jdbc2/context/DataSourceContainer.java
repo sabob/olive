@@ -1,8 +1,8 @@
-package za.sabob.olive.jdbc2;
+package za.sabob.olive.jdbc2.context;
 
+import za.sabob.olive.jdbc2.config.JDBCFactory;
 import java.util.*;
 import javax.sql.*;
-import za.sabob.olive.jdbc2.stack.*;
 
 public class DataSourceContainer {
 
@@ -53,7 +53,7 @@ public class DataSourceContainer {
         return manager;
     }
 
-    protected JDBCContextManager getManager( DataSource ds ) {
+    public  JDBCContextManager getManager( DataSource ds ) {
         return managerByDS.get( ds );
     }
 

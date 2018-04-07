@@ -1,6 +1,6 @@
 package za.sabob.olive.jdbc2.stack;
 
-import za.sabob.olive.jdbc2.JDBCContext;
+import za.sabob.olive.jdbc2.context.JDBCContext;
 
 public class JDBCContextStack {
 

@@ -1,9 +1,8 @@
-package za.sabob.olive.jdbc2.stack;
+package za.sabob.olive.jdbc2.context;
 
+import za.sabob.olive.jdbc2.context.listener.JDBCContextListener;
 import java.sql.*;
 import javax.sql.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.listener.*;
 import za.sabob.olive.util.*;
 
 public class JDBCContextManager {

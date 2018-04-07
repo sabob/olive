@@ -1,5 +1,7 @@
 package za.sabob.olive.jdbc2;
 
+import za.sabob.olive.jdbc2.context.DataSourceContainer;
+import za.sabob.olive.jdbc2.context.JDBCContext;
 import javax.sql.*;
 
 public class JDBC {
