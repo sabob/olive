@@ -19,8 +19,9 @@ public class JDBCContext implements AutoCloseable {
 
     private boolean closed;
 
-    protected Boolean contextHolder = null; // TODO review this now we have listener
+    //protected Boolean contextHolder = null; // TODO review this now we have listener
 
+    // JDBCContext can work with both tx and non-tx connection. This JDBCContext might not be root but might be the root for this specific (Tx or nonTX connection)
     private Boolean canCloseConnection; // TODO review this now we have listener
 
     private JDBCContextListener listener; // TODO listener or listeners
@@ -35,10 +36,10 @@ public class JDBCContext implements AutoCloseable {
     public JDBCContext( JDBCContextListener listener ) {
         this.listener = listener;
     }
-
-    public JDBCContext( boolean contextHolder ) {
-        this.contextHolder = contextHolder;
-    }
+//
+//    public JDBCContext( boolean contextHolder ) {
+//        this.contextHolder = contextHolder;
+//    }
 
     public JDBCContext( Connection conn ) {
         this.connection = conn;
@@ -69,13 +70,14 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public boolean isRootContext() {
+        return getParent() == null;
 
-        JDBCContext parentCtx = getParent();
-        if ( parentCtx == null || parentCtx.isContextHolder() ) {
-            return true;
-        }
-
-        return false;
+        //JDBCContext parentCtx = getParent();
+//        if ( parentCtx == null || parentCtx.isContextHolder() ) {
+//            return true;
+//        }
+//
+//        return false;
     }
 
     public void commit() {
@@ -309,12 +311,18 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public JDBCContext getRootContext() {
-        JDBCContext parentCtx = getParent();
-        if ( parent == null || parentCtx.isContextHolder() ) {
+        if (isRootContext()) {
             return this;
         }
+        
+        return getParent().getRootContext();
 
-        return parent.getRootContext();
+        //JDBCContext parentCtx = getParent();        
+//        if ( parent == null || parentCtx.isContextHolder() ) {
+//            return this;
+//        }
+//
+//        return parent.getRootContext();
     }
 
     public JDBCContext getMostRecentContext() {
@@ -327,6 +335,15 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public void attach( JDBCContext child ) {
+        
+        if (child == null) {
+            throw new IllegalArgumentException("Child JDBCContext cannot be null.");
+        }
+        
+        if (child == this) {
+            throw new IllegalArgumentException("Cannot attach JDBCContext to itself.");
+        }
+        
         if ( child.getParent() != null ) {
             throw new IllegalStateException(
                 "Cannot attach child to this JDBCContext because child is still attached to another JDCContext. First detach the child." );
@@ -346,7 +363,8 @@ public class JDBCContext implements AutoCloseable {
             getListener().onBeforeContextDetach( this );
         }
 
-        if ( isOpen() && !isContextHolder() ) {
+        //if ( isOpen() && !isContextHolder() ) {
+        if ( isOpen()) {
             throw new IllegalStateException( "You have to close the JDBCContext before detaching." );
         }
 
@@ -359,24 +377,24 @@ public class JDBCContext implements AutoCloseable {
 
         setParent( null );
     }
-
-    public boolean isContextHolder() {
-        if ( contextHolder == null ) {
-            return false;
-        }
-
-        return contextHolder;
-    }
-
-    public void setContextHolder( boolean contextHolderArg ) {
-        if ( contextHolder == null ) {
-            contextHolder = contextHolderArg;
-
-        } else {
-            throw new IllegalStateException( "ContextHolder is already set to " + contextHolder + ". Cannot change it." );
-        }
-
-    }
+//
+//    public boolean isContextHolder() {
+//        if ( contextHolder == null ) {
+//            return false;
+//        }
+//
+//        return contextHolder;
+//    }
+//
+//    public void setContextHolder( boolean contextHolderArg ) {
+//        if ( contextHolder == null ) {
+//            contextHolder = contextHolderArg;
+//
+//        } else {
+//            throw new IllegalStateException( "ContextHolder is already set to " + contextHolder + ". Cannot change it." );
+//        }
+//
+//    }
 
     public JDBCContextListener getListener() {
         return listener;

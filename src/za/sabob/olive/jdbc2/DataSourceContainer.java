@@ -28,10 +28,6 @@ public class DataSourceContainer {
         return ctx;
     }
 
-//
-//    public void deleteContext( JDBCContext ctx ) {
-//        ctx.detach( );
-//    }
     public boolean isEmpty() {
         return managerByDS.isEmpty();
     }
@@ -50,8 +46,7 @@ public class DataSourceContainer {
         JDBCContextManager manager = getManager( ds );
 
         if ( manager == null ) {
-            JDBCFactory.getInstance().createManager();
-            manager = new JDBCContextManager();
+            manager = JDBCFactory.getInstance().createManager();
             managerByDS.put( ds, manager );
         }
 

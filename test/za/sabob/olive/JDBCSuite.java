@@ -88,7 +88,7 @@ public class JDBCSuite {
     private static void runClasses( TestNG testNG ) {
         testNG.setTestClasses( new Class[] {
             JDBCInsertTest.class,
-            JDBCTest.class,
+            ThreadJDBCTest.class,
             JDBCThreadedTest.class
         } );
     }

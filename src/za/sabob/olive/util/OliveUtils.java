@@ -2285,10 +2285,12 @@ public class OliveUtils {
                 } else if ( cls == BigDecimal.class ) {
                     BigDecimal value = rs.getBigDecimal( 1 );
                     return (T) value;
+
+                } else {
+                    throw new IllegalArgumentException( cls + " is not a supported type" );
+
                 }
             }
-
-            throw new IllegalArgumentException( cls + " is not a supported type" );
 
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
@@ -2298,6 +2300,7 @@ public class OliveUtils {
             
         }
 
+        return null;
     }
 
     public static ResultSet query( JDBCContext ctx, PreparedStatement ps ) {

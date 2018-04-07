@@ -29,38 +29,44 @@ public class MultipleBeginTest {
         boolean isEmpty = JDBCLookup.getDataSourceContainer().isEmpty( ds );
         Assert.assertTrue( isEmpty );
 
-        JDBCContext first = JDBC.beginOperation( ds );
-        
-        JDBCContext ctx = JDBC.beginOperation( ds );
-        
-        Assert.assertEquals(ctx.getParent(), first);
-        Assert.assertEquals(first.getChild(), ctx);
+        JDBCContext parent = JDBC.beginOperation( ds );
+
+        JDBCContext child = JDBC.beginOperation( ds );
+
+        Assert.assertEquals( child.getParent(), parent );
+        Assert.assertEquals( parent.getChild(), child );
+        Assert.assertNull( parent.getParent() );
 
         //ctx = JDBC.beginOperation( ds );
         //read();
         //insert();
         JDBCContext lastCreatedCtx = save();
 
-        JDBCContext mostRecentCtx = ctx.getMostRecentContext();
+        JDBCContext mostRecentCtx = child.getMostRecentContext();
 
-        Assert.assertFalse( ctx.isRootContext() );
-        Assert.assertFalse( ctx.getRootContext().getConnection().isClosed() );
+        Assert.assertFalse( child.isRootContext() );
+        Assert.assertFalse( child.getRootContext().getConnection().isClosed() );
 
-        Assert.assertFalse( ctx.getConnection().isClosed() );
-        
-        JDBCContext parent = ctx.getParent();
-        Assert.assertNotNull(parent );
-        
-        JDBCContext rootParent = parent.getParent();
-        Assert.assertNotNull(rootParent );
-        
-        ctx.close();
+        Assert.assertFalse( child.getConnection().isClosed() );
 
-        Assert.assertFalse( ctx.getConnection().isClosed(), "Context' Connection must not be closed because a second context was created which is root." );
+        JDBCContext childParent = child.getParent();
+        Assert.assertNotNull( childParent );
 
-        Assert.assertTrue( ctx.isRootContext(), "Context must be root since it was created first!" );
+        JDBCContext rootParent = childParent.getParent();
+        Assert.assertNull( rootParent );
+
+        child.close();
+
+        Assert.assertFalse( child.getConnection().isClosed(), "child' Connection must not be closed because a parent context was created which is root." );
+        Assert.assertTrue( child.isRootContext(), "Context must be root now because its parent was removed when it was closed!" );
         Assert.assertEquals( lastCreatedCtx, mostRecentCtx, "Last context created should match the deepest child!" );
-        Assert.assertEquals( ctx.getConnection(), mostRecentCtx.getConnection(), "Contexts must share the same connection!" );
+        Assert.assertEquals( child.getConnection(), mostRecentCtx.getConnection(), "Contexts must share the same connection!" );
+
+        parent.close();
+        
+        Assert.assertTrue( parent.getConnection().isClosed(), "connection should be closed now because parent was closed.");
+        Assert.assertTrue( child.getConnection().isClosed(), "Child connection should be closed now because parent was closed.");
+        Assert.assertTrue( child.isRootContext(), "Context must be root since it was created first!" );
     }
 
     public JDBCContext save() {

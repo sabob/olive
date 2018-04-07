@@ -52,7 +52,8 @@ public class JDBCOperationTest {
 
         JDBCContext ctx = JDBC.beginOperation( ds );
 
-        Assert.assertEquals( ctx.getParent().getParent(), null );
+        //Assert.assertEquals( ctx.getParent().getParent(), null );
+        Assert.assertEquals( ctx.getParent(), null );
         
         ctx = JDBC.beginOperation( ds );
         JDBCContext recent = ctx.getMostRecentContext();

@@ -12,11 +12,13 @@ public class JDBCContextManager {
     //private JDBCContext mostRecentNonTxCtx;
     //private JDBCContext mostRecentTxCtx;
     //private JDBCContext ctxHolder = new JDBCContext( true );
-    private JDBCContext ctxHolder = new JDBCContext( true );// Can remove this with listener?
+    //private JDBCContext ctxHolder = new JDBCContext( true );// Can remove this with listener?
 
     private Connection conn;
 
     private Connection txConn;
+    
+    private JDBCContext rootCtx;
 
     private JDBCContextListener contextListener = new ManagerListener();
 
@@ -36,9 +38,16 @@ public class JDBCContextManager {
         JDBCContext ctx = createJDBCContext( ds, tx );
         return ctx;
     }
+    
+    public JDBCContext getRootContext() {
+        return rootCtx;
+    }
 
     public JDBCContext getMostRecentContext() {
-        return ctxHolder.getMostRecentContext();
+        
+        if (rootCtx == null) return null;
+        
+        return rootCtx.getMostRecentContext();
     }
 
 //    public JDBCContext getMostRecentTxContext() {
@@ -84,9 +93,14 @@ public class JDBCContextManager {
 //        if ( isRootContext ) {
 //            ctxHolder.attach( ctx );
 //        }
-        JDBCContext mostRecentCtx = getMostRecentContext();
 
-        attach( mostRecentCtx, ctx );
+        if (rootCtx == null) {
+            rootCtx = ctx;
+
+        } else {
+            JDBCContext mostRecentCtx = getMostRecentContext();
+            attach( mostRecentCtx, ctx );
+        }
 
         updateConnection( ctx, tx );
 
@@ -133,7 +147,7 @@ public class JDBCContextManager {
 //    }
     public void attach( JDBCContext parent, JDBCContext child ) {
 
-        if ( parent == null || child == null ) {
+        if ( parent == null || child == null || parent == child) {
             return;
         }
 
@@ -164,7 +178,8 @@ public class JDBCContextManager {
     }
 
     public boolean isEmpty() {
-        return !ctxHolder.hasChild();
+        return rootCtx == null;
+        //return !ctxHolder.hasChild();
         //return ctxHolder == null;
     }
 
@@ -194,6 +209,10 @@ public class JDBCContextManager {
 
         @Override
         public void onBeforeContextDetach( JDBCContext ctx ) {
+
+            if (ctx == rootCtx) {
+                rootCtx = null;
+            }
 
         }
 
