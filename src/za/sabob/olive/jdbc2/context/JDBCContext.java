@@ -19,11 +19,6 @@ public class JDBCContext implements AutoCloseable {
 
     private boolean closed;
 
-    //protected Boolean contextHolder = null; // TODO review this now we have listener
-
-    // JDBCContext can work with both tx and non-tx connection. This JDBCContext might not be root but might be the root for this specific (Tx or nonTX connection)
-    private Boolean canCloseConnection; // TODO review this now we have listener
-
     private JDBCContextListener listener; // TODO listener or listeners
 
     private final List<Statement> statements = new ArrayList<>();
@@ -36,10 +31,6 @@ public class JDBCContext implements AutoCloseable {
     public JDBCContext( JDBCContextListener listener ) {
         this.listener = listener;
     }
-//
-//    public JDBCContext( boolean contextHolder ) {
-//        this.contextHolder = contextHolder;
-//    }
 
     public JDBCContext( Connection conn ) {
         this.connection = conn;
@@ -47,17 +38,6 @@ public class JDBCContext implements AutoCloseable {
 
     public JDBCContext( Connection conn, JDBCContextListener listener ) {
         this.connection = conn;
-        this.listener = listener;
-    }
-
-    public JDBCContext( Connection conn, boolean canCloseConnectionArg ) {
-        this.connection = conn;
-        this.canCloseConnection = canCloseConnectionArg;
-    }
-
-    public JDBCContext( Connection conn, boolean canCloseConnection, JDBCContextListener listener ) {
-        this.connection = conn;
-        this.canCloseConnection = canCloseConnection;
         this.listener = listener;
     }
 
@@ -71,13 +51,6 @@ public class JDBCContext implements AutoCloseable {
 
     public boolean isRootContext() {
         return getParent() == null;
-
-        //JDBCContext parentCtx = getParent();
-//        if ( parentCtx == null || parentCtx.isContextHolder() ) {
-//            return true;
-//        }
-//
-//        return false;
     }
 
     public void commit() {
@@ -110,10 +83,10 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public RuntimeException rollback( Exception e ) {
-        if (e == null) {
-            throw new IllegalArgumentException("exception cannot be null as rollback is expected to return a RuntimeException which wraps the given exception.");
+        if ( e == null ) {
+            throw new IllegalArgumentException( "exception cannot be null as rollback is expected to return a RuntimeException which wraps the given exception." );
         }
-        
+
         if ( canRollback() ) {
             Connection conn = getConnection();
             return OliveUtils.rollback( conn, e );
@@ -122,10 +95,10 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public RuntimeException rollbackSilently( Exception e ) {
-        if (e == null) {
-            throw new IllegalArgumentException("exception cannot be null as rollback is expected to return a RuntimeException which wraps the given exception.");
+        if ( e == null ) {
+            throw new IllegalArgumentException( "exception cannot be null as rollback is expected to return a RuntimeException which wraps the given exception." );
         }
-        
+
         if ( canRollback() ) {
             Connection conn = getConnection();
             return OliveUtils.rollback( conn, e );
@@ -142,18 +115,22 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public boolean canCloseConnection() {
+        return isRootConnectionHolder();
+    }
 
-        if ( canCloseConnection == null ) {
+    public boolean isRootConnectionHolder() {
 
-            if ( isRootContext() ) {
-                return true;
+        Connection conn = getConnection();
+        JDBCContext parent = getParent();
 
-            } else {
+        while ( parent != null ) {
+            Connection parentConn = parent.getConnection();
+            if ( parentConn == conn ) {
                 return false;
             }
+            parent = parent.getParent();
         }
-
-        return canCloseConnection;
+        return true;
     }
 
     public boolean hasConnection() {
@@ -215,7 +192,6 @@ public class JDBCContext implements AutoCloseable {
 
         closeChildren();
 
-        //if ( isAutoCloseConnection() ) {
         if ( canCloseConnection() ) {
             closeIncludingConnection();
 
@@ -311,18 +287,11 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public JDBCContext getRootContext() {
-        if (isRootContext()) {
+        if ( isRootContext() ) {
             return this;
         }
-        
-        return getParent().getRootContext();
 
-        //JDBCContext parentCtx = getParent();        
-//        if ( parent == null || parentCtx.isContextHolder() ) {
-//            return this;
-//        }
-//
-//        return parent.getRootContext();
+        return getParent().getRootContext();
     }
 
     public JDBCContext getMostRecentContext() {
@@ -335,15 +304,15 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public void attach( JDBCContext child ) {
-        
-        if (child == null) {
-            throw new IllegalArgumentException("Child JDBCContext cannot be null.");
+
+        if ( child == null ) {
+            throw new IllegalArgumentException( "Child JDBCContext cannot be null." );
         }
-        
-        if (child == this) {
-            throw new IllegalArgumentException("Cannot attach JDBCContext to itself.");
+
+        if ( child == this ) {
+            throw new IllegalArgumentException( "Cannot attach JDBCContext to itself." );
         }
-        
+
         if ( child.getParent() != null ) {
             throw new IllegalStateException(
                 "Cannot attach child to this JDBCContext because child is still attached to another JDCContext. First detach the child." );
@@ -363,38 +332,18 @@ public class JDBCContext implements AutoCloseable {
             getListener().onBeforeContextDetach( this );
         }
 
-        //if ( isOpen() && !isContextHolder() ) {
-        if ( isOpen()) {
+        if ( isOpen() ) {
             throw new IllegalStateException( "You have to close the JDBCContext before detaching." );
         }
 
         JDBCContext parentCtx = getParent();
 
-        //connection = null;
         if ( parentCtx != null ) {
             parentCtx.setChild( null );
         }
 
         setParent( null );
     }
-//
-//    public boolean isContextHolder() {
-//        if ( contextHolder == null ) {
-//            return false;
-//        }
-//
-//        return contextHolder;
-//    }
-//
-//    public void setContextHolder( boolean contextHolderArg ) {
-//        if ( contextHolder == null ) {
-//            contextHolder = contextHolderArg;
-//
-//        } else {
-//            throw new IllegalStateException( "ContextHolder is already set to " + contextHolder + ". Cannot change it." );
-//        }
-//
-//    }
 
     public JDBCContextListener getListener() {
         return listener;
