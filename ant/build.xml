@@ -23,6 +23,8 @@
     <property file="ant/build.properties"/>
     <xmlproperty file="ant/javascript-syntax-highlighter.xml"/>
     <property name="jar.testng" value="testng-${testng.version}.jar"/>
+    <property name="jar.postgres" value="postgresql-${postgres.driver.version}.jar"/>
+    <property name="jar.hsqldb" value="hsqldb-${hsqldb.version}.jar"/>
     <property name="jar.jcommander" value="jcommander-${jcommander.version}.jar"/>
     <property name="jar.h2" value="h2-${h2.version}.jar"/>
     <property name="jar.servlet" value="servlet-api-${servlet.version}.jar"/>
@@ -179,6 +181,8 @@
     <target name="get-deps" description="download JAR dependencies">
         <mkdir dir="lib" />
           <downloadMacro name="${jar.testng}"       path="org/testng/testng/${testng.version}"/>
+          <downloadMacro name="${jar.postgres}"       path="org/postgresql/postgresql/${postgres.driver.version}"/>
+          <downloadMacro name="${jar.hsqldb}"       path="org/hsqldb/hsqldb/${hsqldb.version}"/>
           <downloadMacro name="${jar.jcommander}"       path="com/beust/jcommander/${jcommander.version}"/>
           <downloadMacro name="${jar.h2}"       path="com/h2database/h2/${h2.version}"/>
           <downloadMacro name="${jar.servlet}"       path="javax/servlet/servlet-api/${servlet.version}"/>
