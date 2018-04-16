@@ -1,7 +1,6 @@
 package za.sabob.olive.jdbc2.config;
 
 import za.sabob.olive.jdbc2.context.JDBCContextManager;
-import za.sabob.olive.jdbc2.stack.*;
 
 public class JDBCFactory {
     
