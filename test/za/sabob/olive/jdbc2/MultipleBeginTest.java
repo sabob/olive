@@ -27,7 +27,7 @@ public class MultipleBeginTest {
     @Test
     public void basicTest() throws SQLException {
 
-        boolean isEmpty = JDBCLookup.getDataSourceContainer().isEmpty( ds );
+        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
         Assert.assertTrue( isEmpty );
 
         JDBCContext parent = JDBC.beginOperation( ds );

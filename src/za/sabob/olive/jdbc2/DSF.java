@@ -1,12 +1,14 @@
 package za.sabob.olive.jdbc2;
 
-import za.sabob.olive.jdbc2.context.DataSourceContainer;
-import za.sabob.olive.jdbc2.context.JDBCContext;
 import java.util.*;
 import javax.sql.*;
+import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.util.*;
 
-public class JDBCLookup {
+/**
+ * DataSourceFactory
+ */
+public class DSF {
 
     private static DataSource defaultDataSource;
 
@@ -86,21 +88,23 @@ public class JDBCLookup {
 //
 //        return null;
 //    }
-
-    public static boolean hasDefaultDataSource() {
+    public static boolean hasDefault() {
         return defaultDataSource != null;
     }
 
-    public static DataSource getDefaultDataSource() {
+    public static DataSource getDefault() {
+
         if ( defaultDataSource == null ) {
             throw new IllegalStateException(
-                "You did not provide a DataSource, so attempting to use JDBCContext.getDefaultDataSource() but no default DataSource is specified. Either pass a DataSource with your calls, or use JDBCContext.setDefaultDataSource() to set a default DataSource" );
+                "No default DataSource have been registered. Register a default "
+                + "DataSource with DSF.registerDefault() or provide the DataSource to the JDBC methods. " );
         }
+
         return defaultDataSource;
     }
 
-    public static void setDefaultDataSource( DataSource defaultDataSource ) {
-        JDBCLookup.defaultDataSource = defaultDataSource;
+    public static void registerDefault( DataSource defaultDataSource ) {
+        DSF.defaultDataSource = defaultDataSource;
     }
 
     public static void cleanup( AutoCloseable... closeables ) {
@@ -149,15 +153,15 @@ public class JDBCLookup {
         return cleanup( null, closeables );
     }
 
-//    
+//
 //    public void saveInServiceTX( Object o ) {
 //
 //        doTransactional( new TransactionCallback() {
 //            @Override
 //            public void execute() throws Exception {
-//                
+//
 //                saveInDao( o );
-//                
+//
 //            }
 //        } );
 //    }
@@ -167,9 +171,9 @@ public class JDBCLookup {
 //        doJDBCOperation( new JDBCCallback() {
 //            @Override
 //            public void execute() throws Exception {
-//                
+//
 //                saveInDao( o );
-//                
+//
 //            }
 //        } );
 //    }

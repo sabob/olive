@@ -7,7 +7,7 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc2.JDBC;
-import za.sabob.olive.jdbc2.JDBCLookup;
+import za.sabob.olive.jdbc2.DSF;
 
 public class MixedCloseConnectionTest {
 
@@ -28,7 +28,7 @@ public class MixedCloseConnectionTest {
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = JDBCLookup.getDataSourceContainer().isEmpty( ds );
+        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
         Assert.assertTrue( isEmpty );
 
         JDBCContext nonTxParent = JDBC.beginOperation( ds );

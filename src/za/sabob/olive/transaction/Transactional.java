@@ -1,12 +1,11 @@
 package za.sabob.olive.transaction;
 
-import za.sabob.olive.jdbc.DataSourceContainer;
-import java.sql.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc.*;
 
 /**
  * There are two ways to run in a transaction.
+ *
  *
  * Either using static Transaction(DataSource, Callback)
  *
@@ -34,7 +33,7 @@ public class Transactional {
     public static Transactional on( DataSource ds ) {
 //        Transactional.on( dataSource ).do( new TransactionCallback() {
 //        @Override
-//        public void doInTransaction() {            
+//        public void doInTransaction() {
 //        }
 //    });
 
@@ -78,19 +77,19 @@ public class Transactional {
     public static void main( String[] args ) {
 //
 //        final Connection conn = null; // get connection from Datasource
-//        
+//
 //        try {
 //            Connection conn = Tansaction.begin(ds);
 //            PreparedStatement st = getStatement();
 //            ResultSet rs = executeUpdate(ps,  new rowMapper());
 //            Person person = toObject(rs, Person.class);
-//            
+//
 //        } catch ( Exception e) {
 //            Tansaction.rollback(conn);
-//            
+//
 //        } finally {
 //            Tansaction.close(ds);
-//            
+//
 //        }
 
 //        Transactional( conn, new TransactionCallback() {
@@ -104,11 +103,11 @@ public class Transactional {
 //                   } );
 //        Transactional(conn, () -> {
 //          PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, parameters );
-//          
+//
 //          JDBCOperation (ps, () -> {
 //              OliveUtils.executeUpdate( ps, newParams );
 //              OliveUtils.executeUpdate( conn, ps, newParams );
-//              OliveUtils.executeUpdate( conn, ps, newParams );              
+//              OliveUtils.executeUpdate( conn, ps, newParams );
 //          });
 //          OliveUtils.executeUpdate( conn, ps );
 //        } );

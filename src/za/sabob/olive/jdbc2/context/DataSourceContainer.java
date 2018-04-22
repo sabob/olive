@@ -1,8 +1,8 @@
 package za.sabob.olive.jdbc2.context;
 
-import za.sabob.olive.jdbc2.config.JDBCFactory;
 import java.util.*;
 import javax.sql.*;
+import za.sabob.olive.jdbc2.config.*;
 
 public class DataSourceContainer {
 
@@ -16,7 +16,7 @@ public class DataSourceContainer {
         return createContext( ds, false );
     }
 
-    public JDBCContext getMostRecentContext( DataSource ds ) {
+    public JDBCContext getMostRecentJDBCContext( DataSource ds ) {
         JDBCContextManager manager = getOrCreateManager( ds );
         return manager.getMostRecentContext();
     }

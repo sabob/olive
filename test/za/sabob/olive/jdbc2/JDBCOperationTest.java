@@ -27,7 +27,7 @@ public class JDBCOperationTest {
     @Test
     public void beginCleanupTest() throws SQLException {
 
-        boolean isEmpty = JDBCLookup.getDataSourceContainer().isEmpty( ds );
+        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
         Assert.assertTrue( isEmpty );
 
         JDBCContext ctx = JDBC.beginOperation( ds );
@@ -48,7 +48,7 @@ public class JDBCOperationTest {
     @Test
     public void beginCleanupNestedTest() throws SQLException {
 
-        boolean isEmpty = JDBCLookup.getDataSourceContainer().isEmpty( ds );
+        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
         Assert.assertTrue( isEmpty );
 
         JDBCContext ctx = JDBC.beginOperation( ds );
