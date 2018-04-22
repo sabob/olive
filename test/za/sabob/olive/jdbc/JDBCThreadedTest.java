@@ -28,7 +28,7 @@ public class JDBCThreadedTest {
     @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
 
-        //ds = DBTestUtils.createDataSource();
+        //ds = DBTestUtils.createDataSource();w
         DBTestUtils.shutdown( ds );
         //Assert.assertEquals( personsCount, 200 );
     }
