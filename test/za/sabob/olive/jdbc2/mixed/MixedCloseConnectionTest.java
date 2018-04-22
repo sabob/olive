@@ -1,4 +1,4 @@
-package za.sabob.olive.jdbc2.close;
+package za.sabob.olive.jdbc2.mixed;
 
 import za.sabob.olive.jdbc2.context.JDBCContext;
 import za.sabob.olive.util.DBTestUtils;

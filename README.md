@@ -1,7 +1,8 @@
 Olive
 =====
 
-Provides SQL utilities such as loading queries from files and named prepared statements.
+Provides SQL utilities such as JDBCContext for working with Connections, Statements, ResultSets, externalize queries to files, query templating
+ and using named prepared statements.
 
 ## [Downloads](https://github.com/sabob/olive/releases)
 

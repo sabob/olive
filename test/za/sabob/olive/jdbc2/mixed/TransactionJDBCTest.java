@@ -13,7 +13,7 @@ import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class TX_JDBCTest {
+public class TransactionJDBCTest {
 
     DataSource ds;
 

@@ -50,7 +50,7 @@ public class DSF {
         //container.popActiveDataSource(); // Not needed since cleanupTransaction should do this
         if ( !container.isEmpty() ) {
             throw new IllegalStateException(
-                "DataSourceContainer should be empty, but contains an active JDBCContext'. Make sure you cleanup all transactions with TX.cleanupTransaction()" );
+                "DataSourceContainer should be empty, but contains an active JDBCContext'. Make sure you cleanup all transactions with JDBC.cleanupTransaction()" );
         }
         HOLDER.set( null );
     }
@@ -58,7 +58,7 @@ public class DSF {
     public static JDBCContext getLatestJDBCContext( DataSource ds ) {
 
         if ( !hasDataSourceContainer() ) {
-            throw new IllegalStateException( "There is no Connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection." );
+            throw new IllegalStateException( "There is no Connection registered. Use JDBC.beginTransaction or JDBC.beginOperation to create a connection." );
         }
 
         DataSourceContainer container = getDataSourceContainer();
