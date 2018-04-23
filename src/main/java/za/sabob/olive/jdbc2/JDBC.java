@@ -1,6 +1,5 @@
 package za.sabob.olive.jdbc2;
 
-import java.sql.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.jdbc2.operation.*;
@@ -131,7 +130,7 @@ public class JDBC {
 
             op.doOperation( ctx );
 
-        } catch ( SQLException ex ) {
+        } catch ( Exception ex ) {
             exception = ex;
 
         } finally {

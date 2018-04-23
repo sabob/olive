@@ -854,7 +854,7 @@ public class OliveUtils {
 
             return id;
 
-        } catch ( SQLException e ) {
+        } catch ( Exception e ) {
             exception = e;
             throw new RuntimeException( exception );
 
@@ -891,7 +891,7 @@ public class OliveUtils {
 
             return list;
 
-        } catch ( SQLException e ) {
+        } catch ( Exception e ) {
             exception = e;
             throw new RuntimeException( e );
 
@@ -2194,7 +2194,7 @@ public class OliveUtils {
                 return t;
             }
 
-        } catch ( SQLException ex ) {
+        } catch ( Exception ex ) {
             exception = ex;
             throw new RuntimeException( ex );
 
