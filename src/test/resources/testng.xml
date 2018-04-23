@@ -1,0 +1,10 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+ 
+<suite name="tempoSuite" verbose="1" >
+    <test name="OliveTests"   >
+    <packages>
+        <package name="za.sabob.olive.*"/>
+    </packages>
+ </test>
+
+</suite>
