@@ -6,6 +6,7 @@ import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
@@ -22,11 +23,11 @@ public class ForceTimeoutTest {
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 ); // Use small pool so that retrieving connections from large amount of threads leads to deadlocks
+        ds = DBTestUtils.createDataSource( DBTestUtils.HSQLDB, 5 ); // Use small pool so that retrieving connections from large amount of threads leads to deadlocks
         // that are resolved only through connection timeouts.
 
         //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.HSQLDB );
     }
 
     @AfterClass(alwaysRun = true)
@@ -68,7 +69,7 @@ public class ForceTimeoutTest {
             personsCount = persons.size();
 
         } catch ( Exception e ) {
-            if ( isTimeout( e )) {
+            if ( isTimeout( e ) ) {
                 // ignore
             } else {
                 throw new RuntimeException(e);
@@ -249,13 +250,4 @@ public class ForceTimeoutTest {
         return getPersons( conn );
 
     }
-
-    public class Person {
-
-        public long id;
-
-        public String name;
-
-    }
-
 }

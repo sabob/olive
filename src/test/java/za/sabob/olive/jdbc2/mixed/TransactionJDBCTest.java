@@ -6,32 +6,21 @@ import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.jdbc2.context.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.postgres.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class TransactionJDBCTest {
-
-    DataSource ds;
+public class TransactionJDBCTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 2 );
-
-        //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
     @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        //ds = new JdbcDataSource();
-        //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        DBTestUtils.shutdown( ds );
+    @Override
+    public void afterClass() {
+        super.afterClass();
         Assert.assertEquals( personsCount, 2 );
     }
 
@@ -121,19 +110,19 @@ public class TransactionJDBCTest {
             Assert.assertTrue( rootOperationCtx.isClosed() );
         }
     }
-
-    private void insertPersons( JDBCContext ctx ) throws SQLException {
-        SqlParams params = new SqlParams();
-        params.set( "name", "Bob" );
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
-
-        ctx.add( ps );
-
-        int count = ps.executeUpdate();
-
-        params.set( "name", "John" );
-        count = ps.executeUpdate();
-    }
+//
+//    private void insertPersons( JDBCContext ctx ) throws SQLException {
+//        SqlParams params = new SqlParams();
+//        params.set( "name", "bob" );
+//        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+//
+//        ctx.add( ps );
+//
+//        int count = ps.executeUpdate();
+//
+//        params.set( "name", "john" );
+//        count = ps.executeUpdate();
+//    }
 //
 //    public void nestedJDBC( DataSource ds ) {
 //
@@ -184,26 +173,17 @@ public class TransactionJDBCTest {
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans(ps, new RowMapper<Person>() {
-                                                 @Override
-                                                 public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                     Person person = new Person();
-                                                     person.id = rs.getLong( "id" );
-                                                     person.name = rs.getString( "name" );
-                                                     return person;
-                                                 }
-                                             } );
+        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+                                                      @Override
+                                                      public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                                                          Person person = new Person();
+                                                          person.id = rs.getLong( "id" );
+                                                          person.name = rs.getString( "name" );
+                                                          return person;
+                                                      }
+                                                  } );
 
         return persons;
 
     }
-
-    class Person {
-
-        public long id;
-
-        public String name;
-
-    }
-
 }

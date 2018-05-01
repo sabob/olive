@@ -984,6 +984,44 @@ public class OliveUtils {
         return ps;
     }
 
+    public static Statement createStatement( JDBCContext ctx ) {
+
+        try {
+            Connection conn = ctx.getConnection();
+            Statement st = conn.createStatement();
+            ctx.add( st );
+            return st;
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static Statement createStatement( JDBCContext ctx, int resultSetType, int resultSetConcurrency ) {
+
+        try {
+            Connection conn = ctx.getConnection();
+            Statement st = conn.createStatement( resultSetType, resultSetConcurrency );
+
+            ctx.add( st );
+            return st;
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static Statement createStatement( JDBCContext ctx, int resultSetType, int resultSetConcurrency, int resultSetHoldability ) {
+
+        try {
+            Connection conn = ctx.getConnection();
+            Statement st = conn.createStatement( resultSetType, resultSetConcurrency, resultSetHoldability );
+
+            ctx.add( st );
+            return st;
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
     /**
      * Create and return a PreparedStatement for the given connection, parsedSql, parameters and options.
      * <p/>
@@ -2186,11 +2224,13 @@ public class OliveUtils {
         try {
             rs = ps.executeQuery();
 
+            int rowNum = 0;
+
             while ( rs.next() ) {
 
-                int rowNum = rs.getRow();
-
-                T t = mapper.map( rs, rowNum );
+                // Dont use rs.getRow, scrollable ResultSet curosrs not supported by Derby
+                //int rowNum = rs.getRow();
+                T t = mapper.map( rs, rowNum++ );
                 return t;
             }
 
@@ -2234,11 +2274,13 @@ public class OliveUtils {
 
             rs = ps.executeQuery();
 
+            int rowNum = 0;
+
             while ( rs.next() ) {
 
-                int rowNum = rs.getRow();
-
-                T t = mapper.map( rs, rowNum );
+                // Dont use rs.getRow, scrollable ResultSet curosrs not supported by Derby
+                //int rowNum = rs.getRow();
+                T t = mapper.map( rs, rowNum++ );
                 list.add( t );
             }
 
@@ -2266,7 +2308,7 @@ public class OliveUtils {
 
         try {
 
-             rs = ps.executeQuery();
+            rs = ps.executeQuery();
             if ( rs.next() ) {
 
                 if ( cls == int.class || cls == Integer.class ) {

@@ -1,29 +1,13 @@
 package za.sabob.olive.jdbc2;
 
 import java.sql.*;
-import javax.sql.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.context.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 
-public class MultipleBeginTest {
+public class MultipleBeginTest extends PostgresBaseTest {
 
-    DataSource ds;
-
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-        //ds.setURL( "jdbc:h2:~/test" );
-
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        DBTestUtils.shutdown( ds );
-    }
 
     @Test
     public void basicTest() throws SQLException {
@@ -65,10 +49,26 @@ public class MultipleBeginTest {
         Assert.assertEquals( child.getConnection(), mostRecentCtx.getConnection(), "Contexts must share the same connection!" );
 
         parent.close();
-        
+
         Assert.assertTrue( parent.getConnection().isClosed(), "connection should be closed now because parent was closed.");
         Assert.assertTrue( child.getConnection().isClosed(), "Child connection should be closed now because parent was closed.");
         Assert.assertTrue( child.isRootContext(), "Context must be root since it was created first!" );
+
+        Assert.assertTrue( DSF.hasDataSourceContainer() );
+        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty( ds ) );
+        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
+
+        JDBC.cleanupOperation( ds );
+        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
+
+        JDBC.cleanupOperation( ds );
+        JDBC.cleanupOperation( ds );
+        JDBC.cleanupOperation( ds );
+        JDBC.cleanupOperation( ds );
+        JDBC.cleanupOperation( ds );
+        JDBC.cleanupOperation( ds );
+        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
+
     }
 
     public JDBCContext save() {

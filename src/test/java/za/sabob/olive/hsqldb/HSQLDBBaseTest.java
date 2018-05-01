@@ -1,22 +1,21 @@
-package za.sabob.olive.derby;
+package za.sabob.olive.hsqldb;
 
-import java.sql.*;
 import javax.sql.*;
 import org.testng.annotations.*;
 
-public class DerbyBaseTest {
+public class HSQLDBBaseTest {
 
     protected DataSource ds;
 
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
-        ds = DerbyTestUtils.createDS();
+        ds = HSQLDBTestUtils.createDS();
 
-        DerbyTestUtils.createPersonTable( ds );
+        HSQLDBTestUtils.createPersonTable( ds );
     }
 
     @AfterClass(alwaysRun = true)
     public void afterClass() throws Exception {
-        DriverManager.getConnection( "jdbc:derby:memory:olive;shutdown=true" );
+        HSQLDBTestUtils.shutdown( ds );
     }
 }

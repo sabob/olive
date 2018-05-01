@@ -6,27 +6,12 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class JDBCInsertTest {
-
-    DataSource ds;
-
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-        //ds.setURL( "jdbc:h2:~/test" );
-
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        DBTestUtils.shutdown( ds );
-    }
+public class JDBCInsertTest extends PostgresBaseTest {
 
     @Test
     public void basicTest() throws SQLException {
@@ -34,13 +19,13 @@ public class JDBCInsertTest {
         JDBCContext ctx = JDBC.beginOperation( ds );
 
         SqlParams params = new SqlParams();
-        params.set( "name", "Bob" );
+        params.set( "name", "bob" );
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
         int count = ps.executeUpdate();
 
-        params.set( "name", "John" );
+        params.set( "name", "john" );
         count = ps.executeUpdate();
 
         nested( ds );

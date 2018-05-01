@@ -1,28 +1,13 @@
 package za.sabob.olive.jdbc2.close;
 
 import java.sql.*;
-import javax.sql.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.context.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.jdbc2.*;
+import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 
-public class CloseConnectionTest {
-
-    DataSource ds;
-
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        DBTestUtils.shutdown( ds );
-    }
+public class CloseConnectionTest extends PostgresBaseTest {
 
     @Test
     public void closeConnectionTest() throws SQLException {
@@ -41,11 +26,18 @@ public class CloseConnectionTest {
         JDBC.cleanupOperation( child2 );
         Assert.assertFalse( parent.getConnection().isClosed() );
 
+        DataSourceContainer container = DSF.getDataSourceContainer();
+        isEmpty = container.isEmpty( ds );
+        Assert.assertFalse( isEmpty );
+
         JDBC.cleanupOperation( child1 );
         Assert.assertFalse( parent.getConnection().isClosed() );
 
         JDBC.cleanupOperation( parent );
-        Assert.assertTrue( parent.getConnection().isClosed() );
+        Assert.assertTrue( parent.isConnectionClosed() );
+
+        isEmpty = container.isEmpty( ds );
+        Assert.assertTrue( isEmpty );
     }
 
 }

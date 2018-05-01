@@ -1,28 +1,12 @@
 package za.sabob.olive.jdbc2;
 
 import java.sql.*;
-import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc2.context.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.postgres.*;
 
-public class JDBCOperationTest {
-
-    DataSource ds;
-
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-        //ds.setURL( "jdbc:h2:~/test" );
-
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        DBTestUtils.shutdown( ds );
-    }
+public class JDBCOperationTest extends PostgresBaseTest {
 
     @Test
     public void beginCleanupTest() throws SQLException {

@@ -12,39 +12,16 @@ import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class JDBCThreadedTest {
-
-    DataSource ds;
+public class JDBCThreadedTXTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        //ds = new JdbcDataSource();
-        //ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-        ds = PostgresTestUtils.createDS();
-        PostgresTestUtils.createPersonTable( ds );
-        //ds.setURL( "jdbc:h2:~/test" );
-
-        //DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-
-        //ds = DBTestUtils.createDataSource();
-       PostgresTestUtils.shutdown( ds );
-        //Assert.assertEquals( personsCount, 200 );
-    }
-
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void threadTest() {
-        //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        JDBCContext ctx = null;
+
+        JDBCContext ctx = JDBC.beginTransaction( ds );
 
         try {
-
-            ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
             params.set( "name", "bob" );
@@ -60,17 +37,16 @@ public class JDBCThreadedTest {
             List<Person> persons = getPersons( ctx );
 
             personsCount = persons.size();
-            //System.out.println( "PERSONS: " + personsCount );
 
-        } catch ( Throwable e ) {
-            throw new RuntimeException( e );
+        } catch ( Exception e ) {
+            throw JDBC.rollbackTransaction( ctx, e );
 
         } finally {
 
             boolean isAtRoot = ctx.isRootContext();
             Assert.assertTrue( isAtRoot );
 
-            JDBC.cleanupOperation( ctx );
+            JDBC.cleanupTransaction( ctx );
 
             isAtRoot = ctx.isRootContext();
             Assert.assertTrue( isAtRoot );
@@ -83,13 +59,13 @@ public class JDBCThreadedTest {
 
         try {
 
-            ctx = JDBC.beginOperation( ds );
+            ctx = JDBC.beginTransaction( ds );
 
             List<Person> persons = getPersons( ctx );
 
         } finally {
             Assert.assertFalse( ctx.isRootContext() );
-            JDBC.cleanupOperation( ctx );
+            JDBC.cleanupTransaction( ctx );
             Assert.assertTrue( ctx.isRootContext());
         }
 

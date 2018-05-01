@@ -3,18 +3,17 @@ package za.sabob.olive.util;
 import com.mchange.v2.c3p0.*;
 import java.sql.*;
 import javax.sql.*;
-import org.h2.jdbcx.*;
 import org.hsqldb.jdbc.*;
 import org.testng.*;
 import za.sabob.olive.jdbc.*;
 
 public class DBTestUtils {
 
-    public static int H2 = 1;
+    //public static int H2 = 1;
 
     public static int HSQLDB = 2;
 
-    public static int POSTGRES = 4;
+    //public static int POSTGRES = 4;
 
     public static DataSource createDataSource( int db ) {
         return createDataSource( db, 10 );
@@ -31,25 +30,27 @@ public class DBTestUtils {
 
         DataSource ds = null;
 
-        if ( db == H2 ) {
-            ds = getH2DataSource( poolSize, multiThreadedAsInt );
-
-        } else if ( db == HSQLDB ) {
+//        if ( db == H2 ) {
+//            ds = getH2DataSource( poolSize, multiThreadedAsInt );
+//
+//        } else
+if ( db == HSQLDB ) {
             ds = getHSQLDataSource( poolSize );
 
-        } else if ( db == POSTGRES ) {
-            ds = getPostGresDataSource( poolSize );
         }
+//else if ( db == POSTGRES ) {
+//            ds = getPostGresDataSource( poolSize );
+//        }
 
         return ds;
     }
-
-    public static DataSource getH2DataSource( int poolSize, int multiThreadedInt ) {
-        JdbcConnectionPool pool = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=" + multiThreadedInt, "sa", "sa" );
-        pool.setMaxConnections( poolSize );
-        pool.setLoginTimeout( 1 );
-        return pool;
-    }
+//
+//    public static DataSource getH2DataSource( int poolSize, int multiThreadedInt ) {
+//        JdbcConnectionPool pool = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=" + multiThreadedInt, "sa", "sa" );
+//        pool.setMaxConnections( poolSize );
+//        pool.setLoginTimeout( 1 );
+//        return pool;
+//    }
 
     public static DataSource getHSQLDataSource( int poolSize ) {
         JDBCPool ds = new JDBCPool( poolSize );
@@ -112,17 +113,19 @@ public class DBTestUtils {
 
     public static void createPersonTable( DataSource ds, int db ) {
 
-        if ( db == H2 ) {
-            update( ds, "create table if NOT EXISTS person (id bigint auto_increment, name varchar(100), primary key (id));" );
-
-        } else if ( db == HSQLDB ) {
+//        if ( db == H2 ) {
+//            update( ds, "create table if NOT EXISTS person (id bigint auto_increment, name varchar(100), primary key (id));" );
+//
+//        } else
+        if ( db == HSQLDB ) {
 
             update( ds, "create table if not exists person (id bigint IDENTITY, name varchar(100), primary key (id));" );
         }
     }
 
-    public static boolean isTimeout( Exception ex ) {
-        if ( ex.getMessage().contains( "Login timeout" ) || ex.getMessage().contains( "Invalid argument in JDBC call" ) ) {
+    public static boolean isTimeout( Throwable ex ) {
+        if ( ex.getMessage().contains( "Login timeout" ) || ex.getMessage().contains( "Invalid argument in JDBC call" )
+            || ex.getMessage().contains( "connection does not exist" ) ) {
             return true;
         }
         return false;

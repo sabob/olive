@@ -1,28 +1,13 @@
 package za.sabob.olive.jdbc2.mixed;
 
 import java.sql.*;
-import javax.sql.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.context.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.jdbc2.*;
+import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 
-public class MixedCloseConnectionTest {
-
-    DataSource ds;
-
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        DBTestUtils.shutdown( ds );
-    }
+public class MixedCloseConnectionTest extends PostgresBaseTest {
 
     @Test
     public void closeConnectionTest() throws SQLException {
@@ -53,8 +38,8 @@ public class MixedCloseConnectionTest {
 
         JDBC.cleanupTransaction( txChild3 );
         JDBC.cleanupTransaction( txChild8 );
-        Assert.assertFalse( txParent.getConnection().isClosed() );        
-        Assert.assertFalse( nonTxParent.getConnection().isClosed() );        
+        Assert.assertFalse( txParent.getConnection().isClosed() );
+        Assert.assertFalse( nonTxParent.getConnection().isClosed() );
         Assert.assertFalse( nonTxParent.isClosed() );
         Assert.assertFalse( txParent.isClosed() );
 

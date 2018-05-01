@@ -1,6 +1,7 @@
 package za.sabob.olive.jdbc2;
 
 import java.util.*;
+import java.util.logging.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.util.*;
@@ -9,6 +10,8 @@ import za.sabob.olive.util.*;
  * DataSourceFactory
  */
 public class DSF {
+
+    private final static Logger LOGGER = Logger.getLogger( DSF.class.getName() );
 
     private static DataSource defaultDataSource;
 
@@ -104,6 +107,10 @@ public class DSF {
     }
 
     public static void registerDefault( DataSource defaultDataSource ) {
+        if ( DSF.defaultDataSource != null ) {
+            LOGGER.warning( "DSF.registerDefault() called while an existing defaultDataSource has already been set before" );
+
+        }
         DSF.defaultDataSource = defaultDataSource;
     }
 

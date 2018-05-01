@@ -4,16 +4,16 @@ import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.derby.*;
 import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
-public class BasicJDBCTest extends DerbyBaseTest {
+public class BasicJDBCTest extends PostgresBaseTest {
 
     @BeforeClass(alwaysRun = true)
     public void beforeThisClass() {
-        DerbyTestUtils.populateDatabase( ds );
+        PostgresTestUtils.populateDatabase( ds );
     }
 
     @Test

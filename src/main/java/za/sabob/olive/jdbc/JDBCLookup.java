@@ -59,7 +59,7 @@ public class JDBCLookup {
         //container.popActiveDataSource(); // Not needed since cleanupTransaction should do this
         if ( container.hasActiveDataSource() ) {
             throw new IllegalStateException(
-                "DataSourceContainer should be empty, but contains an active DataSource. Make sure you cleanup all transactions with TX.cleanupTransaction()" );
+                "DataSourceContainer should be empty, but contains an active DataSource. Make sure you cleanup all transactions with JDBC.cleanupTransaction()" );
         }
         HOLDER.set( null );
     }
@@ -67,7 +67,7 @@ public class JDBCLookup {
     public static Connection getLatestConnection( DataSource ds ) {
 
         if ( !hasDataSourceContainer() ) {
-            throw new IllegalStateException( "There is no Connection registered. Use TX.beginTransaction or JDBC.beginOperation to create a connection." );
+            throw new IllegalStateException( "There is no Connection registered. Use JDBC.beginTransaction or JDBC.beginOperation to create a connection." );
         }
 
         DataSourceContainer container = getDataSourceContainer();
@@ -75,7 +75,7 @@ public class JDBCLookup {
 
         if ( conn == null ) {
             throw new IllegalStateException(
-                "There is no Connection available. Use TX.beginTransaction or JDBC.beginOperation to create a connection in your service layer." );
+                "There is no Connection available. Use JDBC.beginTransaction or JDBC.beginOperation to create a connection in your service layer." );
         }
 
         return conn;
@@ -84,7 +84,7 @@ public class JDBCLookup {
     public static DataSource getLatestDataSource() {
 
         if ( !hasDataSourceContainer() ) {
-            throw new IllegalStateException( "There is no DataSource registered. Use TX.beginTransaction or JDBC.beginOperation to register a dataSource." );
+            throw new IllegalStateException( "There is no DataSource registered. Use JDBC.beginTransaction or JDBC.beginOperation to register a dataSource." );
         }
 
         DataSourceContainer container = getDataSourceContainer();

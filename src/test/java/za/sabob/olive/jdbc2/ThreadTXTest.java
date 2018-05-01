@@ -9,17 +9,15 @@ import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
-public class ThreadJDBCTest extends PostgresBaseTest {
+public class ThreadTXTest extends PostgresBaseTest {
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
-    //@Test(successPercentage = 100, threadPoolSize = 2, invocationCount = 3, timeOut = 1110000)
     public void basicThreadTest() {
 
         JDBCContext ctx = null;
 
         try {
-            //System.out.println( "* start: " + Thread.currentThread().getId() );
-            ctx = JDBC.beginOperation( ds );
+            ctx = JDBC.beginTransaction( ds );
 
             nested( ds );
             SqlParams params = new SqlParams();
@@ -31,17 +29,8 @@ public class ThreadJDBCTest extends PostgresBaseTest {
 
         } finally {
             boolean isRoot = ctx.isRootContext();
-//            if ( !isRoot ) {
-//                JDBCContext root = ctx.getRootContext();
-//                DataSourceContainer container = JDBCLookup.getDataSourceContainer();
-//                JDBCContextManager manager = container.getOrCreateManager( ds );
-//                JDBCContext mostRecent = manager.getRootContext();
-//                isRoot = ctx.isRootContext();
-//
-//            }
             Assert.assertTrue( isRoot );
-            JDBC.cleanupOperation( ctx );
-            //System.out.println( "* end: " + Thread.currentThread().getId() );
+            JDBC.cleanupTransaction( ctx );
 
             boolean isAtRoot = ctx.isRootContext();
             Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
@@ -54,7 +43,7 @@ public class ThreadJDBCTest extends PostgresBaseTest {
         JDBCContext ctx = null;
 
         try {
-            ctx = JDBC.beginOperation( ds );
+            ctx = JDBC.beginTransaction( ds );
 
             SqlParams params = new SqlParams();
             PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
@@ -73,7 +62,7 @@ public class ThreadJDBCTest extends PostgresBaseTest {
 
         } finally {
             Assert.assertFalse( ctx.isRootContext() );
-            JDBC.cleanupOperation( ctx );
+            JDBC.cleanupTransaction( ctx );
             Assert.assertTrue( ctx.isRootContext() );
         }
 

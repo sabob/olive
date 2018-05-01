@@ -1,13 +1,14 @@
-package za.sabob.olive.jdbc2.postgres.multyiple;
+package za.sabob.olive.jdbc2.postgres.multiple;
 
 import java.util.*;
 import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.jdbc2.context.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc2.postgres.*;
+import za.sabob.olive.domain.*;
+import za.sabob.olive.postgres.*;
 
-public class MultiPGTransactionTest extends AbstractPGBaseTest {
+public class MultiPGTransactionTest extends PostgresBaseTest {
 
     @Test
     public void commitTest() {
@@ -18,7 +19,7 @@ public class MultiPGTransactionTest extends AbstractPGBaseTest {
 
             parent = JDBC.beginTransaction( ds );
             child = JDBC.beginTransaction( ds );
-            
+
             //OliveUtils.setTransactionIsolation( parent.getConnection(), Connection.TRANSACTION_READ_COMMITTED );
 
             insertPersons( child );
@@ -30,9 +31,9 @@ public class MultiPGTransactionTest extends AbstractPGBaseTest {
 
             persons = getPersons( ds );
             Assert.assertEquals( persons.size(), 0 );
-            
+
             JDBC.commitTransaction( parent );
-            
+
             persons = getPersons( ds );
             Assert.assertEquals( persons.size(), 2 );
 

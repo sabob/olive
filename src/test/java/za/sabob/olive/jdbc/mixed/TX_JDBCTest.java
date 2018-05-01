@@ -11,7 +11,6 @@ import za.sabob.olive.transaction.*;
 import za.sabob.olive.util.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.util.*;
 
 public class TX_JDBCTest {
 
@@ -22,10 +21,10 @@ public class TX_JDBCTest {
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 5 );
+        ds = DBTestUtils.createDataSource( DBTestUtils.HSQLDB, 5 );
 
         //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.HSQLDB );
     }
 
     @AfterClass(alwaysRun = true)
@@ -88,7 +87,7 @@ public class TX_JDBCTest {
             nestedTX( ds );
 
             List<Person> persons = getPersons( ctx );
-            
+
         } catch (Exception e) {
             //e.printStackTrace();
 

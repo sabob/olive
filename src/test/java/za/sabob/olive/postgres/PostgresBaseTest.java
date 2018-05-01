@@ -1,38 +1,33 @@
-package za.sabob.olive.jdbc2.postgres;
+package za.sabob.olive.postgres;
 
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.annotations.*;
+import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class AbstractPGBaseTest {
+public class PostgresBaseTest {
 
+    protected DataSource ds;
 
-    public DataSource ds;
-
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void beforeClass() {
-        boolean multiThreaded = false;
-        int poolSize = 10;
-        ds = DBTestUtils.createDataSource( DBTestUtils.POSTGRES, poolSize, multiThreaded );
-        //ds.setURL( "jdbc:h2:~/test" );
+        ds = PostgresTestUtils.createDS();
+        System.out.println( "Postgres created" );
 
-        DBTestUtils.createPersonTable( ds, DBTestUtils.POSTGRES );
-
-        DBTestUtils.clearPersonTable( ds );
-
+        PostgresTestUtils.createPersonTable( ds );
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void afterClass() {
-        DBTestUtils.clearPersonTable( ds );
+        System.out.println( "Postgres stopped" );
+        PostgresTestUtils.shutdown( ds );
     }
-
 
     public void insertPersons( JDBCContext ctx ) {
         try {
@@ -70,14 +65,6 @@ public class AbstractPGBaseTest {
                                                  } );
 
         return persons;
-
-    }
-
-    public class Person {
-
-        public long id;
-
-        public String name;
 
     }
 }

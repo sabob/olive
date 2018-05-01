@@ -6,7 +6,9 @@ import za.sabob.olive.jdbc2.config.*;
 
 public class DataSourceContainer {
 
-    final private Map<DataSource, JDBCContextManager> managerByDS = new LinkedHashMap<>();
+    final private Map<DataSource, JDBCContextManager> managerByDS = new HashMap<>();
+
+    final private Map<JDBCContext, DataSource> dsByContext = new HashMap<>();
 
     public JDBCContext createTXContext( DataSource ds ) {
         return createContext( ds, true );
@@ -17,7 +19,12 @@ public class DataSourceContainer {
     }
 
     public JDBCContext getMostRecentJDBCContext( DataSource ds ) {
-        JDBCContextManager manager = getOrCreateManager( ds );
+
+        JDBCContextManager manager = getManager( ds );
+        if ( manager == null ) {
+            return null;
+        }
+
         return manager.getMostRecentContext();
     }
 
@@ -25,6 +32,7 @@ public class DataSourceContainer {
         JDBCContextManager manager = getOrCreateManager( ds );
 
         JDBCContext ctx = manager.createContext( ds, transactional );
+        dsByContext.put( ctx, ds );
         return ctx;
     }
 
@@ -46,15 +54,30 @@ public class DataSourceContainer {
         JDBCContextManager manager = getManager( ds );
 
         if ( manager == null ) {
-            manager = JDBCFactory.getInstance().createManager();
+            manager = createManager( ds );
             managerByDS.put( ds, manager );
         }
 
         return manager;
     }
 
-    public  JDBCContextManager getManager( DataSource ds ) {
+    public JDBCContextManager getManager( DataSource ds ) {
         return managerByDS.get( ds );
+    }
+
+    public JDBCContextManager createManager( DataSource ds ) {
+        JDBCContextManager newManager = JDBCFactory.getInstance().createManager();
+        return newManager;
+    }
+
+    public JDBCContextManager removeManager( JDBCContext ctx, boolean isRootContext ) {
+        DataSource ds = dsByContext.remove( ctx );
+
+        if ( isRootContext ) {
+            JDBCContextManager manager = managerByDS.remove( ds );
+            return manager;
+        }
+        return null;
     }
 
 }

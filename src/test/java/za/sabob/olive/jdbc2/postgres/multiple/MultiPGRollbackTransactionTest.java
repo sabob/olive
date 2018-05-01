@@ -1,13 +1,14 @@
-package za.sabob.olive.jdbc2.postgres.multyiple;
+package za.sabob.olive.jdbc2.postgres.multiple;
 
 import java.util.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.context.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc2.postgres.*;
+import za.sabob.olive.domain.*;
+import za.sabob.olive.jdbc2.*;
+import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 
-public class MultiPGRollbackTransactionTest extends AbstractPGBaseTest {
+public class MultiPGRollbackTransactionTest extends PostgresBaseTest {
 
     @Test
     public void rollbackTest() {

@@ -129,11 +129,26 @@ public class JDBCContext implements AutoCloseable {
         return connection != null;
     }
 
+    /**
+     * Used for testing purposes.
+     *
+     * @return true if the connection is closed, false otherwise
+     */
+    public boolean isConnectionClosed() {
+
+        try {
+            return connection.isClosed();
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
     public Connection getConnection() {
 
         if ( isClosed() ) {
-            LOGGER.info(
-                "You are retrieving a Connection that is closed. Either you closed JDBCContext already or you forgot to begin an operation through JDBC.beginOperation or TX.beginTransaction." );
+            Throwable t = new Throwable(
+                "You are retrieving a Connection from a JDBCContext that is closed. Either you closed JDBCContext already or you forgot to begin an operation through JDBC.beginOperation or TX.beginTransaction." );
+            //LOGGER.log( Level.INFO, t.getMessage(), t );
         }
 
         return connection;

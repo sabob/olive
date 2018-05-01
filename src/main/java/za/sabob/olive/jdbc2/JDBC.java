@@ -39,40 +39,67 @@ public class JDBC {
     }
 
     public static void cleanupOperation( JDBCContext ctx ) {
+
+        if ( ctx == null ) {
+            return;
+        }
+
         ctx.close();
     }
 
     public static RuntimeException cleanupOperationQuietly( JDBCContext ctx ) {
-        return ctx.closeQuietly();
+
+        if ( ctx == null ) {
+            return null;
+        }
+
+        RuntimeException ex = ctx.closeQuietly();
+
+        return ex;
     }
 
     public static RuntimeException cleanupOperationQuietly( JDBCContext ctx, Exception exception ) {
-        RuntimeException ex = ctx.closeQuietly();
+
+        if ( ctx == null ) {
+            return OliveUtils.toRuntimeException( exception );
+        }
+
+        RuntimeException ex = cleanupOperationQuietly( ctx );
         exception = OliveUtils.addSuppressed( ex, exception );
         return OliveUtils.toRuntimeException( exception );
     }
 
     public static void cleanupOperation( DataSource ds ) {
+
+        if ( ds == null ) {
+            throw new IllegalArgumentException( "DataSource cannot be null" );
+        }
+
         DataSourceContainer container = DSF.getDataSourceContainer();
         JDBCContext ctx = container.getMostRecentJDBCContext( ds );
         cleanupOperation( ctx );
     }
 
     public static void cleanupTransaction( JDBCContext ctx ) {
-        ctx.close();
+        cleanupOperation( ctx );
     }
 
     public static RuntimeException cleanupTransactionQuietly( JDBCContext ctx ) {
-        return ctx.closeQuietly();
+        return cleanupOperationQuietly( ctx );
     }
 
     public static RuntimeException cleanupTransactionQuietly( JDBCContext ctx, Exception exception ) {
-        RuntimeException ex = ctx.closeQuietly();
+        RuntimeException ex = cleanupTransactionQuietly( ctx );
         exception = OliveUtils.addSuppressed( ex, exception );
         return OliveUtils.toRuntimeException( exception );
     }
 
     public static void cleanupTransaction( DataSource ds ) {
+
+        if ( ds == null ) {
+            throw new IllegalArgumentException( "DataSource cannot be null" );
+        }
+
         DataSourceContainer container = DSF.getDataSourceContainer();
         JDBCContext ctx = container.getMostRecentJDBCContext( ds );
         cleanupTransaction( ctx );

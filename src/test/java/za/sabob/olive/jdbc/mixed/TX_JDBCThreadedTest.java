@@ -22,10 +22,10 @@ public class TX_JDBCThreadedTest {
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
         //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.H2, 20 );
+        ds = DBTestUtils.createDataSource( DBTestUtils.HSQLDB, 20 );
 
         //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
+        DBTestUtils.createPersonTable( ds, DBTestUtils.HSQLDB );
     }
 
     @AfterClass(alwaysRun = true)

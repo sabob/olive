@@ -2,6 +2,7 @@ package za.sabob.olive.jdbc2.context;
 
 import java.sql.*;
 import javax.sql.*;
+import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.jdbc2.context.listener.*;
 import za.sabob.olive.util.*;
 
@@ -59,13 +60,15 @@ public class JDBCContextManager {
 
     public Connection getNewConnection( DataSource ds, boolean autoCommit ) {
 
+        Connection newConn = null;
+
         try {
-            Connection conn = OliveUtils.getConnection( ds, true );
-            OliveUtils.setAutoCommit( conn, autoCommit );
-            return conn;
+            newConn = OliveUtils.getConnection( ds, true );
+            OliveUtils.setAutoCommit( newConn, autoCommit );
+            return newConn;
 
         } catch ( Exception e ) {
-            throw OliveUtils.closeSilently( e, conn );
+            throw OliveUtils.closeSilently( true, e, newConn );
         }
     }
 
@@ -122,10 +125,17 @@ public class JDBCContextManager {
         @Override
         public void onBeforeContextDetach( JDBCContext ctx ) {
 
-            if ( ctx == rootCtx ) {
+            boolean isRootContext = ctx == rootCtx;
+            // Sanity check
+            if ( isRootContext && !ctx.isRootContext() ) {
+                throw new IllegalStateException( "JDBCContext is not the root context, but JDBCContextManager states that it is!" );
+            }
+
+            if ( isRootContext ) {
                 rootCtx = null;
             }
 
+            removeManager( ctx, isRootContext );
         }
 
         @Override
@@ -138,6 +148,14 @@ public class JDBCContextManager {
 
         }
 
+    }
+
+    private void removeManager( JDBCContext ctx, boolean isRootContext ) {
+        if ( DSF.hasDataSourceContainer() ) {
+            DataSourceContainer container = DSF.getDataSourceContainer();
+            container.removeManager( ctx, isRootContext );
+
+        }
     }
 
 }
