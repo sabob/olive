@@ -138,7 +138,7 @@ public class JDBC {
 
             if ( ex instanceof SQLException ) {
                 SQLException sqle = (SQLException) ex;
-                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             exception = rollbackTransactionSilently( ctx, ex );
@@ -175,7 +175,7 @@ public class JDBC {
 
             if ( ex instanceof SQLException ) {
                 SQLException sqle = (SQLException) ex;
-                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             exception = rollbackTransactionSilently( ctx, ex );
@@ -194,8 +194,48 @@ public class JDBC {
 
     public static <R, X extends Exception> R execute( DataSource ds, OperationExecutor<R, X> executor ) {
 
+        try {
+            return executeWithException( ds, executor );
+
+        } catch ( Exception ex ) {
+            RuntimeException re = OliveUtils.toRuntimeException( ex );
+            throw re;
+        }
+
+//        JDBCContext ctx = null;
+//        RuntimeException exception = null;
+//
+//        R result = null;
+//
+//        try {
+//            ctx = beginOperation( ds );
+//
+//            result = executor.execute( ctx );
+//
+//            return result;
+//
+//        } catch ( Exception ex ) {
+//
+//            if ( ex instanceof SQLException ) {
+//                SQLException sqle = (SQLException) ex;
+//                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+//            }
+//
+//            exception = OliveUtils.toRuntimeException( ex );
+//            throw exception;
+//
+//        } finally {
+//            exception = cleanupOperationQuietly( ctx, exception );
+//            RuntimeException re = new RuntimeException( "SQL SUCS" );
+//            OliveUtils.addSuppressed( exception, re );
+//            OliveUtils.throwAsRuntimeIfException( exception );
+//        }
+    }
+
+    private static <R, X extends Exception> R executeWithException( DataSource ds, OperationExecutor<R, X> executor ) throws X {
+
         JDBCContext ctx = null;
-        RuntimeException exception = null;
+        Exception exception = null;
 
         R result = null;
 
@@ -210,15 +250,20 @@ public class JDBC {
 
             if ( ex instanceof SQLException ) {
                 SQLException sqle = (SQLException) ex;
-                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
-            exception = OliveUtils.toRuntimeException( ex );
-            throw exception;
+            exception = ex;
+
+            throw (X) exception;
 
         } finally {
-            exception = cleanupOperationQuietly( ctx, exception );
-            OliveUtils.throwAsRuntimeIfException( exception );
+            RuntimeException re = cleanupOperationQuietly( ctx, exception );
+            OliveUtils.addSuppressed( exception, re );
+
+            if ( exception != null ) {
+                throw (X) exception;
+            }
         }
     }
 
@@ -249,7 +294,7 @@ public class JDBC {
         } catch ( Exception ex ) {
             if ( ex instanceof SQLException ) {
                 SQLException sqle = (SQLException) ex;
-                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             exception = ex;

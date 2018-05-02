@@ -2386,7 +2386,7 @@ public class OliveUtils {
         return rs;
     }
 
-    public static SQLException convertSqlExcpetionToSuppressed( SQLException e ) {
+    public static SQLException convertSqlExceptionToSuppressed( SQLException e ) {
         for ( SQLException next = e.getNextException(); next != null; next = next.getNextException() ) {
             e.addSuppressed( next );
         }
