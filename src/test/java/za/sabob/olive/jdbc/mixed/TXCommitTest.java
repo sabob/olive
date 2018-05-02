@@ -4,13 +4,12 @@ package za.sabob.olive.jdbc.mixed;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+import org.testng.*;
+import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.transaction.*;
-import za.sabob.olive.util.*;
-import org.testng.*;
-import org.testng.annotations.*;
 import za.sabob.olive.util.*;
 
 public class TXCommitTest {

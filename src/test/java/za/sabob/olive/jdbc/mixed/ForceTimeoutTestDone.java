@@ -14,7 +14,7 @@ import za.sabob.olive.transaction.*;
 import static za.sabob.olive.util.DBTestUtils.isTimeout;
 import za.sabob.olive.util.*;
 
-public class ForceTimeoutTest {
+public class ForceTimeoutTestDone {
 
     DataSource ds;
 
