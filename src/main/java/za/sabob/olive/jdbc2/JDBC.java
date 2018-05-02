@@ -1,5 +1,6 @@
 package za.sabob.olive.jdbc2;
 
+import java.sql.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.jdbc2.operation.*;
@@ -121,7 +122,7 @@ public class JDBC {
         return ctx.rollbackSilently( e );
     }
 
-    public static void doInTransaction( DataSource ds, Transaction transaction ) {
+    public static <X extends Exception> void updateInTransaction( DataSource ds, TransactionUpdater<X> updater ) {
 
         JDBCContext ctx = null;
         Exception exception = null;
@@ -129,11 +130,17 @@ public class JDBC {
         try {
             ctx = beginTransaction( ds );
 
-            transaction.doInTransaction( ctx );
+            updater.update( ctx );
 
             commitTransaction( ctx );
 
         } catch ( Exception ex ) {
+
+            if ( ex instanceof SQLException ) {
+                SQLException sqle = (SQLException) ex;
+                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+            }
+
             exception = rollbackTransactionSilently( ctx, ex );
 
         } finally {
@@ -142,12 +149,94 @@ public class JDBC {
         }
     }
 
-    public static void doOperation( Operation op ) {
+    public static <R, X extends Exception> R executeInTransaction( TransactionExecutor<R, X> executor ) {
+
         DataSource ds = DSF.getDefault();
-        doOperation( ds, op );
+        return executeInTransaction( ds, executor );
     }
 
-    public static void doOperation( DataSource ds, Operation op ) {
+    public static <R, X extends Exception> R executeInTransaction( DataSource ds, TransactionExecutor<R, X> executor ) {
+
+        JDBCContext ctx = null;
+        RuntimeException exception = null;
+
+        R result = null;
+
+        try {
+            ctx = beginTransaction( ds );
+
+            result = executor.execute( ctx );
+
+            commitTransaction( ctx );
+
+            return result;
+
+        } catch ( Exception ex ) {
+
+            if ( ex instanceof SQLException ) {
+                SQLException sqle = (SQLException) ex;
+                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+            }
+
+            exception = rollbackTransactionSilently( ctx, ex );
+            throw exception;
+
+        } finally {
+            exception = cleanupTransactionQuietly( ctx, exception );
+            OliveUtils.throwAsRuntimeIfException( exception );
+        }
+    }
+
+    public static <R, X extends Exception> R execute( OperationExecutor<R, X> executor ) {
+        DataSource ds = DSF.getDefault();
+        return execute( ds, executor );
+    }
+
+    public static <R, X extends Exception> R execute( DataSource ds, OperationExecutor<R, X> executor ) {
+
+        JDBCContext ctx = null;
+        RuntimeException exception = null;
+
+        R result = null;
+
+        try {
+            ctx = beginOperation( ds );
+
+            result = executor.execute( ctx );
+
+            return result;
+
+        } catch ( Exception ex ) {
+
+            if ( ex instanceof SQLException ) {
+                SQLException sqle = (SQLException) ex;
+                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+            }
+
+            exception = OliveUtils.toRuntimeException( ex );
+            throw exception;
+
+        } finally {
+            exception = cleanupOperationQuietly( ctx, exception );
+            OliveUtils.throwAsRuntimeIfException( exception );
+        }
+    }
+
+    public static <R, X extends Exception> R query( OperationExecutor<R, X> executor ) {
+        DataSource ds = DSF.getDefault();
+        return query( ds, executor );
+    }
+
+    public static <R, X extends Exception> R query( DataSource ds, OperationExecutor<R, X> executor ) {
+        return execute( ds, executor );
+    }
+
+    public static <X extends Exception> void update( OperationUpdater<X> updater ) {
+        DataSource ds = DSF.getDefault();
+        update( ds, updater );
+    }
+
+    public static <X extends Exception> void update( DataSource ds, OperationUpdater<X> updater ) {
 
         JDBCContext ctx = null;
         Exception exception = null;
@@ -155,9 +244,14 @@ public class JDBC {
         try {
             ctx = beginOperation( ds );
 
-            op.doOperation( ctx );
+            updater.update( ctx );
 
         } catch ( Exception ex ) {
+            if ( ex instanceof SQLException ) {
+                SQLException sqle = (SQLException) ex;
+                ex = OliveUtils.convertSqlExcpetionToSuppressed( sqle );
+            }
+
             exception = ex;
 
         } finally {
@@ -167,8 +261,19 @@ public class JDBC {
         }
     }
 
-    public static void doInTransaction( Transaction transaction ) {
+    public static <X extends Exception> void updateInTransaction( TransactionUpdater<X> updater ) {
+
         DataSource ds = DSF.getDefault();
-        doInTransaction( ds, transaction );
+        updateInTransaction( ds, updater );
+    }
+
+    public static <R, X extends Exception> R queryInTransaction( DataSource ds, TransactionExecutor<R, X> executor ) {
+        return executeInTransaction( ds, executor );
+    }
+
+    public static <R, X extends Exception> R queryInTransaction( TransactionExecutor<R, X> producer ) {
+
+        DataSource ds = DSF.getDefault();
+        return queryInTransaction( ds, producer );
     }
 }

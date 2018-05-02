@@ -1,6 +1,7 @@
 package za.sabob.olive.jdbc2.dao;
 
 import java.sql.*;
+import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.util.*;
@@ -15,10 +16,20 @@ public class DaoTest {
         saveInService( entity );
     }
 
+    public Person getPerson( long id ) {
+
+        return JDBC.executeInTransaction( ctx -> {
+            System.out.println( "moo" + id );
+            saveInDao( id, ctx );
+            saveInService( "" );
+            return new Person();
+        } );
+    }
+
     public void saveInService( Object entity ) {
-        JDBC.doInTransaction( ctx -> {
-            // TODO how to ensure transaction is passed to other methods now that we have a JDBCContext
-            saveInDao( entity, ctx );
+
+        JDBC.updateInTransaction( (JDBCContext ctx) -> {
+            saveInDao( new Person(), ctx );
         } );
 
     }

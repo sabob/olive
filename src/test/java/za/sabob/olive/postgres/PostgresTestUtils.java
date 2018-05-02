@@ -88,7 +88,7 @@ public class PostgresTestUtils {
 
     public static void createPersonTable( DataSource ds ) {
 
-        JDBC.doInTransaction( ds, (ctx) -> {
+        JDBC.updateInTransaction( ds, (ctx) -> {
 
             URI uri = PostgresTestUtils.class.getResource( "create-tables.sql" ).toURI();
             String ddl = new String( Files.readAllBytes( Paths.get( uri ) ) );
