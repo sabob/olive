@@ -160,12 +160,10 @@ public class JDBC {
         JDBCContext ctx = null;
         RuntimeException exception = null;
 
-        R result = null;
-
         try {
             ctx = beginTransaction( ds );
 
-            result = executor.execute( ctx );
+            R result = executor.execute( ctx );
 
             commitTransaction( ctx );
 
