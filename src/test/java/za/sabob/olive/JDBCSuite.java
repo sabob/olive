@@ -1,5 +1,7 @@
 package za.sabob.olive;
 
+import za.sabob.olive.jdbc2.basic.JDBCInsertTest;
+import za.sabob.olive.jdbc2.threads.ThreadJDBCTest;
 import java.util.*;
 import java.util.logging.*;
 import org.testng.*;

@@ -1,9 +1,10 @@
-package za.sabob.olive.jdbc2;
+package za.sabob.olive.jdbc2.threads;
 
 import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
+import za.sabob.olive.jdbc2.JDBC;
 import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
