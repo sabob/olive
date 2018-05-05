@@ -12,7 +12,7 @@ import za.sabob.olive.util.*;
 import org.testng.*;
 import org.testng.annotations.*;
 
-public class TX_JDBCTest {
+public class TX_JDBCTestDone {
 
     DataSource ds;
 

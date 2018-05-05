@@ -13,7 +13,7 @@ import za.sabob.olive.postgres.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class TransactionJDBCTest extends PostgresBaseTest {
+public class TX_CloseTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
