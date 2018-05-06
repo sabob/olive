@@ -1,61 +1,57 @@
 // TODO mix jdbc and tx test
-package za.sabob.olive.jdbc.mixed;
+package za.sabob.olive.jdbc2.mixed;
 
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc2.*;
+import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
-import za.sabob.olive.transaction.*;
 import static za.sabob.olive.util.DBTestUtils.isTimeout;
 import za.sabob.olive.util.*;
 
-public class TX_JDBCThreadedTest {
-
-    DataSource ds;
+public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
-        //ds = new JdbcDataSource();
-        ds = DBTestUtils.createDataSource( DBTestUtils.HSQLDB, 20 );
+        ds = PostgresTestUtils.createDS( 20 );
+        System.out.println( "Postgres created" );
 
-        //ds.setURL( "jdbc:h2:~/test" );
-        DBTestUtils.createPersonTable( ds, DBTestUtils.HSQLDB );
+        PostgresTestUtils.createPersonTable( ds );
     }
 
     @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        //ds = new JdbcDataSource();
-        //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        DBTestUtils.shutdown( ds );
+    public void afterClass() {
+        super.afterClass();
         Assert.assertEquals( personsCount, 400 );
     }
 
+    //@Test(successPercentage = 100, threadPoolSize = 3, invocationCount = 20, timeOut = 1110000)
     @Test(successPercentage = 0, threadPoolSize = 20, invocationCount = 200, timeOut = 1110000)
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         JDBCContext ctx = null;
-        PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
 
-            boolean isRoot = JDBC.isAtRootConnection();
-            Assert.assertFalse( isRoot, "CLEAN: " );
+            boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
+            Assert.assertTrue( isEmpty, "CLEAN: " );
 
             ctx = JDBC.beginOperation( ds );
 
-            isRoot = JDBC.isAtRootConnection();
-            Assert.assertTrue( isRoot, "CLEAN:" );
+            isEmpty = ctx.isRootConnectionHolder();
+            Assert.assertTrue( isEmpty, "CLEAN:" );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -74,26 +70,16 @@ public class TX_JDBCThreadedTest {
 
         } finally {
 
-            boolean isRoot = JDBC.isAtRootConnection();
-            boolean connectionCreated = ctx != null;
+            boolean isRoot = ctx.isRootContext();
 
-            if ( connectionCreated ) {
+            Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
 
-                Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
+            boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
+            Assert.assertFalse( isEmpty );
 
-            } else {
-                if ( isRoot ) {
-                    System.out.println( "BUG JDBC 1, conn: " + connectionCreated + ", isRoot: " + isRoot );
-                }
-            }
-
-            //Assert.assertFalse(  );
-            JDBC.cleanupOperation();
-            //Assert.assertTrue( JDBC.isAtRootConnection() );
-            isRoot = JDBC.isAtRootConnection();
-            if ( isRoot ) {
-                System.out.println( "BUG 2" );
-            }
+            JDBC.cleanupOperation( ctx );
+            isEmpty = DSF.getDataSourceContainer().isEmpty();
+            Assert.assertTrue( isEmpty );
         }
     }
 
@@ -115,7 +101,7 @@ public class TX_JDBCThreadedTest {
 
         } finally {
 
-            boolean isRoot = JDBC.isAtRootConnection();
+            boolean isRoot = ctx.isRootConnectionHolder();
             boolean connectionCreated = ctx != null;
 
             if ( connectionCreated ) {
@@ -130,9 +116,9 @@ public class TX_JDBCThreadedTest {
             }
 
             //Assert.assertFalse(  );
-            JDBC.cleanupOperation();
+            JDBC.cleanupOperation( ctx );
             //Assert.assertTrue( JDBC.isAtRootConnection() );
-            isRoot = JDBC.isAtRootConnection();
+            isRoot = ctx.isRootConnectionHolder();
             if ( !isRoot ) {
                 System.out.println( "BUG 1.2" );
             }
@@ -145,16 +131,15 @@ public class TX_JDBCThreadedTest {
         JDBCContext ctx = null;
 
         try {
-
-            ctx = TX.beginTransaction( ds );
+            ctx = JDBC.beginTransaction( ds );
 
             List<Person> persons = getTXPersons();
 
         } catch ( Exception ex ) {
-            if ( isTimeout( ex )) {
+            if ( isTimeout( ex ) ) {
                 // ignore
             } else {
-                throw new RuntimeException(ex);
+                throw new RuntimeException( ex );
             }
 //            System.out.println( "SERIOUS PROBLEM 2" + throwable.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
 //                + Thread.currentThread().getId() );
@@ -163,10 +148,10 @@ public class TX_JDBCThreadedTest {
 
             try {
 
-                boolean isRoot = TX.isAtRootConnection();
+                boolean isRoot = ctx.isRootConnectionHolder();
                 boolean connectionCreated = ctx != null;
 
-                TX.cleanupTransaction();
+                JDBC.cleanupTransaction( ctx );
 
                 if ( connectionCreated ) {
                     Assert.assertTrue( isRoot, "TX Connection was created, we must be root" );
@@ -188,14 +173,14 @@ public class TX_JDBCThreadedTest {
             PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
 
             List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
-                                                     @Override
-                                                     public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                         Person person = new Person();
-                                                         person.id = rs.getLong( "id" );
-                                                         person.name = rs.getString( "name" );
-                                                         return person;
-                                                     }
-                                                 } );
+                                                          @Override
+                                                          public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                                                              Person person = new Person();
+                                                              person.id = rs.getLong( "id" );
+                                                              person.name = rs.getString( "name" );
+                                                              return person;
+                                                          }
+                                                      } );
 
             return persons;
         } catch ( Exception e ) {
@@ -204,18 +189,21 @@ public class TX_JDBCThreadedTest {
     }
 
     public List<Person> getJDBCPersons() {
-        Connection conn = JDBCLookup.getLatestConnection( ds );
-            boolean isAutoCommit = OliveUtils.getAutoCommit( conn );
-            Assert.assertTrue( isAutoCommit, " Connection should not be a transactional connection." );
+        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+        Connection conn = ctx.getConnection();
+
+        boolean isAutoCommit = OliveUtils.getAutoCommit( conn );
+        Assert.assertTrue( isAutoCommit, " Connection should not be a transactional connection." );
 
         return getPersons( conn );
 
     }
 
     public List<Person> getTXPersons() {
-        Connection conn = JDBCLookup.getLatestConnection( ds );
-            boolean isTransaction = !OliveUtils.getAutoCommit( conn );
-            Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );
+        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+        Connection conn = ctx.getConnection();
+        boolean isTransaction = !OliveUtils.getAutoCommit( conn );
+        Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );
 
         return getPersons( conn );
 

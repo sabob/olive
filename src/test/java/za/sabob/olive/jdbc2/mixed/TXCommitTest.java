@@ -1,47 +1,28 @@
 // TODO mix jdbc and tx test
-package za.sabob.olive.jdbc.mixed;
+package za.sabob.olive.jdbc2.mixed;
 
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc2.*;
+import za.sabob.olive.jdbc2.context.*;
+import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
-import za.sabob.olive.transaction.*;
 import za.sabob.olive.util.*;
 
-public class TXCommitTest {
-
-    DataSource ds;
+public class TXCommitTest extends PostgresBaseTest {
 
     int personsCount = 0;
-
-    @BeforeClass(alwaysRun = true)
-    public void beforeClass() {
-
-        ds = DBTestUtils.createDataSource( DBTestUtils.HSQLDB, 15 );
-        DBTestUtils.createPersonTable( ds, DBTestUtils.HSQLDB );
-    }
-
-    @AfterClass(alwaysRun = true)
-    public void afterClass() throws Exception {
-        //ds = new JdbcDataSource();
-        //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
-        DBTestUtils.shutdown( ds );
-    }
 
     @Test
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
-        JDBCContext ctx = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        JDBCContext ctx = JDBC.beginOperation( ds );
 
         try {
-
-            ctx = JDBC.beginOperation( ds );
 
             nestedJDBC( ds );
 
@@ -55,23 +36,23 @@ public class TXCommitTest {
 
         } finally {
 
-            boolean isAtRoot = JDBC.isAtRootConnection();
+            boolean isAtRoot = ctx.isRootConnectionHolder();
             Assert.assertTrue( isAtRoot );
 
-            JDBC.cleanupOperation( ps, rs );
+            JDBC.cleanupOperation( ctx );
 
-            isAtRoot = JDBC.isAtRootConnection();
-            Assert.assertFalse( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+            isAtRoot = ctx.isRootConnectionHolder();
+            Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+            Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
+
         }
     }
 
     public void nestedJDBC( DataSource ds ) {
 
-        JDBCContext ctx = null;
+        JDBCContext ctx = JDBC.beginOperation( ds );
 
         try {
-
-            ctx = JDBC.beginOperation( ds );
 
             nestedTX( ds );
 
@@ -89,20 +70,18 @@ public class TXCommitTest {
 
     public void nestedTX( DataSource ds ) {
 
-        JDBCContext ctx = null;
-        PreparedStatement ps = null;
+        JDBCContext ctx = JDBC.beginTransaction( ds );
         Exception ex = null;
 
         try {
 
-            ctx = TX.beginTransaction( ds );
             //conn.setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED);
             //System.out.println( "In Transaction? " + !conn.getAutoCommit() );
             //System.out.println( "Isolation level? " + OliveUtils.getTransactionIsolation( conn ) );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
             Assert.assertEquals( count, 1 );
@@ -110,7 +89,7 @@ public class TXCommitTest {
             params.set( "name", "John" );
             //count = ps.executeUpdate();
 
-            TX.rollbackTransaction();
+            JDBC.rollbackTransaction( ctx );
 
             List<Person> persons = getPersons();
 
@@ -123,7 +102,7 @@ public class TXCommitTest {
 
         } finally {
             //Assert.assertTrue( TX.isAtRootConnection() );
-            RuntimeException result = TX.cleanupTransaction( ex, ctx.getConnection(), ps );
+            RuntimeException result = JDBC.cleanupTransactionQuietly( ctx, ex );
 
             if ( result != null ) {
                 throw result;
@@ -133,7 +112,8 @@ public class TXCommitTest {
     }
 
     public List<Person> getPersons() {
-        Connection conn = JDBCLookup.getLatestConnection( ds );
+        JDBCContext latestCtx = DSF.getLatestJDBCContext( ds );
+        Connection conn = latestCtx.getConnection();
         return getPersons( conn );
     }
 
