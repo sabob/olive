@@ -1,10 +1,11 @@
 package za.sabob.olive.hsqldb;
 
+import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.DSF;
 import java.sql.*;
 import javax.sql.*;
 import org.hsqldb.jdbc.*;
 import org.testng.*;
-import za.sabob.olive.jdbc2.*;
 import za.sabob.olive.util.*;
 
 public class HSQLDBTestUtils {

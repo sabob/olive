@@ -1,13 +1,12 @@
 package za.sabob.olive;
 
-import za.sabob.olive.jdbc2.basic.JDBCInsertTest;
-import za.sabob.olive.jdbc2.threads.ThreadJDBCTest;
+import za.sabob.olive.jdbc.threads.JDBCThreadedTest;
+import za.sabob.olive.jdbc.basic.JDBCInsertTest;
+import za.sabob.olive.jdbc.threads.ThreadJDBCTest;
 import java.util.*;
 import java.util.logging.*;
 import org.testng.*;
 import org.testng.xml.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.threads.*;
 
 public class JDBCSuite {
 

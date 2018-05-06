@@ -1,5 +1,8 @@
 package za.sabob.olive.postgres;
 
+import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.DSF;
 import com.mchange.v2.c3p0.*;
 import com.opentable.db.postgres.embedded.*;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres.Builder;
@@ -10,8 +13,6 @@ import javax.sql.*;
 import org.testng.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 

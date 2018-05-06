@@ -1,12 +1,12 @@
 package za.sabob.olive.postgres;
 
+import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.jdbc.JDBC;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
-import za.sabob.olive.jdbc2.*;
-import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;

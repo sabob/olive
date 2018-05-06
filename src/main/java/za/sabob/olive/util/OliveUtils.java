@@ -15,6 +15,7 @@
  */
 package za.sabob.olive.util;
 
+import za.sabob.olive.jdbc.context.JDBCContext;
 import java.io.*;
 import java.math.*;
 import java.sql.*;
@@ -24,7 +25,6 @@ import javax.sql.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
-import za.sabob.olive.jdbc2.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 
