@@ -1,12 +1,11 @@
 package za.sabob.olive;
 
-import za.sabob.olive.jdbc.threads.JDBCThreadedTest;
-import za.sabob.olive.jdbc.basic.JDBCInsertTest;
-import za.sabob.olive.jdbc.threads.ThreadJDBCTest;
 import java.util.*;
 import java.util.logging.*;
 import org.testng.*;
 import org.testng.xml.*;
+import za.sabob.olive.jdbc.basic.*;
+import za.sabob.olive.jdbc.threads.*;
 
 public class JDBCSuite {
 
@@ -22,7 +21,7 @@ public class JDBCSuite {
         //listnerClasses.add( org.wso2.platform.test.core.PlatformSuiteManager.class );
         testNG.setDefaultSuiteName( "JDBC suite" );
 
-        XmlPackage xmlPackage = new XmlPackage( "za.sabob.olive.jdbc2.*" );
+        XmlPackage xmlPackage = new XmlPackage( "za.sabob.olive.jdbc.*" );
         //xmlPackage.setInclude(Arrays.asList( "*.*" ) );
         List<XmlPackage> xmlPackages = new ArrayList<>();
         xmlPackages.add( xmlPackage );
