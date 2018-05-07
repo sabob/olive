@@ -1,8 +1,8 @@
 //
 // JMustache - A Java implementation of the Mustache templating language
-// http://github.za.sabob.olive/jmustache/blob/master/LICENSE
+// http://github.com/samskivert/jmustache/blob/master/LICENSE
 
-package za.sabob.olive.mustache;
+package com.samskivert.mustache;
 
 /**
  * An exception thrown when an error occurs parsing or executing a Mustache template.

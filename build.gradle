@@ -1,5 +1,8 @@
 apply plugin: 'java-library'
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 repositories {
     mavenCentral();
 }
@@ -18,4 +21,15 @@ task copyLibs(type: Copy) {
     def libs = configurations.runtimeClasspath  + configurations.testRuntimeClasspath;
     into "$projectDir/lib"
     from libs
+}
+
+task renameMustache(type: Copy) {
+    println "$projectDir/src/main/java/com/samskivert";
+    from("$projectDir/src/main/java/com/samskivert"){
+      include "**/*"
+      // does not work as tokenValue is still null when this is evaluated
+      filter{ it.replaceAll("com.samskivert", "za.sabob.olive")}
+  }
+  into("$projectDir/src/main/java/za/sabob/olive")
+    
 }
