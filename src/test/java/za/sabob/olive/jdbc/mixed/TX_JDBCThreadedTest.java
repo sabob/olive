@@ -24,6 +24,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
+        System.out.println( "BEFORE CLASS" );
         ds = PostgresTestUtils.createDS( 20 );
         System.out.println( "Postgres created" );
 
@@ -33,24 +34,31 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
     @AfterClass(alwaysRun = true)
     public void afterClass() {
         super.afterClass();
+        System.out.println( "AFTER CLASS" );
         Assert.assertEquals( personsCount, 400 );
     }
 
-    //@Test(successPercentage = 100, threadPoolSize = 3, invocationCount = 20, timeOut = 1110000)
     @Test(successPercentage = 0, threadPoolSize = 20, invocationCount = 200, timeOut = 1110000)
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
+
+        boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
+        Assert.assertTrue( isEmpty, "CLEAN: " );
+
         JDBCContext ctx = null;
+        try {
+            ctx = JDBC.beginOperation( ds );
+        } catch ( Throwable e ) {
+            System.out.println( "CANNOT CREATE JDBCCONTEXT: " + e.getMessage() );
+            e.printStackTrace();
+        }
         ResultSet rs = null;
 
         try {
-
-            boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertTrue( isEmpty, "CLEAN: " );
-
-            ctx = JDBC.beginOperation( ds );
-
             isEmpty = ctx.isRootConnectionHolder();
+            Assert.assertTrue( isEmpty, "CLEAN:" );
+
+            isEmpty = ctx.isRootContext();
             Assert.assertTrue( isEmpty, "CLEAN:" );
 
             SqlParams params = new SqlParams();
@@ -69,6 +77,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
             personsCount = persons.size();
 
         } catch ( Throwable e ) {
+            e.printStackTrace();
             System.out.println( "WHY 2? " + e.getMessage() );
             //throw new RuntimeException( e );
 
@@ -78,7 +87,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
             Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
 
-            boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
+            isEmpty = DSF.getDataSourceContainer().isEmpty();
             Assert.assertFalse( isEmpty );
 
             JDBC.cleanupOperation( ctx );
@@ -89,11 +98,8 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
     public void nestedJDBC( DataSource ds ) {
 
-        JDBCContext ctx = null;
-
+        JDBCContext ctx = JDBC.beginOperation( ds );
         try {
-
-            ctx = JDBC.beginOperation( ds );
 
             nestedTX( ds );
 
@@ -101,41 +107,32 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
             //System.out.println( "PERSONS " + persons.size() );
 
         } catch ( Throwable e ) {
+            e.printStackTrace();
             System.out.println( "SERIOUS PROBLEM 1? " + e.getMessage() );
 
         } finally {
 
-            boolean isRoot = ctx.isRootConnectionHolder();
-            boolean connectionCreated = ctx != null;
+            try {
 
-            if ( connectionCreated ) {
-                //Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
-                Assert.assertFalse( isRoot, "2nd JDBC Connection was created, we must NOT be root" );
-                //JDBC.isAtRootConnection();
+                boolean isRootConnHolder = ctx.isRootConnectionHolder();
+                Assert.assertFalse( isRootConnHolder, "2nd JDBC Connection was created, we must NOT be root" );
 
-            } else {
-                if ( isRoot ) {
-                    System.out.println( "BUG JDBC 1.1, conn: " + connectionCreated + ", isRoot: " + isRoot );
-                }
+                JDBC.cleanupOperation( ctx );
+
+                boolean isRoot = ctx.isRootContext();
+                Assert.assertTrue( isRoot );
+
+            } catch ( Throwable e ) {
+                e.printStackTrace();
             }
-
-            //Assert.assertFalse(  );
-            JDBC.cleanupOperation( ctx );
-            //Assert.assertTrue( JDBC.isAtRootConnection() );
-            isRoot = ctx.isRootConnectionHolder();
-            if ( !isRoot ) {
-                System.out.println( "BUG 1.2" );
-            }
-
         }
     }
 
     public void nestedTX( DataSource ds ) {
 
-        JDBCContext ctx = null;
+        JDBCContext ctx = JDBC.beginTransaction( ds );
 
         try {
-            ctx = JDBC.beginTransaction( ds );
 
             List<Person> persons = getTXPersons();
 
@@ -143,6 +140,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
             if ( isTimeout( ex ) ) {
                 // ignore
             } else {
+                ex.printStackTrace();
                 throw new RuntimeException( ex );
             }
 //            System.out.println( "SERIOUS PROBLEM 2" + throwable.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
@@ -152,21 +150,15 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
             try {
 
-                boolean isRoot = ctx.isRootConnectionHolder();
-                boolean connectionCreated = ctx != null;
+                boolean isRootTX = ctx.isRootTransactionContext();
 
                 JDBC.cleanupTransaction( ctx );
 
-                if ( connectionCreated ) {
-                    Assert.assertTrue( isRoot, "TX Connection was created, we must be root" );
+                Assert.assertTrue( isRootTX, "TX Connection was created, we must be root" );
 
-                } else {
-                    if ( isRoot ) {
-                        System.out.println( "BUG TX, conn creted?: " + connectionCreated + ", isRoot: " + isRoot );
-                    }
-                }
             } catch ( Exception e ) {
                 System.out.println( "SERIOUS PROBLEM 2.2" + e.getMessage() );
+                e.printStackTrace();
             }
         }
     }

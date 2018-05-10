@@ -36,12 +36,12 @@ public class TXCommitTest extends PostgresBaseTest {
 
         } finally {
 
-            boolean isAtRoot = ctx.isRootConnectionHolder();
-            Assert.assertTrue( isAtRoot );
+            boolean isAtRootConnHolder = ctx.isRootConnectionHolder();
+            Assert.assertTrue( isAtRootConnHolder );
 
             JDBC.cleanupOperation( ctx );
 
-            isAtRoot = ctx.isRootConnectionHolder();
+            boolean isAtRoot = ctx.isRootContext();
             Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
             Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
 

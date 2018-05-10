@@ -1,11 +1,11 @@
 package za.sabob.olive.jdbc.threads;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
 import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
@@ -41,10 +41,9 @@ public class ThreadTXTest extends PostgresBaseTest {
 
     public static void nested( DataSource ds ) {
 
-        JDBCContext ctx = null;
+        JDBCContext ctx = JDBC.beginTransaction( ds );
 
         try {
-            ctx = JDBC.beginTransaction( ds );
 
             SqlParams params = new SqlParams();
             PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );

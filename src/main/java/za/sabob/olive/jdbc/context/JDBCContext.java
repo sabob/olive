@@ -19,26 +19,38 @@ public class JDBCContext implements AutoCloseable {
 
     private boolean closed;
 
+    private boolean autoCommitValueRetrievedFromDataSource = true;
+
+    private boolean transaction = false;
+
     private JDBCContextListener listener; // TODO listener or listeners
 
     private final List<Statement> statements = new ArrayList<>();
 
     private final List<ResultSet> resultSets = new ArrayList<>();
 
-    public JDBCContext() {
-    }
-
-    public JDBCContext( JDBCContextListener listener ) {
-        this.listener = listener;
-    }
-
     public JDBCContext( Connection conn ) {
         this.connection = conn;
     }
 
-    public JDBCContext( Connection conn, JDBCContextListener listener ) {
+    public JDBCContext( Connection conn, boolean transaction ) {
+        this.connection = conn;
+        this.transaction = transaction;
+    }
+
+    public JDBCContext( Connection conn, JDBCContextListener listener, boolean transaction ) {
         this.connection = conn;
         this.listener = listener;
+        this.transaction = transaction;
+    }
+
+    public JDBCContext( Connection conn, JDBCContextListener listener, boolean transaction, boolean autoCommitValueRetrievedFromDataSource ) {
+        this( conn, listener, transaction );
+        this.autoCommitValueRetrievedFromDataSource = autoCommitValueRetrievedFromDataSource;
+    }
+
+    public boolean getAutoCommitValueRetrievedFromDataSource() {
+        return autoCommitValueRetrievedFromDataSource;
     }
 
     public List<Statement> getStatements() {
@@ -49,8 +61,27 @@ public class JDBCContext implements AutoCloseable {
         return Collections.unmodifiableList( resultSets );
     }
 
+    public boolean isRootTransactionContext() {
+
+        if ( isClosed() ) {
+            return false;
+        }
+
+        JDBCContext parent = getParent();
+
+        while ( parent != null ) {
+            boolean isParentRootTransactionContext = parent.transaction;
+            if ( isParentRootTransactionContext ) {
+                return false;
+            }
+            parent = parent.getParent();
+        }
+        return transaction;
+    }
+
     public boolean isRootContext() {
-        return getParent() == null;
+        boolean isRoot = getParent() == null;
+        return isRoot;
     }
 
     public void commit() {
@@ -99,11 +130,11 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public boolean canRollback() {
-        return canCloseConnection();
+        return isRootTransactionContext();
     }
 
     public boolean canCommit() {
-        return canCloseConnection();
+        return isRootTransactionContext();
     }
 
     public boolean canCloseConnection() {
@@ -111,18 +142,22 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public boolean isRootConnectionHolder() {
-
-        Connection conn = getConnection();
-        JDBCContext parent = getParent();
-
-        while ( parent != null ) {
-            Connection parentConn = parent.getConnection();
-            if ( parentConn == conn ) {
-                return false;
-            }
-            parent = parent.getParent();
+        if ( isClosed() ) {
+            return false;
         }
-        return true;
+        return isRootContext();
+//
+//        Connection conn = getConnection();
+//        JDBCContext parent = getParent();
+//
+//        while ( parent != null ) {
+//            Connection parentConn = parent.getConnection();
+//            if ( parentConn == conn ) {
+//                return false;
+//            }
+//            parent = parent.getParent();
+//        }
+//        return true;
     }
 
     public boolean hasConnection() {
@@ -148,7 +183,7 @@ public class JDBCContext implements AutoCloseable {
         if ( isClosed() ) {
             Throwable t = new Throwable(
                 "You are retrieving a Connection from a JDBCContext that is closed. Either you closed JDBCContext already or you forgot to begin an operation through JDBC.beginOperation or TX.beginTransaction." );
-            //LOGGER.log( Level.INFO, t.getMessage(), t );
+            LOGGER.log( Level.FINE, t.getMessage(), t );
         }
 
         return connection;
@@ -172,7 +207,7 @@ public class JDBCContext implements AutoCloseable {
         this.resultSets.add( rs );
     }
 
-    public void clear() {
+    private void clear() {
         this.resultSets.clear();
         this.statements.clear();
         this.connection = null;
@@ -183,10 +218,10 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public boolean isClosed() {
-        return closed;
+        return this.closed;
     }
 
-    public void setClosed( boolean closed ) {
+    private void setClosed( boolean closed ) {
         this.closed = closed;
     }
 
@@ -220,7 +255,7 @@ public class JDBCContext implements AutoCloseable {
 
         // TODO should we nullify connection here to prevent leaks?
         //connection = null;
-        closed = true;
+        setClosed( true );
 
         detach();
 
@@ -238,7 +273,7 @@ public class JDBCContext implements AutoCloseable {
     private void closeIncludingConnection() {
 
         List<AutoCloseable> closeables = gatherResources();
-        boolean autoCommit = true;
+        boolean autoCommit = autoCommitValueRetrievedFromDataSource;
         RuntimeException exception = OliveUtils.closeSilently( autoCommit, closeables );
 
         fireConnectionClosed();
@@ -252,8 +287,12 @@ public class JDBCContext implements AutoCloseable {
         // Dont close the connection since we aren't referencing the root connection
         closeables.remove( connection );
 
-        boolean autoCommit = true;
-        RuntimeException exception = OliveUtils.closeSilently( autoCommit, closeables );
+        RuntimeException exception = OliveUtils.closeSilently( closeables );
+
+        if ( isRootTransactionContext() ) {
+            // We are leaving the root TX context (but not the root context), so switch connection back to autoCommit
+            OliveUtils.setAutoCommit( connection, true );
+        }
 
         OliveUtils.throwAsRuntimeIfException( exception );
     }

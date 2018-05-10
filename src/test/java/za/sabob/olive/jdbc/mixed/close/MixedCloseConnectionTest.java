@@ -1,4 +1,4 @@
-package za.sabob.olive.jdbc.mixed;
+package za.sabob.olive.jdbc.mixed.close;
 
 import java.sql.*;
 import org.testng.*;

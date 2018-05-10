@@ -1,32 +1,31 @@
 // TODO mix jdbc and tx test
 package za.sabob.olive.jdbc.mixed;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
-import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.jdbc.DSF;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
-import za.sabob.olive.hsqldb.*;
+import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.context.*;
+import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import static za.sabob.olive.util.DBTestUtils.isTimeout;
 import za.sabob.olive.util.*;
 
-public class ForceTimeoutTest {
+public class DeadlockTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
-    private DataSource ds;
 
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
-        ds = HSQLDBTestUtils.createDS( 5 );
-        System.out.println( "HSQLDB created" );
-        HSQLDBTestUtils.createPersonTable( ds );
+        ds = PostgresTestUtils.createDS( 1 );
+        System.out.println( "Postgres created" );
+        PostgresTestUtils.createPersonTable( ds );
+        ds.setCheckoutTimeout( 0 ); // There should be no deadlocks because Olive uses only 1 connection per thread.
     }
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
@@ -37,6 +36,7 @@ public class ForceTimeoutTest {
         ResultSet rs = null;
 
         try {
+
             ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
@@ -56,7 +56,7 @@ public class ForceTimeoutTest {
 
         } catch ( Throwable e ) {
             if ( isTimeout( e ) ) {
-                // ignore
+                throw new IllegalStateException( "Oh no! Timeout!! ", e );
             } else {
                 throw new RuntimeException( e );
             }
@@ -72,12 +72,13 @@ public class ForceTimeoutTest {
                 if ( connectionCreated ) {
 
                     boolean isRoot = ctx.isRootContext();
-
                     Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
+
+                    Assert.assertTrue( ctx.isRootConnectionHolder() );
 
                     JDBC.cleanupOperation( ctx );
                     Assert.assertTrue( ctx.isRootContext() );
-                    Assert.assertTrue( ctx.isRootConnectionHolder() );
+                    Assert.assertFalse( ctx.isRootConnectionHolder() );
                 }
 
             } catch ( Throwable e ) {

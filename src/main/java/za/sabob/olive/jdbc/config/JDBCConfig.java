@@ -4,7 +4,7 @@ public class JDBCConfig {
 
     private static final ThreadLocal<Boolean> JOINABLE_TRANSACTIONS = new ThreadLocal<>();
 
-    private static boolean JOINABLE_TRANSACTIONS_DEFAULT = false;
+    private static boolean JOINABLE_TRANSACTIONS_DEFAULT = true;
 
     public static void setJoinableTransactionsDefault( boolean value ) {
         JOINABLE_TRANSACTIONS_DEFAULT = value;

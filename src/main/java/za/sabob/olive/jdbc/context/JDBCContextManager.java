@@ -11,8 +11,6 @@ public class JDBCContextManager {
 
     private Connection conn;
 
-    private Connection txConn;
-
     private JDBCContext rootCtx;
 
     private final JDBCContextListener contextListener = new ManagerListener();
@@ -37,24 +35,43 @@ public class JDBCContextManager {
 
     public JDBCContext createJDBCContext( DataSource ds, boolean beginTransaction ) {
 
-        Connection mostRecentConn = getConnection( beginTransaction );
+        Connection contextConn = getConnection();
+        boolean autoCommitValueRetrievedFromDataSource = true;
 
-        if ( mostRecentConn == null ) {
-            boolean autoCommit = !beginTransaction;
-            mostRecentConn = getNewConnection( ds, autoCommit );
+        JDBCContext ctx = null;
+
+        boolean autoCommit = !beginTransaction;
+
+        if ( contextConn == null ) {
+
+            ConnectionAutoAndCommitValue connectionAndAutoCommitValue = getNewConnection( ds, autoCommit );
+
+            contextConn = connectionAndAutoCommitValue.conn;
+            autoCommitValueRetrievedFromDataSource = connectionAndAutoCommitValue.autoCommit;
+
+            ctx = new JDBCContext( contextConn, contextListener, beginTransaction, autoCommitValueRetrievedFromDataSource );
 
         } else {
 
-            if ( beginTransaction ) {
+            boolean autoCommitOfCurrentConnection = getAutoCommitOrClose( contextConn );
+            ctx = new JDBCContext( contextConn, contextListener, beginTransaction );
+
+            boolean isTransactionRunning = !autoCommitOfCurrentConnection;
+
+            if ( beginTransaction && isTransactionRunning ) {
                 if ( !JDBCConfig.isJoinableTransactions() ) {
                     throw new IllegalStateException(
                         "You are not allowed to start nested transactions for this DataSource. This DataSource connection is already busy with a transaction."
                         + " To allow transactions to join set JDBCConfig.setJoinableTransactions( true )" );
                 }
             }
-        }
 
-        JDBCContext ctx = new JDBCContext( mostRecentConn, contextListener );
+            if ( beginTransaction && !isTransactionRunning ) {
+                // switch on transaction
+                setAutoCommitOrClose( ctx, autoCommit, getRootContext().getAutoCommitValueRetrievedFromDataSource() );
+
+            }
+        }
 
         if ( rootCtx == null ) {
             rootCtx = ctx;
@@ -64,33 +81,34 @@ public class JDBCContextManager {
             attach( mostRecentCtx, ctx );
         }
 
-        updateConnection( ctx, beginTransaction );
+        updateConnection( ctx );
 
         return ctx;
     }
 
-    public Connection getNewConnection( DataSource ds, boolean autoCommit ) {
+    private ConnectionAutoAndCommitValue getNewConnection( DataSource ds, boolean autoCommit ) {
 
         Connection newConn = null;
+        boolean currentAutoCommit = true;
 
         try {
-            newConn = OliveUtils.getConnection( ds, true );
+            newConn = OliveUtils.getConnection( ds );
+            currentAutoCommit = newConn.getAutoCommit();
             OliveUtils.setAutoCommit( newConn, autoCommit );
-            return newConn;
+
+            ConnectionAutoAndCommitValue result = new ConnectionAutoAndCommitValue( newConn, currentAutoCommit );
+
+            return result;
 
         } catch ( Exception e ) {
-            throw OliveUtils.closeSilently( true, e, newConn );
+            RuntimeException re = OliveUtils.closeSilently( currentAutoCommit, e, newConn );
+            throw re;
         }
+
     }
 
-    public void updateConnection( JDBCContext ctx, boolean tx ) {
-        if ( tx ) {
-            txConn = ctx.getConnection();
-
-        } else {
-            conn = ctx.getConnection();
-        }
-
+    public void updateConnection( JDBCContext ctx ) {
+        conn = ctx.getConnection();
     }
 
     public void attach( JDBCContext parent, JDBCContext child ) {
@@ -107,28 +125,16 @@ public class JDBCContextManager {
 
     }
 
-    protected Connection getConnection( boolean tx ) {
-
-        if ( tx ) {
-            return txConn;
-
-        } else {
-            return conn;
-        }
+    protected Connection getConnection() {
+        return conn;
     }
 
     public boolean isEmpty() {
         return rootCtx == null;
     }
 
-    protected void resetConnection( Connection connToReset ) {
-
-        if ( connToReset == conn ) {
-            conn = null;
-
-        } else if ( connToReset == txConn ) {
-            txConn = null;
-        }
+    protected void resetConnection() {
+        conn = null;
     }
 
     private class ManagerListener extends JDBCContextListener {
@@ -153,8 +159,7 @@ public class JDBCContextManager {
         public void onConnectionClosed( JDBCContext ctx ) {
 
             if ( ctx.hasConnection() ) {
-                Connection contextConn = ctx.getConnection();
-                resetConnection( contextConn );
+                resetConnection();
             }
 
         }
@@ -167,6 +172,47 @@ public class JDBCContextManager {
             container.removeManager( ctx, isRootContext );
 
         }
+    }
+
+    private class ConnectionAutoAndCommitValue {
+
+        private boolean autoCommit = true;
+
+        private Connection conn = null;
+
+        public ConnectionAutoAndCommitValue( Connection conn, boolean autoCommit ) {
+            this.conn = conn;
+            this.autoCommit = autoCommit;
+
+        }
+
+    }
+
+    private boolean getAutoCommitOrClose( Connection connArg ) {
+        try {
+            return connArg.getAutoCommit();
+
+        } catch ( SQLException ex ) {
+            RuntimeException re = OliveUtils.closeSilently( connArg );
+            throw re;
+        }
+    }
+
+    private void setAutoCommitOrClose( JDBCContext ctx, boolean autoCommit, boolean originalAutoCommit ) {
+
+        try {
+            OliveUtils.setAutoCommit( ctx.getConnection(), autoCommit );
+
+        } catch ( Exception e ) {
+
+            if ( ctx.isRootConnectionHolder() ) {
+                RuntimeException re = OliveUtils.closeSilently( originalAutoCommit, e, ctx.getConnection() );
+                throw re;
+            }
+
+            throw OliveUtils.toRuntimeException( e );
+        }
+
     }
 
 }

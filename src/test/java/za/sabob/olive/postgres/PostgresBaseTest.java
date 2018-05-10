@@ -1,19 +1,19 @@
 package za.sabob.olive.postgres;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
-import za.sabob.olive.jdbc.JDBC;
+import com.mchange.v2.c3p0.*;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
+import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
 public class PostgresBaseTest {
 
-    protected DataSource ds;
+    protected ComboPooledDataSource ds;
 
     @BeforeClass(alwaysRun = true)
     public void beforeClass() {
@@ -48,9 +48,8 @@ public class PostgresBaseTest {
     }
 
     public List<Person> getPersons( DataSource ds ) {
-        //public List<Person> getPersons( JDBCContext ctx ) {
-        JDBCContext ctx = JDBC.beginOperation( ds );
-        OliveUtils.setTransactionIsolation( ctx.getConnection(), Connection.TRANSACTION_READ_COMMITTED );
+        Connection conn = OliveUtils.getConnection( ds );
+        JDBCContext ctx = new JDBCContext( conn );
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 

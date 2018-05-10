@@ -1,5 +1,5 @@
 // TODO mix jdbc and tx test
-package za.sabob.olive.jdbc.mixed;
+package za.sabob.olive.jdbc.mixed.close;
 
 import java.sql.*;
 import java.util.*;
@@ -13,7 +13,7 @@ import za.sabob.olive.postgres.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
-public class TX_CloseTest extends PostgresBaseTest {
+public class TX_and_OPS_CloseTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
@@ -60,12 +60,19 @@ public class TX_CloseTest extends PostgresBaseTest {
 
         JDBCContext rootOperationCtx = JDBC.beginOperation( ds );
         Assert.assertTrue( rootOperationCtx.isRootContext() );
+        Assert.assertTrue( rootOperationCtx.isRootConnectionHolder() );
+        Assert.assertFalse( rootOperationCtx.isRootTransactionContext() );
+        Assert.assertFalse( rootOperationCtx.canCommit() );
+        Assert.assertTrue( OliveUtils.getAutoCommit( rootOperationCtx.getConnection() ) );
 
         try {
 
             insertPersons( rootOperationCtx );
 
             JDBCContext childTXCtx = JDBC.beginTransaction( ds );
+            Assert.assertTrue( childTXCtx.isRootTransactionContext() );
+            Assert.assertFalse( childTXCtx.isRootConnectionHolder() );
+            Assert.assertTrue( childTXCtx.canCommit() );
             Assert.assertFalse( OliveUtils.getAutoCommit( childTXCtx.getConnection() ) );
 
             List<Person> persons = getPersons( childTXCtx );
@@ -73,11 +80,15 @@ public class TX_CloseTest extends PostgresBaseTest {
 
             Assert.assertFalse( childTXCtx.isRootContext() );
             Assert.assertFalse( childTXCtx.getConnection().getAutoCommit() );
+            Assert.assertTrue( childTXCtx.isRootTransactionContext() );
 
             JDBC.cleanupTransaction( childTXCtx );
 
             Assert.assertTrue( childTXCtx.isClosed() );
-            Assert.assertTrue( childTXCtx.getConnection().isClosed() );
+            Assert.assertFalse( childTXCtx.getConnection().isClosed() );
+            Assert.assertFalse( childTXCtx.isRootConnectionHolder() );
+            Assert.assertFalse( childTXCtx.isRootTransactionContext() );
+            Assert.assertFalse( childTXCtx.canCommit() );
 
             Assert.assertFalse( rootOperationCtx.getConnection().isClosed() );
             Assert.assertFalse( rootOperationCtx.isClosed() );
@@ -165,7 +176,7 @@ public class TX_CloseTest extends PostgresBaseTest {
 
             Assert.assertTrue( ctx.isRootContext() );
             Assert.assertTrue( ctx.isClosed() );
-            Assert.assertTrue( ctx.getConnection().isClosed() );
+            Assert.assertFalse( ctx.getConnection().isClosed() );
         }
     }
 

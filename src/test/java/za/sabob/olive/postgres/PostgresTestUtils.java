@@ -1,8 +1,5 @@
 package za.sabob.olive.postgres;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
-import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.jdbc.DSF;
 import com.mchange.v2.c3p0.*;
 import com.opentable.db.postgres.embedded.*;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres.Builder;
@@ -13,6 +10,8 @@ import javax.sql.*;
 import org.testng.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
@@ -35,12 +34,12 @@ public class PostgresTestUtils {
 
     }
 
-    public static DataSource createDS() {
+    public static ComboPooledDataSource createDS() {
         return createDS( 5 );
 
     }
 
-    public static DataSource createDS( int poolSize ) {
+    public static ComboPooledDataSource createDS( int poolSize ) {
 
         try {
 
@@ -62,7 +61,7 @@ public class PostgresTestUtils {
             ComboPooledDataSource ds = new ComboPooledDataSource();
 
             ds.setDriverClass( "org.postgresql.Driver" );
-            ds.setLoginTimeout( 1 );
+            ds.setCheckoutTimeout( 1000 );
 
             //ds.setJdbcUrl( "jdbc:postgresql://localhost:45678/postgres?user=postgres&loginTimeout=1&connectTimeout=1&socketTimeout=1" );
             ds.setJdbcUrl( "jdbc:postgresql://localhost:45678/postgres?user=postgres" );

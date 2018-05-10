@@ -78,7 +78,7 @@ public class TX_JDBCTest extends PostgresBaseTest {
         } finally {
             Assert.assertFalse( ctx.isRootConnectionHolder() );
             JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( ctx.isRootConnectionHolder() );
+            Assert.assertFalse( ctx.isRootConnectionHolder() );
 
         }
     }
@@ -99,7 +99,7 @@ public class TX_JDBCTest extends PostgresBaseTest {
 
             Assert.assertFalse( ctx.isConnectionClosed() );
             JDBC.cleanupTransaction( ctx );
-            Assert.assertTrue( ctx.isConnectionClosed() );
+            Assert.assertFalse( ctx.isConnectionClosed() );
 
             isEmpty = DSF.getDataSourceContainer().isEmpty();
             Assert.assertFalse( isEmpty );
