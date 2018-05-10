@@ -1,11 +1,10 @@
 package za.sabob.olive.hsqldb;
 
-import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.jdbc.DSF;
 import java.sql.*;
 import javax.sql.*;
 import org.hsqldb.jdbc.*;
 import org.testng.*;
+import za.sabob.olive.jdbc.*;
 import za.sabob.olive.util.*;
 
 public class HSQLDBTestUtils {
@@ -48,8 +47,9 @@ public class HSQLDBTestUtils {
 
             ds.getConnection().createStatement().execute( "SHUTDOWN" );
 
-        } catch ( SQLException ex ) {
-            throw new RuntimeException( ex );
+        } catch ( Throwable ex ) {
+            System.out.println( "SHUTDOWN ERROR: " + ex.getMessage() );
+            ex.printStackTrace();
         }
     }
 
