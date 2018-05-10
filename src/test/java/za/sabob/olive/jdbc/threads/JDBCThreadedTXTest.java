@@ -6,6 +6,7 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.config.*;
 import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
@@ -18,6 +19,7 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void threadTest() {
+        JDBCConfig.setJoinableTransactionsDefault( true );
 
         JDBCContext ctx = JDBC.beginTransaction( ds );
 
@@ -55,11 +57,9 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
     public void nested( DataSource ds ) {
 
-        JDBCContext ctx = null;
+        JDBCContext ctx = JDBC.beginTransaction( ds );
 
         try {
-
-            ctx = JDBC.beginTransaction( ds );
 
             List<Person> persons = getPersons( ctx );
 

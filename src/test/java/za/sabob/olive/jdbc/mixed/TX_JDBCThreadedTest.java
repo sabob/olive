@@ -16,6 +16,10 @@ import za.sabob.olive.util.*;
 
 public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
+    public TX_JDBCThreadedTest() {
+        //JDBCConfig.setJoinableTransactionsDefault( false );
+    }
+
     int personsCount = 0;
 
     @BeforeClass(alwaysRun = true)

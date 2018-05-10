@@ -3,6 +3,7 @@ package za.sabob.olive.jdbc.context;
 import java.sql.*;
 import javax.sql.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.config.*;
 import za.sabob.olive.jdbc.context.listener.*;
 import za.sabob.olive.util.*;
 
@@ -16,8 +17,8 @@ public class JDBCContextManager {
 
     private final JDBCContextListener contextListener = new ManagerListener();
 
-    public JDBCContext createContext( DataSource ds, boolean tx ) {
-        JDBCContext ctx = createJDBCContext( ds, tx );
+    public JDBCContext createContext( DataSource ds, boolean beginTransaction ) {
+        JDBCContext ctx = createJDBCContext( ds, beginTransaction );
         return ctx;
     }
 
@@ -34,13 +35,23 @@ public class JDBCContextManager {
         return rootCtx.getMostRecentContext();
     }
 
-    public JDBCContext createJDBCContext( DataSource ds, boolean tx ) {
+    public JDBCContext createJDBCContext( DataSource ds, boolean beginTransaction ) {
 
-        Connection mostRecentConn = getConnection( tx );
+        Connection mostRecentConn = getConnection( beginTransaction );
 
         if ( mostRecentConn == null ) {
-            boolean autoCommit = !tx;
+            boolean autoCommit = !beginTransaction;
             mostRecentConn = getNewConnection( ds, autoCommit );
+
+        } else {
+
+            if ( beginTransaction ) {
+                if ( !JDBCConfig.isJoinableTransactions() ) {
+                    throw new IllegalStateException(
+                        "You are not allowed to start nested transactions for this DataSource. This DataSource connection is already busy with a transaction."
+                        + " To allow transactions to join set JDBCConfig.setJoinableTransactions( true )" );
+                }
+            }
         }
 
         JDBCContext ctx = new JDBCContext( mostRecentConn, contextListener );
@@ -53,7 +64,7 @@ public class JDBCContextManager {
             attach( mostRecentCtx, ctx );
         }
 
-        updateConnection( ctx, tx );
+        updateConnection( ctx, beginTransaction );
 
         return ctx;
     }

@@ -1,11 +1,11 @@
 package za.sabob.olive.jdbc.basic;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
 import java.sql.*;
 import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
@@ -40,7 +40,7 @@ public class BasicJDBCTest extends PostgresBaseTest {
                 Assert.assertEquals( name, "bob" );
             }
 
-        } catch ( SQLException e ) {
+        } catch ( Exception e ) {
             throw new RuntimeException( e );
 
         } finally {

@@ -28,10 +28,11 @@ public class DataSourceContainer {
         return manager.getMostRecentContext();
     }
 
-    protected JDBCContext createContext( DataSource ds, boolean transactional ) {
+    protected JDBCContext createContext( DataSource ds, boolean beginTransaction ) {
+
         JDBCContextManager manager = getOrCreateManager( ds );
 
-        JDBCContext ctx = manager.createContext( ds, transactional );
+        JDBCContext ctx = manager.createContext( ds, beginTransaction );
         dsByContext.put( ctx, ds );
         return ctx;
     }
