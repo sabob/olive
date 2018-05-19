@@ -1,5 +1,8 @@
 package za.sabob.olive.jdbc.config;
 
+import javax.sql.*;
+import za.sabob.olive.jdbc.*;
+
 public class JDBCConfig {
 
     private static final ThreadLocal<Boolean> JOINABLE_TRANSACTIONS = new ThreadLocal<>();
@@ -26,6 +29,14 @@ public class JDBCConfig {
             return isJoinableTransactionsDefault();
         }
         return value;
-
     }
+
+    public static DataSource getDefault() {
+        return DSF.getDefault();
+    }
+
+    public static void registerDefault( DataSource defaultDataSource ) {
+        DSF.registerDefault( defaultDataSource );
+    }
+
 }
