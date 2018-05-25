@@ -118,8 +118,8 @@ public class JDBC {
         return ctx.rollback( e );
     }
 
-    public static RuntimeException rollbackTransactionSilently( JDBCContext ctx, Exception e ) {
-        return ctx.rollbackSilently( e );
+    public static RuntimeException rollbackTransactionQuietly( JDBCContext ctx, Exception e ) {
+        return ctx.rollbackQuietly( e );
     }
 
     public static <X extends Exception> void updateInTransaction( DataSource ds, TransactionUpdater<X> updater ) {
@@ -141,7 +141,7 @@ public class JDBC {
                 ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
-            exception = rollbackTransactionSilently( ctx, ex );
+            exception = rollbackTransactionQuietly( ctx, ex );
 
         } finally {
             exception = cleanupTransactionQuietly( ctx, exception );
@@ -176,7 +176,7 @@ public class JDBC {
                 ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
-            exception = rollbackTransactionSilently( ctx, ex );
+            exception = rollbackTransactionQuietly( ctx, ex );
             throw exception;
 
         } finally {

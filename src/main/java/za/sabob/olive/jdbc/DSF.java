@@ -137,26 +137,19 @@ public class DSF {
     }
 
     public static void cleanup( Iterable<AutoCloseable> closeables ) {
-
-        try {
-            OliveUtils.close( closeables );
-
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-
+        OliveUtils.close( closeables );
     }
 
-    public static RuntimeException cleanupSilently( Iterable<AutoCloseable> closeables ) {
+    public static RuntimeException cleanupQuietly( Iterable<AutoCloseable> closeables ) {
         return cleanup( null, closeables );
 
     }
 
-    public static RuntimeException cleanupSilently( AutoCloseable... closables ) {
+    public static RuntimeException cleanupQuietly( AutoCloseable... closables ) {
         return cleanup( null, closables );
     }
 
-    public static RuntimeException cleanupSilently( Exception exception, Iterable<AutoCloseable> closeables ) {
+    public static RuntimeException cleanupQuietly( Exception exception, Iterable<AutoCloseable> closeables ) {
         return cleanup( null, closeables );
     }
 

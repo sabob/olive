@@ -41,7 +41,7 @@ public class BasicJDBCTest extends PostgresBaseTest {
             }
 
         } catch ( Exception e ) {
-            throw new RuntimeException( e );
+            throw e;
 
         } finally {
 

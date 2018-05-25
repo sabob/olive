@@ -136,7 +136,7 @@ public class OliveUtils {
      * @param conn the connection to commit
      * @return RuntimeException
      */
-    public static RuntimeException commitSilently( Connection conn ) {
+    public static RuntimeException commitQuietly( Connection conn ) {
         try {
             if ( conn != null ) {
                 conn.commit();
@@ -401,7 +401,7 @@ public class OliveUtils {
      *
      * @return the given exception and any exception that occurred while rolling back the connection
      */
-    public static RuntimeException rollbackSilently( Connection conn ) {
+    public static RuntimeException rollbackQuietly( Connection conn ) {
 
         try {
 
@@ -426,7 +426,7 @@ public class OliveUtils {
      *
      * @return the given exception and any exception that occurred while rolling back the connection
      */
-    public static RuntimeException rollbackSilently( Connection conn, Exception exception ) {
+    public static RuntimeException rollbackQuietly( Connection conn, Exception exception ) {
 
         try {
 
@@ -859,7 +859,7 @@ public class OliveUtils {
             throw new RuntimeException( exception );
 
         } finally {
-            exception = closeSilently( exception, rs );
+            exception = closeQuietly( exception, rs );
             throwAsRuntimeIfException( exception );
         }
     }
@@ -896,7 +896,7 @@ public class OliveUtils {
             throw new RuntimeException( e );
 
         } finally {
-            exception = closeSilently( exception, rs );
+            exception = closeQuietly( exception, rs );
             throwAsRuntimeIfException( exception );
         }
     }
@@ -1707,13 +1707,13 @@ public class OliveUtils {
         throwAsRuntimeIfException( mainException );
     }
 
-    public static RuntimeException closeSilently( boolean autoCommit, Exception exception, AutoCloseable... closeables ) {
+    public static RuntimeException closeQuietly( boolean autoCommit, Exception exception, AutoCloseable... closeables ) {
 
         List list = Arrays.asList( closeables );
-        return closeSilently( autoCommit, exception, list );
+        return closeQuietly( autoCommit, exception, list );
     }
 
-    public static RuntimeException closeSilently( boolean autoCommit, Exception exception, Iterable<? extends AutoCloseable> closeables ) {
+    public static RuntimeException closeQuietly( boolean autoCommit, Exception exception, Iterable<? extends AutoCloseable> closeables ) {
 
         try {
             close( autoCommit, closeables );
@@ -1725,7 +1725,7 @@ public class OliveUtils {
         }
     }
 
-    public static RuntimeException closeSilently( Exception exception, Iterable<? extends AutoCloseable> closeables ) {
+    public static RuntimeException closeQuietly( Exception exception, Iterable<? extends AutoCloseable> closeables ) {
 
         try {
             close( closeables );
@@ -1737,27 +1737,27 @@ public class OliveUtils {
         return OliveUtils.toRuntimeException( exception );
     }
 
-    public static RuntimeException closeSilently( boolean autoCommit, Iterable<? extends AutoCloseable> closeables ) {
-        return closeSilently( autoCommit, null, closeables );
+    public static RuntimeException closeQuietly( boolean autoCommit, Iterable<? extends AutoCloseable> closeables ) {
+        return closeQuietly( autoCommit, null, closeables );
     }
 
-    public static RuntimeException closeSilently( boolean autoCommit, AutoCloseable... closeables ) {
-        return closeSilently( autoCommit, null, closeables );
+    public static RuntimeException closeQuietly( boolean autoCommit, AutoCloseable... closeables ) {
+        return closeQuietly( autoCommit, null, closeables );
     }
 
-    public static RuntimeException closeSilently( Iterable<? extends AutoCloseable> closeables ) {
-        return closeSilently( null, closeables );
+    public static RuntimeException closeQuietly( Iterable<? extends AutoCloseable> closeables ) {
+        return closeQuietly( null, closeables );
     }
 
-    public static RuntimeException closeSilently( Exception exception, AutoCloseable... closeables ) {
+    public static RuntimeException closeQuietly( Exception exception, AutoCloseable... closeables ) {
 
         List list = Arrays.asList( closeables );
-        return closeSilently( exception, list );
+        return closeQuietly( exception, list );
     }
 
-    public static RuntimeException closeSilently( AutoCloseable... closeables ) {
+    public static RuntimeException closeQuietly( AutoCloseable... closeables ) {
 
-        return closeSilently( null, closeables );
+        return closeQuietly( null, closeables );
     }
 
     /**
@@ -2239,7 +2239,7 @@ public class OliveUtils {
             throw new RuntimeException( ex );
 
         } finally {
-            exception = closeSilently( exception, rs );
+            exception = closeQuietly( exception, rs );
             throwAsRuntimeIfException( exception );
         }
 
@@ -2289,7 +2289,7 @@ public class OliveUtils {
             throw new RuntimeException( ex );
 
         } finally {
-            exception = closeSilently( exception, rs );
+            exception = closeQuietly( exception, rs );
             throwAsRuntimeIfException( exception );
         }
 
@@ -2362,7 +2362,7 @@ public class OliveUtils {
             throw new RuntimeException( exception );
 
         } finally {
-            exception = closeSilently( exception, rs );
+            exception = closeQuietly( exception, rs );
             throwAsRuntimeIfException( exception );
 
         }

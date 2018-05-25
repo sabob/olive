@@ -93,9 +93,9 @@ public class JDBCContext implements AutoCloseable {
         }
     }
 
-    public RuntimeException commitSilently() {
+    public RuntimeException commitQuietly() {
         Connection conn = getConnection();
-        return OliveUtils.commitSilently( conn );
+        return OliveUtils.commitQuietly( conn );
     }
 
     public void rollback() {
@@ -105,10 +105,10 @@ public class JDBCContext implements AutoCloseable {
         }
     }
 
-    public RuntimeException rollbackSilently() {
+    public RuntimeException rollbackQuietly() {
         if ( canRollback() ) {
             Connection conn = getConnection();
-            return OliveUtils.rollbackSilently( conn );
+            return OliveUtils.rollbackQuietly( conn );
         }
         return null;
     }
@@ -125,7 +125,7 @@ public class JDBCContext implements AutoCloseable {
         return toRuntimeException( e );
     }
 
-    public RuntimeException rollbackSilently( Exception e ) {
+    public RuntimeException rollbackQuietly( Exception e ) {
         return rollback( e );
     }
 
@@ -274,7 +274,7 @@ public class JDBCContext implements AutoCloseable {
 
         List<AutoCloseable> closeables = gatherResources();
         boolean autoCommit = autoCommitValueRetrievedFromDataSource;
-        RuntimeException exception = OliveUtils.closeSilently( autoCommit, closeables );
+        RuntimeException exception = OliveUtils.closeQuietly( autoCommit, closeables );
 
         fireConnectionClosed();
 
@@ -287,7 +287,7 @@ public class JDBCContext implements AutoCloseable {
         // Dont close the connection since we aren't referencing the root connection
         closeables.remove( connection );
 
-        RuntimeException exception = OliveUtils.closeSilently( closeables );
+        RuntimeException exception = OliveUtils.closeQuietly( closeables );
 
         if ( isRootTransactionContext() ) {
             // We are leaving the root TX context (but not the root context), so switch connection back to autoCommit

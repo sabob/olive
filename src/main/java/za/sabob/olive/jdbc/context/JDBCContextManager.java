@@ -101,7 +101,7 @@ public class JDBCContextManager {
             return result;
 
         } catch ( Exception e ) {
-            RuntimeException re = OliveUtils.closeSilently( currentAutoCommit, e, newConn );
+            RuntimeException re = OliveUtils.closeQuietly( currentAutoCommit, e, newConn );
             throw re;
         }
 
@@ -193,7 +193,7 @@ public class JDBCContextManager {
             return connArg.getAutoCommit();
 
         } catch ( SQLException ex ) {
-            RuntimeException re = OliveUtils.closeSilently( connArg );
+            RuntimeException re = OliveUtils.closeQuietly( connArg );
             throw re;
         }
     }
@@ -206,7 +206,7 @@ public class JDBCContextManager {
         } catch ( Exception e ) {
 
             if ( ctx.isRootConnectionHolder() ) {
-                RuntimeException re = OliveUtils.closeSilently( originalAutoCommit, e, ctx.getConnection() );
+                RuntimeException re = OliveUtils.closeQuietly( originalAutoCommit, e, ctx.getConnection() );
                 throw re;
             }
 
