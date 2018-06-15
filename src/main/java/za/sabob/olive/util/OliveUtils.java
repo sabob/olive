@@ -1657,6 +1657,14 @@ public class OliveUtils {
         throw new RuntimeException( exception );
     }
 
+    public static <X extends Throwable> void throwIfException( Exception exception ) throws X {
+        if ( exception == null ) {
+            return;
+        }
+
+        throw (X) exception;
+    }
+
     public static RuntimeException toRuntimeException( Exception exception ) {
         if ( exception == null ) {
             return null;
