@@ -257,7 +257,7 @@ public class JDBC {
 
         } finally {
             RuntimeException re = cleanupOperationQuietly( ctx, exception );
-            OliveUtils.addSuppressed( exception, re );
+            exception = OliveUtils.addSuppressed( exception, re );
 
             if ( exception != null ) {
                 throw (X) exception;
