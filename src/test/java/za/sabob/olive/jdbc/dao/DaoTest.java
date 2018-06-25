@@ -42,7 +42,7 @@ public class DaoTest extends PostgresBaseTest {
 
     public Person getPerson( long id ) {
 
-        return JDBC.executeInTransaction( ctx -> {
+        return JDBC.inTransaction( ctx -> {
             saveInDao( id, ctx );
             saveInService( "" );
             return new Person();
@@ -52,7 +52,7 @@ public class DaoTest extends PostgresBaseTest {
     public void saveInService( Object entity ) {
 
         DataSource ds = DSF.getDefault();
-        JDBC.execute( ds, ctx -> {
+        JDBC.inOperation( ds, ctx -> {
             saveInDao( new Person(), ctx );
                       return null;
                   } );
@@ -62,10 +62,10 @@ public class DaoTest extends PostgresBaseTest {
     public void saveWithException( Object entity ) {
 
         DataSource ds = DSF.getDefault();
-        JDBC.execute( ds, ctx -> {
-            throw new IOException( "BAD IO" );
-                  } );
 
+        JDBC.inOperation( ds, ctx -> {
+            if (true) throw new IOException( "BAD IO" );
+        } );
     }
 
     public void saveInDao( Object o, JDBCContext ctx ) throws IOException {

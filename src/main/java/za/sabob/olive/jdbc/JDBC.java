@@ -122,7 +122,7 @@ public class JDBC {
         return ctx.rollbackQuietly( e );
     }
 
-    public static <X extends Exception> void updateInTransaction( DataSource ds, TransactionUpdater<X> updater ) {
+    public static <X extends Exception> void inTransaction( DataSource ds, TransactionalOperation<X> operation ) {
 
         JDBCContext ctx = null;
         Exception exception = null;
@@ -130,7 +130,7 @@ public class JDBC {
         try {
             ctx = beginTransaction( ds );
 
-            updater.update( ctx );
+            operation.run( ctx );
 
             commitTransaction( ctx );
 
@@ -149,13 +149,19 @@ public class JDBC {
         }
     }
 
-    public static <R, X extends Exception> R executeInTransaction( TransactionExecutor<R, X> executor ) {
+    public static <X extends Exception> void inTransaction( TransactionalOperation<X> operation ) {
 
         DataSource ds = DSF.getDefault();
-        return executeInTransaction( ds, executor );
+        inTransaction( ds, operation );
     }
 
-    public static <R, X extends Exception> R executeInTransaction( DataSource ds, TransactionExecutor<R, X> executor ) {
+    public static <R, X extends Exception> R inTransaction( TransactionalQuery<R, X> query ) {
+
+        DataSource ds = DSF.getDefault();
+        return inTransaction( ds, query );
+    }
+
+    public static <R, X extends Exception> R inTransaction( DataSource ds, TransactionalQuery<R, X> query ) {
 
         JDBCContext ctx = null;
         RuntimeException exception = null;
@@ -163,7 +169,7 @@ public class JDBC {
         try {
             ctx = beginTransaction( ds );
 
-            R result = executor.execute( ctx );
+            R result = query.get( ctx );
 
             commitTransaction( ctx );
 
@@ -185,15 +191,15 @@ public class JDBC {
         }
     }
 
-    public static <R, X extends Exception> R execute( OperationExecutor<R, X> executor ) {
+    public static <R, X extends Exception> R inOperation( Query<R, X> query ) {
         DataSource ds = DSF.getDefault();
-        return execute( ds, executor );
+        return JDBC.inOperation( ds, query );
     }
 
-    public static <R, X extends Exception> R execute( DataSource ds, OperationExecutor<R, X> executor ) {
+    public static <R, X extends Exception> R inOperation( DataSource ds, Query<R, X> query ) {
 
         try {
-            return executeWithException( ds, executor );
+            return inOperationWithException( ds, query );
 
         } catch ( Exception ex ) {
             RuntimeException re = OliveUtils.toRuntimeException( ex );
@@ -208,7 +214,7 @@ public class JDBC {
 //        try {
 //            ctx = beginOperation( ds );
 //
-//            result = executor.execute( ctx );
+//            result = query.get( ctx );
 //
 //            return result;
 //
@@ -230,7 +236,7 @@ public class JDBC {
 //        }
     }
 
-    private static <R, X extends Exception> R executeWithException( DataSource ds, OperationExecutor<R, X> executor ) throws X {
+    private static <R, X extends Exception> R inOperationWithException( DataSource ds, Query<R, X> query ) throws X {
 
         JDBCContext ctx = null;
         Exception exception = null;
@@ -240,7 +246,7 @@ public class JDBC {
         try {
             ctx = beginOperation( ds );
 
-            result = executor.execute( ctx );
+            result = query.get( ctx );
 
             return result;
 
@@ -265,21 +271,7 @@ public class JDBC {
         }
     }
 
-    public static <R, X extends Exception> R query( OperationExecutor<R, X> executor ) {
-        DataSource ds = DSF.getDefault();
-        return query( ds, executor );
-    }
-
-    public static <R, X extends Exception> R query( DataSource ds, OperationExecutor<R, X> executor ) {
-        return execute( ds, executor );
-    }
-
-    public static <X extends Exception> void update( OperationUpdater<X> updater ) {
-        DataSource ds = DSF.getDefault();
-        update( ds, updater );
-    }
-
-    public static <X extends Exception> void update( DataSource ds, OperationUpdater<X> updater ) {
+    public static <X extends Exception> void inOperation( DataSource ds, Operation<X> operation ) {
 
         JDBCContext ctx = null;
         Exception exception = null;
@@ -287,7 +279,7 @@ public class JDBC {
         try {
             ctx = beginOperation( ds );
 
-            updater.update( ctx );
+            operation.run( ctx );
 
         } catch ( Exception ex ) {
             if ( ex instanceof SQLException ) {
@@ -302,21 +294,5 @@ public class JDBC {
             exception = cleanupOperationQuietly( ctx, exception );
             OliveUtils.throwAsRuntimeIfException( exception );
         }
-    }
-
-    public static <X extends Exception> void updateInTransaction( TransactionUpdater<X> updater ) {
-
-        DataSource ds = DSF.getDefault();
-        updateInTransaction( ds, updater );
-    }
-
-    public static <R, X extends Exception> R queryInTransaction( DataSource ds, TransactionExecutor<R, X> executor ) {
-        return executeInTransaction( ds, executor );
-    }
-
-    public static <R, X extends Exception> R queryInTransaction( TransactionExecutor<R, X> producer ) {
-
-        DataSource ds = DSF.getDefault();
-        return queryInTransaction( ds, producer );
     }
 }

@@ -33,7 +33,7 @@ public class HSQLDBTestUtils {
 
     public static void createPersonTable( DataSource ds ) {
 
-        JDBC.updateInTransaction( ds, (ctx) -> {
+        JDBC.inTransaction( ds, (ctx) -> {
             String ddl = "create table if not exists person (id bigint IDENTITY, name varchar(100), primary key (id));";
             Statement stmnt = OliveUtils.createStatement( ctx );
             stmnt.executeUpdate( ddl );
