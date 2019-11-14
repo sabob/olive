@@ -191,6 +191,7 @@ public class JDBC {
         } catch ( Exception ex ) {
 
             if ( ex instanceof SQLException ) {
+
                 SQLException sqle = ( SQLException ) ex;
                 ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
