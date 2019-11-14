@@ -7,6 +7,7 @@ import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.config.JDBCConfig;
 import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.util.*;
@@ -51,7 +52,7 @@ public class DaoTest extends PostgresBaseTest {
 
     public void saveInService( Object entity ) {
 
-        DataSource ds = DSF.getDefault();
+        DataSource ds = JDBCConfig.getDefaultDataSource();
         JDBC.inOperation( ds, ctx -> {
             saveInDao( new Person(), ctx );
                       return null;
@@ -61,7 +62,7 @@ public class DaoTest extends PostgresBaseTest {
 
     public void saveWithException( Object entity ) {
 
-        DataSource ds = DSF.getDefault();
+        DataSource ds = JDBCConfig.getDefaultDataSource();
 
         JDBC.inOperation( ds, ctx -> {
             if (true) throw new IOException( "BAD IO" );

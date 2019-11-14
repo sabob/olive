@@ -1,42 +1,23 @@
 package za.sabob.olive.jdbc.config;
 
-import javax.sql.*;
-import za.sabob.olive.jdbc.*;
+import javax.sql.DataSource;
 
 public class JDBCConfig {
 
-    private static final ThreadLocal<Boolean> JOINABLE_TRANSACTIONS = new ThreadLocal<>();
+    private static DataSource defaultDataSource;
 
-    private static boolean JOINABLE_TRANSACTIONS_DEFAULT = true;
 
-    public static void setJoinableTransactionsDefault( boolean value ) {
-        JOINABLE_TRANSACTIONS_DEFAULT = value;
+    public static boolean hasDefaultDataSource() {
+        return getDefaultDataSource() != null;
     }
 
-    public static boolean isJoinableTransactionsDefault() {
-        return JOINABLE_TRANSACTIONS_DEFAULT;
+    public static DataSource getDefaultDataSource() {
+        return JDBCConfig.defaultDataSource;
     }
 
-    public static boolean setJoinableTransactions( boolean value ) {
-        boolean currentValue = isJoinableTransactions();
-        JOINABLE_TRANSACTIONS.set( value );
-        return currentValue;
+    public static void setDefaultDataSource( DataSource defaultDataSource ) {
+        JDBCConfig.defaultDataSource = defaultDataSource;
     }
 
-    public static boolean isJoinableTransactions() {
-        Boolean value = JOINABLE_TRANSACTIONS.get();
-        if ( value == null ) {
-            return isJoinableTransactionsDefault();
-        }
-        return value;
-    }
-
-    public static DataSource getDefault() {
-        return DSF.getDefault();
-    }
-
-    public static void registerDefault( DataSource defaultDataSource ) {
-        DSF.registerDefault( defaultDataSource );
-    }
 
 }

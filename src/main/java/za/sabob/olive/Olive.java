@@ -178,7 +178,7 @@ public class Olive {
     }
 
     /**
-     * Returns the {@link main.java.za.sabob.olive.Mode} Olive is running in.
+     * Returns the {@link za.sabob.olive.Mode} Olive is running in.
      *
      * @return the mode Olive is running in
      */
@@ -187,7 +187,7 @@ public class Olive {
     }
 
     /**
-     * Set the {@link main.java.za.sabob.olive.Mode} for Olive to run in.
+     * Set the {@link za.sabob.olive.Mode} for Olive to run in.
      *
      * @param mode the mode Olive must Run in
      */
