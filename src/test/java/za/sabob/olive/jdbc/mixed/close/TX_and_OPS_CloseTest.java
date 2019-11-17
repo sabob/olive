@@ -36,21 +36,16 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
 
             nestedTX( ds );
 
-            //List<Person> persons = getPersons( ctx );
-            //personsCount = persons.size();
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
 
         } finally {
 
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
             Assert.assertTrue( ctx.isOpen() );
             Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
 
             JDBC.cleanupOperation( ctx );
 
-            Assert.assertTrue( ctx.isRootContext() );
             Assert.assertTrue( ctx.isClosed() );
         }
     }
@@ -59,10 +54,6 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
     public void closeEachChildContextIndividuallyTest() {
 
         JDBCContext rootOperationCtx = JDBC.beginOperation( ds );
-        Assert.assertTrue( rootOperationCtx.isRootContext() );
-        Assert.assertTrue( rootOperationCtx.isRootConnectionHolder() );
-        Assert.assertFalse( rootOperationCtx.isRootTransactionContext() );
-        Assert.assertFalse( rootOperationCtx.canCommit() );
         Assert.assertTrue( OliveUtils.getAutoCommit( rootOperationCtx.getConnection() ) );
 
         try {
@@ -70,28 +61,18 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
             insertPersons( rootOperationCtx );
 
             JDBCContext childTXCtx = JDBC.beginTransaction( ds );
-            Assert.assertTrue( childTXCtx.isRootTransactionContext() );
-            Assert.assertFalse( childTXCtx.isRootConnectionHolder() );
-            Assert.assertTrue( childTXCtx.canCommit() );
             Assert.assertFalse( OliveUtils.getAutoCommit( childTXCtx.getConnection() ) );
 
             List<Person> persons = getPersons( childTXCtx );
             personsCount = persons.size();
 
-            Assert.assertFalse( childTXCtx.isRootContext() );
             Assert.assertFalse( childTXCtx.getConnection().getAutoCommit() );
-            Assert.assertTrue( childTXCtx.isRootTransactionContext() );
 
             JDBC.cleanupTransaction( childTXCtx );
 
             Assert.assertTrue( childTXCtx.isClosed() );
             Assert.assertFalse( childTXCtx.getConnection().isClosed() );
-            Assert.assertFalse( childTXCtx.isRootConnectionHolder() );
-            Assert.assertFalse( childTXCtx.isRootTransactionContext() );
-            Assert.assertFalse( childTXCtx.canCommit() );
-
-            Assert.assertFalse( rootOperationCtx.getConnection().isClosed() );
-            Assert.assertFalse( rootOperationCtx.isClosed() );
+            Assert.assertTrue( childTXCtx.getConnection().getAutoCommit() );
 
             JDBC.cleanupTransaction( childTXCtx ); // calling cleanup on TCX should not make a difference too root, because root is non TX
             //JDBC.cleanupTransaction( rootCtx ); // calling cleanup on TCX should not make a difference too root, because root is non TX
@@ -110,14 +91,8 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-
-            boolean isAtRoot = rootOperationCtx.isRootContext();
-            Assert.assertTrue( isAtRoot );
-            //Assert.assertTrue( OliveUtils.getAutoCommit( rootCtx.getConnection() ) );
-
             JDBC.cleanupOperation( rootOperationCtx );
 
-            Assert.assertTrue( rootOperationCtx.isRootContext() );
             Assert.assertTrue( rootOperationCtx.isClosed() );
         }
     }
@@ -168,13 +143,10 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
             List<Person> persons = getPersons( ctx );
 
         } finally {
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertFalse( isAtRoot );
             Assert.assertFalse( ctx.getConnection().getAutoCommit() );
 
             JDBC.cleanupTransaction( ctx );
 
-            Assert.assertTrue( ctx.isRootContext() );
             Assert.assertTrue( ctx.isClosed() );
             Assert.assertFalse( ctx.getConnection().isClosed() );
         }

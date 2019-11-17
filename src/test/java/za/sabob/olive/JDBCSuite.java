@@ -15,7 +15,7 @@ public class JDBCSuite {
     //@BeforeSuite
     public static void main( String[] args ) {
 
-        JDBCConfig.setJoinableTransactionsDefault( true );
+        //JDBCConfig.setJoinableTransactionsDefault( true );
         //JDBCConfig.setJoinableTransactions( true );
 
         TestNG testNG = new TestNG();

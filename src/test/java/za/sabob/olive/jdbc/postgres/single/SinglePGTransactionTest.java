@@ -38,13 +38,13 @@ public class SinglePGTransactionTest extends PostgresBaseTest {
             throw JDBC.rollbackTransaction( ctx, ex );
 
         } finally {
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertFalse( ctx.isClosed() );
 
             JDBC.cleanupTransaction( ctx );
 
-            isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isClosed() );
         }
     }
 

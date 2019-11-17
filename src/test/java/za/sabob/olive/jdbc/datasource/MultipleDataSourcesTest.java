@@ -3,10 +3,12 @@ package za.sabob.olive.jdbc.datasource;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.hsqldb.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.config.JDBCConfig;
 import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
@@ -18,7 +20,7 @@ public class MultipleDataSourcesTest {
 
     DataSource hsqldbDS;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass( alwaysRun = true )
     public void beforeClass() {
         postgresDS = PostgresTestUtils.createDS();
         hsqldbDS = HSQLDBTestUtils.createDS();
@@ -26,7 +28,7 @@ public class MultipleDataSourcesTest {
         HSQLDBTestUtils.createPersonTable( hsqldbDS );
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass( alwaysRun = true )
     public void afterClass() throws Exception {
         //ds = new JdbcDataSource();
         //ds = JdbcConnectionPool.create( "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MULTI_THREADED=1", "sa", "sa" );
@@ -91,38 +93,39 @@ public class MultipleDataSourcesTest {
 
     public void testPersonsInBothDatabases() {
 
+        JDBCContext ctx1 = null;
+        JDBCContext ctx2 = null;
+
         try {
 
-            JDBCContext ctx1 = JDBC.beginTransaction( postgresDS );
-            List persons = getLatestPersons( postgresDS );
+            ctx1 = JDBC.beginTransaction( postgresDS );
+            List persons = getLatestPersons( postgresDS, ctx1 );
             Assert.assertEquals( persons.size(), 2 );
 
             try {
-                JDBCContext ctx2 = JDBC.beginTransaction( hsqldbDS );
-                persons = getLatestPersons( hsqldbDS );
+                ctx2 = JDBC.beginTransaction( hsqldbDS );
+                persons = getLatestPersons( hsqldbDS, ctx2 );
                 Assert.assertEquals( persons.size(), 0 );
 
             } finally {
-                JDBC.cleanupTransaction( hsqldbDS );
+                JDBC.cleanupTransaction( ctx2 );
             }
 
         } finally {
-            JDBC.cleanupTransaction( postgresDS );
+            JDBC.cleanupTransaction( ctx1 );
         }
     }
 
-    public List<Person> getLatestPersons( DataSource ds ) {
-
-        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+    public List<Person> getLatestPersons( DataSource ds, JDBCContext ctx ) {
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, (ResultSet rs, int rowNum) -> {
-                                                      Person person = new Person();
-                                                      person.id = rs.getLong( "id" );
-                                                      person.name = rs.getString( "name" );
-                                                      return person;
-                                                  } );
+        List<Person> persons = OliveUtils.mapToBeans( ps, ( ResultSet rs, int rowNum ) -> {
+            Person person = new Person();
+            person.id = rs.getLong( "id" );
+            person.name = rs.getString( "name" );
+            return person;
+        } );
 
         return persons;
 

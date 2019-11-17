@@ -12,9 +12,6 @@ public class TX_RestoreAutoCommitToTrue extends PostgresBaseTest {
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
-        Assert.assertTrue( isEmpty );
-
         JDBCContext ctx = JDBC.beginTransaction( ds );
         Assert.assertFalse( ctx.getConnection().getAutoCommit() );
 

@@ -2,6 +2,7 @@ package za.sabob.olive.jdbc.threads;
 
 import java.sql.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
@@ -12,7 +13,7 @@ import za.sabob.olive.util.*;
 
 public class ThreadTXTest extends PostgresBaseTest {
 
-    @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
+    @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     public void basicThreadTest() {
 
         JDBCContext ctx = null;
@@ -29,12 +30,10 @@ public class ThreadTXTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-            boolean isRoot = ctx.isRootContext();
-            Assert.assertTrue( isRoot );
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
             JDBC.cleanupTransaction( ctx );
-
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+            Assert.assertTrue( ctx.isClosed() );
         }
 
     }
@@ -61,9 +60,12 @@ public class ThreadTXTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-            Assert.assertFalse( ctx.isRootContext() );
+
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
             JDBC.cleanupTransaction( ctx );
-            Assert.assertTrue( ctx.isRootContext() );
+            Assert.assertTrue( ctx.isClosed() );
+            Assert.assertTrue( ctx.isConnectionClosed() );
         }
 
     }

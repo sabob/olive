@@ -9,12 +9,17 @@ repositories {
 
 dependencies {
     implementation "javax.servlet:javax.servlet-api:3.0.1"
-    
+
     testImplementation  "org.testng:testng:6.14.2"
     testImplementation  "com.mchange:c3p0:0.9.5.2"
     testImplementation "org.hsqldb:hsqldb:2.4.0"
     testImplementation "com.opentable.components:otj-pg-embedded:0.11.4"
 }
+
+sourceSets.test.resources.srcDirs = [ "src/test/java", "src/test/resources"]
+//sourceSets.main.resources.srcDirs = [ "src/test/java" ]
+sourceSets.test.resources.includes = [ "**/*.*" ]
+//sourceSets.main.resources { srcDirs = ["src/main/java", "src/main/test" ]; include "**/*.*" }
 
 task copyLibs(type: Copy) {
     //def libs = configurations.api + configurations.implementation + configurations.testImplementation
@@ -31,5 +36,5 @@ task renameMustache(type: Copy) {
       filter{ it.replaceAll("com.samskivert", "za.sabob.olive")}
   }
   into("$projectDir/src/main/java/za/sabob/olive")
-    
+
 }

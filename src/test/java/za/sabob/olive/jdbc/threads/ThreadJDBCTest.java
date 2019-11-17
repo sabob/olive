@@ -19,10 +19,15 @@ public class ThreadJDBCTest extends PostgresBaseTest {
         JDBCContext ctx = null;
 
         try {
-            //System.out.println( "* start: " + Thread.currentThread().getId() );
             ctx = JDBC.beginOperation( ds );
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
 
             nested( ds );
+
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
+
             SqlParams params = new SqlParams();
             PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person p", params );
             String name = OliveUtils.mapToPrimitive( String.class, ps );
@@ -31,21 +36,11 @@ public class ThreadJDBCTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-            boolean isRoot = ctx.isRootContext();
-//            if ( !isRoot ) {
-//                JDBCContext root = ctx.getRootContext();
-//                DataSourceContainer container = JDBCLookup.getDataSourceContainer();
-//                JDBCContextManager manager = container.getOrCreateManager( ds );
-//                JDBCContext mostRecent = manager.getRootContext();
-//                isRoot = ctx.isRootContext();
-//
-//            }
-            Assert.assertTrue( isRoot );
-            JDBC.cleanupOperation( ctx );
-            //System.out.println( "* end: " + Thread.currentThread().getId() );
 
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
+            JDBC.cleanupOperation( ctx );
+
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isClosed() );
         }
 
     }
@@ -73,9 +68,13 @@ public class ThreadJDBCTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-            Assert.assertFalse( ctx.isRootContext() );
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
+
             JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( ctx.isRootContext() );
+
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isClosed() );
         }
 
     }

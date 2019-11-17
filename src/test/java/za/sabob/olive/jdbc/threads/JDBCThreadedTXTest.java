@@ -19,7 +19,6 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
     @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
     public void threadTest() {
-        JDBCConfig.setJoinableTransactionsDefault( true );
 
         JDBCContext ctx = JDBC.beginTransaction( ds );
 
@@ -45,13 +44,13 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
         } finally {
 
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertFalse( ctx.isClosed() );
 
             JDBC.cleanupTransaction( ctx );
 
-            isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isClosed() );
         }
     }
 
@@ -64,9 +63,11 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
             List<Person> persons = getPersons( ctx );
 
         } finally {
-            Assert.assertFalse( ctx.isRootContext() );
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
             JDBC.cleanupTransaction( ctx );
-            Assert.assertTrue( ctx.isRootContext());
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isClosed() );
         }
 
     }

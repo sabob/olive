@@ -1,6 +1,7 @@
 package za.sabob.olive.jdbc.postgres.multiple;
 
 import java.util.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
@@ -14,41 +15,37 @@ public class MultiPGRollbackTransactionTest extends PostgresBaseTest {
     public void rollbackTest() {
 
         JDBCContext parent = null;
-            JDBCContext child = null;
+        JDBCContext child = null;
 
-            try {
+        try {
 
-                parent = JDBC.beginTransaction( ds );
-                child = JDBC.beginTransaction( ds );
+            parent = JDBC.beginTransaction( ds );
+            child = JDBC.beginTransaction( ds );
 
-                //OliveUtils.setTransactionIsolation( parent.getConnection(), Connection.TRANSACTION_READ_COMMITTED );
-                insertPersons( child );
+            //OliveUtils.setTransactionIsolation( parent.getConnection(), Connection.TRANSACTION_READ_COMMITTED );
+            insertPersons( child );
 
-                List<Person> persons = getPersons( ds );
-                Assert.assertEquals( persons.size(), 0 );
+            List<Person> persons = getPersons( ds );
+            Assert.assertEquals( persons.size(), 0 );
 
-                JDBC.rollbackTransaction( child ); // child won't rollback
+            JDBC.rollbackTransaction( child ); // child won't rollback
 
-                persons = getPersons( ds );
-                Assert.assertEquals( persons.size(), 0 );
+            persons = getPersons( ds );
+            Assert.assertEquals( persons.size(), 0 );
 
-                JDBC.commitTransaction( parent );
+            JDBC.commitTransaction( parent );
 
-                persons = getPersons( ds );
-                Assert.assertEquals( persons.size(), 2 );
+            persons = getPersons( ds );
+            Assert.assertEquals( persons.size(), 2 );
 
-            } catch ( Exception ex ) {
+        } catch ( Exception ex ) {
 
-                throw JDBC.rollbackTransaction( parent, ex );
+            throw JDBC.rollbackTransaction( parent, ex );
 
-            } finally {
-                boolean isAtRoot = parent.isRootContext();
-                Assert.assertTrue( isAtRoot );
-
-                JDBC.cleanupTransaction( parent );
-
-                isAtRoot = parent.isRootContext();
-                Assert.assertTrue( isAtRoot );
-            }
+        } finally {
+            Assert.assertFalse( parent.isConnectionClosed() );
+            JDBC.cleanupTransaction( parent );
+            Assert.assertTrue( parent.isConnectionClosed() );
         }
     }
+}

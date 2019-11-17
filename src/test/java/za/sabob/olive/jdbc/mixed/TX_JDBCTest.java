@@ -4,6 +4,7 @@ package za.sabob.olive.jdbc.mixed;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
@@ -17,7 +18,7 @@ public class TX_JDBCTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass( alwaysRun = true )
     public void afterClass() {
 
         super.afterClass();
@@ -52,13 +53,11 @@ public class TX_JDBCTest extends PostgresBaseTest {
 
         } finally {
 
-            boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertFalse( isEmpty );
-
             JDBC.cleanupOperation( ctx );
+            Assert.assertTrue( ctx.isClosed() );
+            Assert.assertTrue( OliveUtils.isClosed( ps ) );
+            Assert.assertTrue( ctx.isConnectionClosed() );
 
-            isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertTrue( isEmpty, "cleanupTransaction should remove all datasources in the JDBC Operation" );
         }
     }
 
@@ -76,10 +75,9 @@ public class TX_JDBCTest extends PostgresBaseTest {
             //e.printStackTrace();
 
         } finally {
-            Assert.assertFalse( ctx.isRootConnectionHolder() );
             JDBC.cleanupOperation( ctx );
-            Assert.assertFalse( ctx.isRootConnectionHolder() );
-
+            Assert.assertTrue( ctx.isClosed() );
+            Assert.assertTrue( ctx.isConnectionClosed() );
         }
     }
 
@@ -94,15 +92,10 @@ public class TX_JDBCTest extends PostgresBaseTest {
             List<Person> persons = getPersons( ctx );
 
         } finally {
-            boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertFalse( isEmpty );
-
             Assert.assertFalse( ctx.isConnectionClosed() );
             JDBC.cleanupTransaction( ctx );
+            Assert.assertTrue( ctx.isClosed() );
             Assert.assertFalse( ctx.isConnectionClosed() );
-
-            isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertFalse( isEmpty );
         }
 
     }
@@ -112,14 +105,14 @@ public class TX_JDBCTest extends PostgresBaseTest {
         PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
 
         List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
-                                                      @Override
-                                                      public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                          Person person = new Person();
-                                                          person.id = rs.getLong( "id" );
-                                                          person.name = rs.getString( "name" );
-                                                          return person;
-                                                      }
-                                                  } );
+            @Override
+            public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                Person person = new Person();
+                person.id = rs.getLong( "id" );
+                person.name = rs.getString( "name" );
+                return person;
+            }
+        } );
 
         return persons;
 

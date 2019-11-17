@@ -3,14 +3,17 @@ package za.sabob.olive.postgres;
 import com.mchange.v2.c3p0.*;
 import com.opentable.db.postgres.embedded.*;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres.Builder;
+
 import java.net.*;
 import java.nio.file.*;
 import java.sql.*;
 import javax.sql.*;
-import org.testng.*;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.config.JDBCConfig;
 import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
@@ -22,8 +25,6 @@ public class PostgresTestUtils {
     public static void shutdown( DataSource ds ) {
 
         try {
-            DSF.unbindDataSourceContainer();
-            Assert.assertFalse( DSF.hasDataSourceContainer() );
 
             Thread.sleep( 500 ); // Not sure why but give a bit of time so Postgres dont shut down while connections still busy.
             pg.close();
@@ -77,7 +78,7 @@ public class PostgresTestUtils {
 
             //ds.getConnection().close();
 
-            DSF.registerDefault( ds );
+            JDBCConfig.setDefaultDataSource( ds );
 
             return ds;
 
@@ -88,7 +89,7 @@ public class PostgresTestUtils {
 
     public static void createPersonTable( DataSource ds ) {
 
-        JDBC.inTransaction( ds, (ctx) -> {
+        JDBC.inTransaction( ds, ( ctx ) -> {
 
             URI uri = PostgresTestUtils.class.getResource( "create-tables.sql" ).toURI();
             String ddl = new String( Files.readAllBytes( Paths.get( uri ) ) );

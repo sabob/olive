@@ -4,6 +4,7 @@ package za.sabob.olive.jdbc.mixed;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
@@ -12,7 +13,9 @@ import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
+
 import static za.sabob.olive.util.DBTestUtils.isTimeout;
+
 import za.sabob.olive.util.*;
 
 public class DeadlockTest extends PostgresBaseTest {
@@ -20,7 +23,7 @@ public class DeadlockTest extends PostgresBaseTest {
     int personsCount = 0;
 
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass( alwaysRun = true )
     public void beforeClass() {
         ds = PostgresTestUtils.createDS( 1 );
         System.out.println( "Postgres created" );
@@ -28,7 +31,7 @@ public class DeadlockTest extends PostgresBaseTest {
         ds.setCheckoutTimeout( 0 ); // There should be no deadlocks because Olive uses only 1 connection per thread.
     }
 
-    @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
+    @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     public void threadTest() throws Exception {
 
         JDBCContext ctx = null;
@@ -50,7 +53,7 @@ public class DeadlockTest extends PostgresBaseTest {
 
             nestedJDBC( ds );
 
-            List<Person> persons = getJDBCPersons();
+            List<Person> persons = getJDBCPersons( ctx );
 
             personsCount = persons.size();
 
@@ -71,14 +74,11 @@ public class DeadlockTest extends PostgresBaseTest {
 
                 if ( connectionCreated ) {
 
-                    boolean isRoot = ctx.isRootContext();
-                    Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
-
-                    Assert.assertTrue( ctx.isRootConnectionHolder() );
+                    Assert.assertFalse( ctx.isConnectionClosed() );
 
                     JDBC.cleanupOperation( ctx );
-                    Assert.assertTrue( ctx.isRootContext() );
-                    Assert.assertFalse( ctx.isRootConnectionHolder() );
+
+                    Assert.assertTrue( ctx.isConnectionClosed() );
                 }
 
             } catch ( Throwable e ) {
@@ -95,13 +95,13 @@ public class DeadlockTest extends PostgresBaseTest {
     public void nestedJDBC( DataSource ds ) {
 
         JDBCContext ctx = JDBC.beginOperation( ds );
-        ctx.isRootContext();
+        Assert.assertFalse( ctx.isConnectionClosed() );
 
         try {
 
             nestedTX( ds );
 
-            List<Person> persons = getJDBCPersons();
+            List<Person> persons = getJDBCPersons( ctx );
             //System.out.println( "PERSONS " + persons.size() );
 
         } catch ( Throwable e ) {
@@ -117,19 +117,12 @@ public class DeadlockTest extends PostgresBaseTest {
 
             try {
 
-                boolean isRoot = ctx.isRootContext();
-
-                //Assert.assertFalse(  );
                 JDBC.cleanupOperation( ctx );
-                //Assert.assertTrue( JDBC.isAtRootConnection() );
-                isRoot = ctx.isRootContext();
+                Assert.assertTrue( ctx.isConnectionClosed() );
 
-                if ( !isRoot ) {
-                    System.out.println( "BUG 1.2" );
-                }
             } catch ( Throwable e ) {
-                System.out.println( "SERIOUS PROBLEM 1.1" + e.getMessage() );
                 JDBC.cleanupOperation( ctx );
+                Assert.assertTrue( ctx.isConnectionClosed() );
             }
         }
     }
@@ -140,7 +133,7 @@ public class DeadlockTest extends PostgresBaseTest {
 
         try {
 
-            List<Person> persons = getTXPersons();
+            List<Person> persons = getTXPersons( ctx );
 
         } catch ( Exception ex ) {
 
@@ -150,35 +143,16 @@ public class DeadlockTest extends PostgresBaseTest {
                 throw new RuntimeException( ex );
 
             }
-//            err = ex;
-//            System.out.println( "SERIOUS PROBLEM 2" + ex.getMessage() + ", fault? " + TX.isFaultRegisteringDS() + ", thread: "
-//                + Thread.currentThread().getId() );
 
         } finally {
 
             try {
 
-//                if ( err != null ) {
-//                    System.out.println( "..." );
-//                }
-                boolean isRoot = ctx.isRootConnectionHolder();
-                boolean connectionCreated = ctx != null;
-
                 JDBC.cleanupTransaction( ctx );
+                Assert.assertTrue( ctx.isConnectionClosed() );
 
-                isRoot = ctx.isRootContext();
-                Assert.assertTrue( isRoot, "TX Connection was closed, this must be root Context" );
-
-                if ( connectionCreated ) {
-                    Assert.assertTrue( isRoot, "TX Connection was created, we must be root connection holder " );
-
-                } else {
-                    if ( isRoot ) {
-                        System.out.println( "BUG TX, conn creted?: " + connectionCreated + ", isRoot: " + isRoot );
-                    }
-                }
             } catch ( Exception e ) {
-                System.out.println( "SERIOUS PROBLEM 2.2" + e.getMessage() );
+                e.printStackTrace();
             }
         }
     }
@@ -189,14 +163,14 @@ public class DeadlockTest extends PostgresBaseTest {
             PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
 
             List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
-                                                          @Override
-                                                          public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                              Person person = new Person();
-                                                              person.id = rs.getLong( "id" );
-                                                              person.name = rs.getString( "name" );
-                                                              return person;
-                                                          }
-                                                      } );
+                @Override
+                public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                    Person person = new Person();
+                    person.id = rs.getLong( "id" );
+                    person.name = rs.getString( "name" );
+                    return person;
+                }
+            } );
 
             return persons;
         } catch ( Exception e ) {
@@ -204,8 +178,8 @@ public class DeadlockTest extends PostgresBaseTest {
         }
     }
 
-    public List<Person> getJDBCPersons() {
-        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+    public List<Person> getJDBCPersons( JDBCContext ctx ) {
+
         boolean isAutoCommit = OliveUtils.getAutoCommit( ctx.getConnection() );
         Assert.assertTrue( isAutoCommit, " Connection should not be a transactional connection." );
 
@@ -213,8 +187,7 @@ public class DeadlockTest extends PostgresBaseTest {
 
     }
 
-    public List<Person> getTXPersons() {
-        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+    public List<Person> getTXPersons( JDBCContext ctx ) {
         boolean isTransaction = !OliveUtils.getAutoCommit( ctx.getConnection() );
         Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );
 

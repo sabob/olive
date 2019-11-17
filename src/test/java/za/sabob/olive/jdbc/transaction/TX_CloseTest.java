@@ -6,52 +6,38 @@ import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
 import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
+import za.sabob.olive.util.OliveUtils;
 
 public class TX_CloseTest extends PostgresBaseTest {
 
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        JDBCContext first = JDBC.beginTransaction( ds );
+        Assert.assertFalse( OliveUtils.getAutoCommit( first.getConnection() ) );
+        Assert.assertTrue( first.isOpen() );
 
-        JDBCContext parent = JDBC.beginTransaction( ds );
-        Assert.assertTrue( parent.isRootTransactionContext() );
-        Assert.assertTrue( parent.canCommit() );
+        JDBCContext second = JDBC.beginTransaction( ds );
+        Assert.assertFalse( OliveUtils.getAutoCommit( second.getConnection() ) );
 
-        JDBCContext child1 = JDBC.beginTransaction( ds );
-        Assert.assertFalse( child1.isRootTransactionContext() );
-        Assert.assertFalse( child1.canCommit() );
+        Assert.assertFalse( first.getConnection().isClosed() );
 
-        Assert.assertFalse( parent.getConnection().isClosed() );
+        JDBC.cleanupTransaction( second );
+        Assert.assertTrue( first.getConnection().isClosed() );
+        Assert.assertTrue( OliveUtils.getAutoCommit( second.getConnection() ) );
 
-        JDBC.cleanupTransaction( child1 );
-        Assert.assertFalse( parent.getConnection().isClosed() );
+        JDBC.cleanupTransaction( second ); // should make no difference
+        Assert.assertTrue( OliveUtils.getAutoCommit( second.getConnection() ) );
+        Assert.assertTrue( second.isConnectionClosed() );
 
-        Assert.assertFalse( child1.isRootTransactionContext() );
-        JDBC.cleanupTransaction( child1 ); // should make no difference
-        Assert.assertFalse( child1.isRootTransactionContext() );
-        Assert.assertFalse( child1.isConnectionClosed() );
+        Assert.assertFalse( first.getConnection().isClosed() );
+        Assert.assertFalse( OliveUtils.getAutoCommit( first.getConnection() ) );
 
-        Assert.assertFalse( child1.canCommit() );
+        JDBC.cleanupTransaction( first );
 
-        DataSourceContainer container = DSF.getDataSourceContainer();
-        isEmpty = container.isEmpty( ds );
-        Assert.assertFalse( isEmpty );
-
-        JDBC.cleanupTransaction( child1 );
-        Assert.assertFalse( parent.getConnection().isClosed() );
-
-        Assert.assertTrue( parent.isRootTransactionContext() );
-        Assert.assertTrue( parent.canCommit() );
-
-        JDBC.cleanupTransaction( parent );
-        Assert.assertTrue( parent.isConnectionClosed() );
-        Assert.assertFalse( parent.isRootTransactionContext() );
-        Assert.assertFalse( parent.canCommit() );
-
-        isEmpty = container.isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        Assert.assertTrue( OliveUtils.getAutoCommit( first.getConnection() ) );
+        Assert.assertTrue( first.isConnectionClosed() );
+        Assert.assertTrue( first.isClosed() );
     }
 
 }

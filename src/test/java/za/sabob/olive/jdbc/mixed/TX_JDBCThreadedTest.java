@@ -4,6 +4,7 @@ package za.sabob.olive.jdbc.mixed;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
@@ -11,7 +12,9 @@ import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
+
 import static za.sabob.olive.util.DBTestUtils.isTimeout;
+
 import za.sabob.olive.util.*;
 
 public class TX_JDBCThreadedTest extends PostgresBaseTest {
@@ -22,7 +25,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass( alwaysRun = true )
     public void beforeClass() {
         System.out.println( "BEFORE CLASS" );
         ds = PostgresTestUtils.createDS( 20 );
@@ -31,21 +34,19 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
         PostgresTestUtils.createPersonTable( ds );
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass( alwaysRun = true )
     public void afterClass() {
         super.afterClass();
         System.out.println( "AFTER CLASS" );
         Assert.assertEquals( personsCount, 400 );
     }
 
-    @Test(successPercentage = 0, threadPoolSize = 20, invocationCount = 200, timeOut = 1110000)
+    @Test( successPercentage = 0, threadPoolSize = 20, invocationCount = 200, timeOut = 1110000 )
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
-        Assert.assertTrue( isEmpty, "CLEAN: " );
-
         JDBCContext ctx = null;
+
         try {
             ctx = JDBC.beginOperation( ds );
         } catch ( Throwable e ) {
@@ -53,17 +54,14 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
             e.printStackTrace();
         }
         ResultSet rs = null;
+        PreparedStatement ps = null;
 
         try {
-            isEmpty = ctx.isRootConnectionHolder();
-            Assert.assertTrue( isEmpty, "CLEAN:" );
-
-            isEmpty = ctx.isRootContext();
-            Assert.assertTrue( isEmpty, "CLEAN:" );
+            DBTestUtils.assertOpen( ctx );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -72,7 +70,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
             nestedJDBC( ds );
 
-            List<Person> persons = getJDBCPersons();
+            List<Person> persons = getJDBCPersons( ctx );
 
             personsCount = persons.size();
 
@@ -83,27 +81,30 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
         } finally {
 
-            boolean isRoot = ctx.isRootContext();
-
-            Assert.assertTrue( isRoot, "JDBC Connection was created, we must be root" );
-
-            isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertFalse( isEmpty );
+            DBTestUtils.assertOpen( ctx );
+            DBTestUtils.assertOpen( ps );
+            DBTestUtils.assertOpen( rs );
 
             JDBC.cleanupOperation( ctx );
-            isEmpty = DSF.getDataSourceContainer().isEmpty();
-            Assert.assertTrue( isEmpty );
+
+            DBTestUtils.assertClosed( ctx );
+            DBTestUtils.assertClosed( ps );
+            DBTestUtils.assertClosed( rs );
         }
     }
 
     public void nestedJDBC( DataSource ds ) {
 
         JDBCContext ctx = JDBC.beginOperation( ds );
+
+        Assert.assertFalse( ctx.isClosed() );
+        Assert.assertFalse( ctx.isConnectionClosed() );
+
         try {
 
             nestedTX( ds );
 
-            List<Person> persons = getJDBCPersons();
+            List<Person> persons = getJDBCPersons( ctx );
             //System.out.println( "PERSONS " + persons.size() );
 
         } catch ( Throwable e ) {
@@ -114,13 +115,13 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
             try {
 
-                boolean isRootConnHolder = ctx.isRootConnectionHolder();
-                Assert.assertFalse( isRootConnHolder, "2nd JDBC Connection was created, we must NOT be root" );
+                Assert.assertFalse( ctx.isClosed() );
+                Assert.assertFalse( ctx.isConnectionClosed() );
 
                 JDBC.cleanupOperation( ctx );
 
-                boolean isRoot = ctx.isRootContext();
-                Assert.assertTrue( isRoot );
+                Assert.assertTrue( ctx.isClosed() );
+                Assert.assertTrue( ctx.isConnectionClosed() );
 
             } catch ( Throwable e ) {
                 e.printStackTrace();
@@ -134,7 +135,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
         try {
 
-            List<Person> persons = getTXPersons();
+            List<Person> persons = getTXPersons( ctx );
 
         } catch ( Exception ex ) {
             if ( isTimeout( ex ) ) {
@@ -150,11 +151,13 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
             try {
 
-                boolean isRootTX = ctx.isRootTransactionContext();
+                Assert.assertFalse( ctx.isClosed() );
+                Assert.assertFalse( ctx.isConnectionClosed() );
 
                 JDBC.cleanupTransaction( ctx );
 
-                Assert.assertTrue( isRootTX, "TX Connection was created, we must be root" );
+                Assert.assertTrue( ctx.isClosed() );
+                Assert.assertTrue( ctx.isConnectionClosed() );
 
             } catch ( Exception e ) {
                 System.out.println( "SERIOUS PROBLEM 2.2" + e.getMessage() );
@@ -169,14 +172,14 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
             PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
 
             List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
-                                                          @Override
-                                                          public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                              Person person = new Person();
-                                                              person.id = rs.getLong( "id" );
-                                                              person.name = rs.getString( "name" );
-                                                              return person;
-                                                          }
-                                                      } );
+                @Override
+                public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                    Person person = new Person();
+                    person.id = rs.getLong( "id" );
+                    person.name = rs.getString( "name" );
+                    return person;
+                }
+            } );
 
             return persons;
         } catch ( Exception e ) {
@@ -184,8 +187,8 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
         }
     }
 
-    public List<Person> getJDBCPersons() {
-        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+    public List<Person> getJDBCPersons( JDBCContext ctx ) {
+
         Connection conn = ctx.getConnection();
 
         boolean isAutoCommit = OliveUtils.getAutoCommit( conn );
@@ -195,8 +198,7 @@ public class TX_JDBCThreadedTest extends PostgresBaseTest {
 
     }
 
-    public List<Person> getTXPersons() {
-        JDBCContext ctx = DSF.getLatestJDBCContext( ds );
+    public List<Person> getTXPersons( JDBCContext ctx ) {
         Connection conn = ctx.getConnection();
         boolean isTransaction = !OliveUtils.getAutoCommit( conn );
         Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );

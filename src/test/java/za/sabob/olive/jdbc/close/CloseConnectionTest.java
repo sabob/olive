@@ -12,9 +12,6 @@ public class CloseConnectionTest extends PostgresBaseTest {
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
-
         JDBCContext parent = JDBC.beginOperation( ds );
 
         JDBCContext child1 = JDBC.beginOperation( ds );
@@ -26,18 +23,12 @@ public class CloseConnectionTest extends PostgresBaseTest {
         JDBC.cleanupOperation( child2 );
         Assert.assertFalse( parent.getConnection().isClosed() );
 
-        DataSourceContainer container = DSF.getDataSourceContainer();
-        isEmpty = container.isEmpty( ds );
-        Assert.assertFalse( isEmpty );
-
         JDBC.cleanupOperation( child1 );
         Assert.assertFalse( parent.getConnection().isClosed() );
 
+        Connection conn = parent.getConnection();
         JDBC.cleanupOperation( parent );
-        Assert.assertTrue( parent.isConnectionClosed() );
-
-        isEmpty = container.isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        Assert.assertTrue( conn.isClosed() );
     }
 
 }

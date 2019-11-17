@@ -35,11 +35,14 @@ public class JDBCInsertTest extends PostgresBaseTest {
 
         Assert.assertEquals( persons.size(), 2 );
 
-        Assert.assertTrue( ctx.isRootContext() );
+        Assert.assertFalse(  ctx.isClosed() );
+        Assert.assertFalse(  ps.isClosed() );
+        Assert.assertFalse( ctx.isConnectionClosed() );
 
         JDBC.cleanupOperation( ctx );
 
         Assert.assertTrue( ctx.isClosed() );
+        Assert.assertTrue(  ps.isClosed() );
         Assert.assertTrue( ps.isClosed());
         Assert.assertTrue( ctx.getConnection().isClosed() );
     }

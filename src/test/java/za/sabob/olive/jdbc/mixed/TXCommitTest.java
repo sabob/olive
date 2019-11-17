@@ -4,6 +4,7 @@ package za.sabob.olive.jdbc.mixed;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
@@ -21,12 +22,13 @@ public class TXCommitTest extends PostgresBaseTest {
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         JDBCContext ctx = JDBC.beginOperation( ds );
+        Assert.assertFalse( ctx.isConnectionClosed() );
 
         try {
 
             nestedJDBC( ds );
 
-            List<Person> persons = getPersons();
+            List<Person> persons = getPersons( ctx );
 
             personsCount = persons.size();
             //Assert.assertEquals( personsCount, 0 );
@@ -35,15 +37,11 @@ public class TXCommitTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-
-            boolean isAtRootConnHolder = ctx.isRootConnectionHolder();
-            Assert.assertTrue( isAtRootConnHolder );
+            Assert.assertFalse( ctx.isConnectionClosed() );
 
             JDBC.cleanupOperation( ctx );
 
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
-            Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
+            Assert.assertTrue( ctx.isConnectionClosed() );
 
         }
     }
@@ -56,7 +54,7 @@ public class TXCommitTest extends PostgresBaseTest {
 
             nestedTX( ds );
 
-            List<Person> persons = getPersons();
+            List<Person> persons = getPersons( ctx );
 
         } catch ( Exception e ) {
             e.printStackTrace();
@@ -91,7 +89,7 @@ public class TXCommitTest extends PostgresBaseTest {
 
             JDBC.rollbackTransaction( ctx );
 
-            List<Person> persons = getPersons();
+            List<Person> persons = getPersons( ctx );
 
             Assert.assertEquals( persons.size(), 0 );
             Assert.assertEquals( count, 1 );
@@ -111,9 +109,8 @@ public class TXCommitTest extends PostgresBaseTest {
         }
     }
 
-    public List<Person> getPersons() {
-        JDBCContext latestCtx = DSF.getLatestJDBCContext( ds );
-        Connection conn = latestCtx.getConnection();
+    public List<Person> getPersons( JDBCContext ctx ) {
+        Connection conn = ctx.getConnection();
         return getPersons( conn );
     }
 
@@ -123,14 +120,14 @@ public class TXCommitTest extends PostgresBaseTest {
         PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
 
         List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
-                                                 @Override
-                                                 public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                     Person person = new Person();
-                                                     person.id = rs.getLong( "id" );
-                                                     person.name = rs.getString( "name" );
-                                                     return person;
-                                                 }
-                                             } );
+            @Override
+            public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                Person person = new Person();
+                person.id = rs.getLong( "id" );
+                person.name = rs.getString( "name" );
+                return person;
+            }
+        } );
 
         return persons;
 

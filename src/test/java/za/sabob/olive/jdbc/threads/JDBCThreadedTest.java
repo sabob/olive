@@ -3,6 +3,7 @@ package za.sabob.olive.jdbc.threads;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
@@ -18,7 +19,7 @@ public class JDBCThreadedTest {
 
     int personsCount = 0;
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass( alwaysRun = true )
     public void beforeClass() {
         //ds = new JdbcDataSource();
         //ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
@@ -29,15 +30,15 @@ public class JDBCThreadedTest {
         //DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterClass( alwaysRun = true )
     public void afterClass() throws Exception {
 
         //ds = DBTestUtils.createDataSource();
-       PostgresTestUtils.shutdown( ds );
+        PostgresTestUtils.shutdown( ds );
         //Assert.assertEquals( personsCount, 200 );
     }
 
-    @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
+    @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     public void threadTest() {
         //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         JDBCContext ctx = null;
@@ -47,6 +48,9 @@ public class JDBCThreadedTest {
             ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
+
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+
             params.set( "name", "bob" );
             PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
@@ -67,13 +71,9 @@ public class JDBCThreadedTest {
 
         } finally {
 
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
-
             JDBC.cleanupOperation( ctx );
 
-            isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
         }
     }
 
@@ -88,9 +88,9 @@ public class JDBCThreadedTest {
             List<Person> persons = getPersons( ctx );
 
         } finally {
-            Assert.assertFalse( ctx.isRootContext() );
+            Assert.assertTrue( ctx.isOpen() );
             JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( ctx.isRootContext());
+            Assert.assertTrue( ctx.isConnectionClosed() );
         }
 
     }
@@ -99,15 +99,15 @@ public class JDBCThreadedTest {
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans(ps, new RowMapper<Person>() {
-                                                 @Override
-                                                 public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                     Person person = new Person();
-                                                     person.id = rs.getLong( "id" );
-                                                     person.name = rs.getString( "name" );
-                                                     return person;
-                                                 }
-                                             } );
+        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+            @Override
+            public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                Person person = new Person();
+                person.id = rs.getLong( "id" );
+                person.name = rs.getString( "name" );
+                return person;
+            }
+        } );
 
         return persons;
 

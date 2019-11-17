@@ -2,9 +2,11 @@ package za.sabob.olive.hsqldb;
 
 import java.sql.*;
 import javax.sql.*;
+
 import org.hsqldb.jdbc.*;
 import org.testng.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.config.JDBCConfig;
 import za.sabob.olive.util.*;
 
 public class HSQLDBTestUtils {
@@ -27,13 +29,13 @@ public class HSQLDBTestUtils {
             throw new RuntimeException( ex );
         }
 
-        DSF.registerDefault( ds );
+        JDBCConfig.setDefaultDataSource( ds );
         return ds;
     }
 
     public static void createPersonTable( DataSource ds ) {
 
-        JDBC.inTransaction( ds, (ctx) -> {
+        JDBC.inTransaction( ds, ( ctx ) -> {
             String ddl = "create table if not exists person (id bigint IDENTITY, name varchar(100), primary key (id));";
             Statement stmnt = OliveUtils.createStatement( ctx );
             stmnt.executeUpdate( ddl );
@@ -41,9 +43,8 @@ public class HSQLDBTestUtils {
     }
 
     public static void shutdown( DataSource ds ) {
+
         try {
-            DSF.unbindDataSourceContainer();
-            Assert.assertFalse( DSF.hasDataSourceContainer() );
 
             ds.getConnection().createStatement().execute( "SHUTDOWN" );
 

@@ -12,31 +12,24 @@ public class ConnectionStaysTX_Test extends PostgresBaseTest {
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
-
         JDBCContext parentTX = JDBC.beginTransaction( ds );
+
         Assert.assertFalse( parentTX.getConnection().getAutoCommit() );
-        Assert.assertTrue( parentTX.isRootTransactionContext() );
-        Assert.assertTrue( parentTX.canCommit() );
-        Assert.assertTrue( parentTX.isRootConnectionHolder() );
+        Assert.assertTrue( parentTX.isOpen());
 
         JDBCContext child1TX = JDBC.beginTransaction( ds );
-        Assert.assertFalse( child1TX.isRootTransactionContext() );
-        Assert.assertFalse( child1TX.canCommit() );
+        Assert.assertFalse( parentTX.getConnection().getAutoCommit() );
+        Assert.assertTrue( parentTX.isOpen());
 
         JDBCContext parentOP = JDBC.beginOperation( ds );
-        Assert.assertFalse( parentOP.isRootConnectionHolder() );
+        Assert.assertTrue( parentOP.getConnection().getAutoCommit() );
+        Assert.assertTrue( parentOP.isOpen());
 
         Assert.assertFalse( parentTX.getConnection().isClosed() );
 
         JDBC.cleanupTransaction( parentOP );
         Assert.assertFalse( parentTX.getConnection().isClosed() );
         Assert.assertFalse( parentTX.getConnection().getAutoCommit() );
-
-        DataSourceContainer container = DSF.getDataSourceContainer();
-        isEmpty = container.isEmpty( ds );
-        Assert.assertFalse( isEmpty );
 
         JDBC.cleanupTransaction( child1TX );
         Assert.assertFalse( parentTX.getConnection().isClosed() );
@@ -45,9 +38,6 @@ public class ConnectionStaysTX_Test extends PostgresBaseTest {
         JDBC.cleanupTransaction( parentTX );
 
         Assert.assertTrue( parentTX.isConnectionClosed() );
-
-        isEmpty = container.isEmpty( ds );
-        Assert.assertTrue( isEmpty );
     }
 
 }

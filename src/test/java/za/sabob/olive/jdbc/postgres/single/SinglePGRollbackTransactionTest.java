@@ -15,7 +15,6 @@ public class SinglePGRollbackTransactionTest extends PostgresBaseTest {
 
     @Test
     public void rollbackTest() {
-        JDBCConfig.setJoinableTransactionsDefault( true );
         JDBCContext ctx = JDBC.beginTransaction( ds );
 
         try {
@@ -39,15 +38,11 @@ public class SinglePGRollbackTransactionTest extends PostgresBaseTest {
         } catch ( Exception ex ) {
 
             throw JDBC.rollbackTransaction( ctx, ex );
-
         } finally {
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
 
             JDBC.cleanupTransaction( ctx );
-
-            isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( ctx.isConnectionClosed());
+            Assert.assertTrue( ctx.isClosed());
         }
     }
 

@@ -12,9 +12,6 @@ public class MixedCloseConnectionTest extends PostgresBaseTest {
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
-
         JDBCContext nonTxParent = JDBC.beginOperation( ds );
         JDBCContext txParent = JDBC.beginTransaction( ds ); // Note: nonTxParent is the parent of txParent since it was created first
 
@@ -34,7 +31,7 @@ public class MixedCloseConnectionTest extends PostgresBaseTest {
 
         JDBC.cleanupOperation( nonTxChild1 );
         JDBC.cleanupOperation( nonTxChild7 );
-        Assert.assertFalse( nonTxParent.getConnection().isClosed() );
+        Assert.assertFalse( nonTxParent.isConnectionClosed() );
 
         JDBC.cleanupTransaction( txChild3 );
         JDBC.cleanupTransaction( txChild8 );

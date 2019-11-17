@@ -1,12 +1,12 @@
 package za.sabob.olive.jdbc.basic;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
-import java.sql.*;
-import org.testng.*;
-import org.testng.annotations.*;
-import za.sabob.olive.jdbc.DSF;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.postgres.*;
+import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.postgres.PostgresBaseTest;
+
+import java.sql.SQLException;
 
 public class MultipleBeginTest extends PostgresBaseTest {
 
@@ -14,63 +14,21 @@ public class MultipleBeginTest extends PostgresBaseTest {
     @Test
     public void basicTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        JDBCContext first = JDBC.beginOperation( ds );
+        JDBCContext second = JDBC.beginOperation( ds );
 
-        JDBCContext parent = JDBC.beginOperation( ds );
-
-        JDBCContext child = JDBC.beginOperation( ds );
-
-        Assert.assertEquals( child.getParent(), parent );
-        Assert.assertEquals( parent.getChild(), child );
-        Assert.assertNull( parent.getParent() );
-
-        //ctx = JDBC.beginOperation( ds );
-        //read();
-        //insert();
         JDBCContext lastCreatedCtx = save();
+        Assert.assertFalse( second.isConnectionClosed() );
 
-        JDBCContext mostRecentCtx = child.getMostRecentContext();
+        Assert.assertFalse( second.getConnection().isClosed() );
 
-        Assert.assertFalse( child.isRootContext() );
-        Assert.assertFalse( child.getRootContext().getConnection().isClosed() );
+        second.close();
 
-        Assert.assertFalse( child.getConnection().isClosed() );
+        Assert.assertTrue( second.getConnection().isClosed() );
 
-        JDBCContext childParent = child.getParent();
-        Assert.assertNotNull( childParent );
+        first.close();
 
-        JDBCContext rootParent = childParent.getParent();
-        Assert.assertNull( rootParent );
-
-        child.close();
-
-        Assert.assertFalse( child.getConnection().isClosed(), "child' Connection must not be closed because a parent context was created which is root." );
-        Assert.assertTrue( child.isRootContext(), "Context must be root now because its parent was removed when it was closed!" );
-        Assert.assertEquals( lastCreatedCtx, mostRecentCtx, "Last context created should match the deepest child!" );
-        Assert.assertEquals( child.getConnection(), mostRecentCtx.getConnection(), "Contexts must share the same connection!" );
-
-        parent.close();
-
-        Assert.assertTrue( parent.getConnection().isClosed(), "connection should be closed now because parent was closed.");
-        Assert.assertTrue( child.getConnection().isClosed(), "Child connection should be closed now because parent was closed.");
-        Assert.assertTrue( child.isRootContext(), "Context must be root since it was created first!" );
-
-        Assert.assertTrue( DSF.hasDataSourceContainer() );
-        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty( ds ) );
-        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
-
-        JDBC.cleanupOperation( ds );
-        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
-
-        JDBC.cleanupOperation( ds );
-        JDBC.cleanupOperation( ds );
-        JDBC.cleanupOperation( ds );
-        JDBC.cleanupOperation( ds );
-        JDBC.cleanupOperation( ds );
-        JDBC.cleanupOperation( ds );
-        Assert.assertTrue( DSF.getDataSourceContainer().isEmpty() );
-
+        Assert.assertTrue( first.getConnection().isClosed(), "connection should be closed now because parent was closed." );
     }
 
     public JDBCContext save() {

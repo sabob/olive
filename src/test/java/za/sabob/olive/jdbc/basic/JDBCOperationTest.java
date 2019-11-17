@@ -1,10 +1,11 @@
 package za.sabob.olive.jdbc.basic;
 
 import za.sabob.olive.jdbc.context.JDBCContext;
+
 import java.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
-import za.sabob.olive.jdbc.DSF;
 import za.sabob.olive.jdbc.JDBC;
 import za.sabob.olive.postgres.*;
 
@@ -13,50 +14,37 @@ public class JDBCOperationTest extends PostgresBaseTest {
     @Test
     public void beginCleanupTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
-
         JDBCContext ctx = JDBC.beginOperation( ds );
-        JDBC.cleanupOperation( ds );
+        JDBC.cleanupOperation( ctx );
 
         ctx = JDBC.beginOperation( ds );
-        JDBC.cleanupOperation( ds );
 
-        Assert.assertEquals( ctx.getParent(), null );
-        Assert.assertEquals( ctx.getChild(), null );
-        Assert.assertTrue( ctx.isClosed() );
-        Assert.assertTrue( ctx.isRootContext() );
+        Assert.assertTrue( ctx.isOpen() );
+        Assert.assertTrue( ctx.getConnection().getAutoCommit() );
+
+        JDBC.cleanupOperation( ctx );
+
+        Assert.assertTrue( ctx.getConnection().getAutoCommit() );
         Assert.assertTrue( ctx.getConnection().isClosed() );
-        Assert.assertTrue( ctx.getRootContext().getConnection().isClosed() );
-        Assert.assertNull( ctx.getParent() );
+        Assert.assertNull( ctx.isClosed() );
     }
 
     @Test
     public void beginCleanupNestedTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        JDBCContext ctx1 = JDBC.beginOperation( ds );
 
-        JDBCContext ctx = JDBC.beginOperation( ds );
+        Assert.assertTrue( ctx1.getConnection().getAutoCommit() );
 
-        //Assert.assertEquals( ctx.getParent().getParent(), null );
-        Assert.assertEquals( ctx.getParent(), null );
+        JDBCContext ctx2 = JDBC.beginOperation( ds );
 
-        ctx = JDBC.beginOperation( ds );
-        JDBCContext recent = ctx.getMostRecentContext();
+        JDBC.cleanupOperation( ctx1 );
 
-        Assert.assertEquals( ctx, recent );
+        JDBC.cleanupOperation( ctx2 );
 
-        JDBC.cleanupOperation( ds );
-
-        JDBC.cleanupOperation( ds );
-
-        Assert.assertEquals( ctx.getParent(), null );
-        Assert.assertEquals( ctx.getChild(), null );
-        Assert.assertTrue( ctx.isClosed() );
-        Assert.assertTrue( ctx.isRootContext() );
-        Assert.assertTrue( ctx.getConnection().isClosed() );
-        Assert.assertTrue( ctx.getRootContext().getConnection().isClosed() );
-        Assert.assertNull( ctx.getParent() );
+        Assert.assertTrue( ctx1.isClosed() );
+        Assert.assertTrue( ctx2.isClosed() );
+        Assert.assertTrue( ctx1.getConnection().isClosed() );
+        Assert.assertTrue( ctx2.getConnection().isClosed() );
     }
 }

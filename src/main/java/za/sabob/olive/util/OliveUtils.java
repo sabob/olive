@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.logging.*;
 import javax.sql.*;
 import javax.xml.parsers.*;
+
 import org.w3c.dom.*;
 import org.xml.sax.*;
 import za.sabob.olive.jdbc.context.*;
@@ -50,7 +51,6 @@ import za.sabob.olive.query.*;
  * PreparedStatement ps = OliveUtils.prepareStatement(Connection conn, ParsedSql parsedSql, SqlParams params);
  * ...
  * </pre>
- *
  */
 public class OliveUtils {
 
@@ -181,7 +181,7 @@ public class OliveUtils {
      * Returns the connection for the given DataSource and set the connection#setAutoCommit to the given value. Any SQLExceptions are wrapped and thrown as
      * RuntimeExcepions.
      *
-     * @param ds the DataSource to get a Connection from
+     * @param ds         the DataSource to get a Connection from
      * @param autoCommit the autoCommit value to set
      * @return the DataSource Connection
      */
@@ -206,7 +206,7 @@ public class OliveUtils {
      * Returns the connection for the given DataSource, username and password and wraps any SQLExceptions thrown in RuntimeExcepions.
      * <p/>
      *
-     * @param ds the DataSource to get a Connection from
+     * @param ds       the DataSource to get a Connection from
      * @param username - the database user on whose behalf the connection is being made
      * @param password - the user's password
      * @return the DataSource Connection
@@ -228,11 +228,10 @@ public class OliveUtils {
      * Any SQLExceptions are wrapped and thrown as RuntimeExcepions.
      * <p/>
      *
-     * @param ds the DataSource to get a Connection from
-     * @param username - the database user on whose behalf the connection is being made
-     * @param password - the user's password
+     * @param ds         the DataSource to get a Connection from
+     * @param username   - the database user on whose behalf the connection is being made
+     * @param password   - the user's password
      * @param autoCommit the autoCommit value to set
-     *
      * @return the DataSource Connection
      */
     public static Connection getConnection( DataSource ds, String username, String password, boolean autoCommit ) {
@@ -256,7 +255,6 @@ public class OliveUtils {
      * Returns the connection from the DriverManager.class for the given url and wraps any SQLExceptions thrown in RuntimeExcepions.
      *
      * @param url - a database url of the form jdbc:subprotocol:subname
-     *
      * @return a connection to the URL
      */
     public static Connection getConnection( String url ) {
@@ -274,10 +272,9 @@ public class OliveUtils {
     /**
      * Returns the connection from the DriverManager.class for the given url and wraps any SQLExceptions thrown in RuntimeExcepions.
      *
-     * @param url - a database url of the form jdbc:subprotocol:subname
+     * @param url  - a database url of the form jdbc:subprotocol:subname
      * @param info - a list of arbitrary string tag/value pairs as connection arguments; normally at least a "user" and "password" property
-     * should be included
-     *
+     *             should be included
      * @return a connection to the URL
      */
     public static Connection getConnection( String url, Properties info ) {
@@ -295,10 +292,9 @@ public class OliveUtils {
     /**
      * Returns the connection from the DriverManager.class for the given url and wraps any SQLExceptions thrown in RuntimeExcepions.
      *
-     * @param url - a database url of the form jdbc:subprotocol:subname
-     * @param user - the database user on whose behalf the connection is being made
+     * @param url      - a database url of the form jdbc:subprotocol:subname
+     * @param user     - the database user on whose behalf the connection is being made
      * @param password - the user's password
-     *
      * @return a connection to the URL
      */
     public static Connection getConnection( String url, String user, String password ) {
@@ -353,7 +349,7 @@ public class OliveUtils {
      *
      * </pre>
      *
-     * @param conn the connection to rollback
+     * @param conn      the connection to rollback
      * @param exception the Exception that is causing the transaction to be rolled back
      * @return RuntimeException
      */
@@ -398,7 +394,6 @@ public class OliveUtils {
      * This method is null safe, so the connection can be null.
      *
      * @param conn the connection to rollback
-     *
      * @return the given exception and any exception that occurred while rolling back the connection
      */
     public static RuntimeException rollbackQuietly( Connection conn ) {
@@ -421,9 +416,8 @@ public class OliveUtils {
      * <p/>
      * This method is null safe, so the connection can be null.
      *
-     * @param conn the connection to rollback
+     * @param conn      the connection to rollback
      * @param exception the Exception that is causing the transaction to be rolled back
-     *
      * @return the given exception and any exception that occurred while rolling back the connection
      */
     public static RuntimeException rollbackQuietly( Connection conn, Exception exception ) {
@@ -499,7 +493,7 @@ public class OliveUtils {
      * This method is null safe, so the connection can be null.
      *
      * @param autoCommit whether to enable/disable Connection#setAutoCommit
-     * @param conn the connection to close
+     * @param conn       the connection to close
      */
     public static void closeConnection( boolean autoCommit, Connection conn ) {
 
@@ -531,7 +525,7 @@ public class OliveUtils {
      * <p/>
      * This method is null safe, so the statement and connection can be null.
      *
-     * @param st the statement to close
+     * @param st   the statement to close
      * @param conn the connection to close
      */
     public static void close( Statement st, Connection conn ) {
@@ -600,8 +594,8 @@ public class OliveUtils {
      * This method is null safe, so the statement and connection can be null.
      *
      * @param autoCommit whether to enable/disable Connection#setAutoCommit
-     * @param st the statement to close
-     * @param conn the connection to close
+     * @param st         the statement to close
+     * @param conn       the connection to close
      */
     public static void close( boolean autoCommit, Statement st, Connection conn ) {
 
@@ -639,8 +633,8 @@ public class OliveUtils {
      * <p/>
      * This method is null safe, so the resultset, statement and connection can be null.
      *
-     * @param rs the resultset to close
-     * @param st the statement to close
+     * @param rs   the resultset to close
+     * @param st   the statement to close
      * @param conn the connection to close
      */
     public static void close( ResultSet rs, Statement st, Connection conn ) {
@@ -680,9 +674,9 @@ public class OliveUtils {
      * This method is null safe, so the resultset, statement and connection can be null.
      *
      * @param autoCommit whether to enable/disable Connection#setAutoCommit
-     * @param rs the resultset to close
-     * @param st the statement to close
-     * @param conn the connection to close
+     * @param rs         the resultset to close
+     * @param st         the statement to close
+     * @param conn       the connection to close
      */
     public static void close( boolean autoCommit, ResultSet rs, Statement st, Connection conn ) {
 
@@ -758,7 +752,7 @@ public class OliveUtils {
      * This method is null safe, so the connection can be null.
      *
      * @param autoCommit whether to enable/disable Connection#setAutoCommit
-     * @param conn the connection to close
+     * @param conn       the connection to close
      */
     public static void close( boolean autoCommit, Connection conn ) {
         closeConnection( autoCommit, conn );
@@ -771,7 +765,6 @@ public class OliveUtils {
      *
      * @param conn the connection on which to set autoCommit
      * @param bool true to enable setAutoCommit, false to disable autoCommit
-     *
      * @throws RuntimeException that wraps the SQLException
      */
     public static void setAutoCommit( Connection conn, boolean bool ) {
@@ -830,11 +823,10 @@ public class OliveUtils {
 
     /**
      * Returns the generated key and wraps any SQLExceptions thrown as a RuntimeExcepion.
-     *
+     * <p>
      * This method is null safe, so the statement can be null.
      *
      * @param st the statement from which to get the generatedKey
-     *
      * @return the generated key or null if no key was generated
      */
     public static long getGeneratedKey( Statement st ) {
@@ -866,11 +858,10 @@ public class OliveUtils {
 
     /**
      * Returns the generated Keys and wraps any SQLExceptions thrown as a RuntimeExcepion.
-     *
+     * <p>
      * This method is null safe, so the statement can be null.
      *
      * @param st the statement from which to get the generatedKeys
-     *
      * @return the list of generated keys as long values
      */
     public static List<Long> getGeneratedKeys( Statement st ) {
@@ -926,7 +917,8 @@ public class OliveUtils {
      * be used for a select list. Select lists should be limited to 100 or fewer elements.
      * A larger number of elements is not guaranteed to be supported by the database and
      * is strictly vendor-dependent.
-     * @param parsedSql the parsed representation of the SQL statement
+     *
+     * @param parsedSql  the parsed representation of the SQL statement
      * @param parameters the source for named parameters
      * @return the SQL statement with substituted parameters
      */
@@ -941,8 +933,8 @@ public class OliveUtils {
      * <p/>
      * the PreparedStatement will have all it's named parameters replaced by the given parameters
      *
-     * @param conn the connection to create the PreparedStatement with
-     * @param parsedSql the parsed representation of the SQL statement
+     * @param conn       the connection to create the PreparedStatement with
+     * @param parsedSql  the parsed representation of the SQL statement
      * @param parameters the source for named parameters
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
@@ -1027,9 +1019,9 @@ public class OliveUtils {
      * <p/>
      * the PreparedStatement will have all it's named parameters replaced by the given parameters
      *
-     * @param conn the connection to create the PreparedStatement with
-     * @param parsedSql the parsed representation of the SQL statement
-     * @param parameters the source for named parameters
+     * @param conn              the connection to create the PreparedStatement with
+     * @param parsedSql         the parsed representation of the SQL statement
+     * @param parameters        the source for named parameters
      * @param autoGeneratedKeys specifies the autoGenerated keys value of: Statement.RETURN_GENERATED_KEYS or Statement.NO_GENERATED_KEYS
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
@@ -1057,16 +1049,16 @@ public class OliveUtils {
      * <p/>
      * the PreparedStatement will have all it's named parameters replaced by the given parameters
      *
-     * @param conn the connection to create the PreparedStatement with
-     * @param parsedSql the parsed representation of the SQL statement
-     * @param parameters the source for named parameters
-     * @param resultSetType - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE
+     * @param conn                 the connection to create the PreparedStatement with
+     * @param parsedSql            the parsed representation of the SQL statement
+     * @param parameters           the source for named parameters
+     * @param resultSetType        - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE
      * @param resultSetConcurrency - one of the following ResultSet constants: ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE
      * @param resultSetHoldability - one of the following ResultSet constants: ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
     public static PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams parameters, int resultSetType, int resultSetConcurrency,
-        int resultSetHoldability ) {
+                                                      int resultSetHoldability ) {
         String sql = NamedParameterUtils.substituteNamedParameters( parsedSql, parameters );
         try {
             PreparedStatement ps = conn.prepareStatement( sql, resultSetType, resultSetConcurrency, resultSetHoldability );
@@ -1079,7 +1071,7 @@ public class OliveUtils {
     }
 
     public static PreparedStatement prepareStatement( JDBCContext ctx, ParsedSql parsedSql, SqlParams parameters, int resultSetType, int resultSetConcurrency,
-        int resultSetHoldability ) {
+                                                      int resultSetHoldability ) {
         Connection conn = ctx.getConnection();
         PreparedStatement ps = prepareStatement( conn, parsedSql, parameters, resultSetType, resultSetConcurrency, resultSetHoldability );
         ctx.add( ps );
@@ -1093,9 +1085,9 @@ public class OliveUtils {
      * <p/>
      * the PreparedStatement will have all it's named parameters replaced by the given parameters
      *
-     * @param conn the connection to create the PreparedStatement with
+     * @param conn         the connection to create the PreparedStatement with
      * @param sqlStatement a SQL statement
-     * @param parameters the source for named parameters
+     * @param parameters   the source for named parameters
      * @return the PreparedStatement with all named parameters replaced by the given parameters
      */
     public static PreparedStatement prepareStatement( Connection conn, String sqlStatement, SqlParams parameters ) {
@@ -1123,8 +1115,8 @@ public class OliveUtils {
     /**
      * Replace the named parameters defined on the parsedSql with JDBC placeholders ('?') on the PreparedStatement for the given parameters.
      *
-     * @param ps the PreparedStatement which named parameters must be replaced with JDBC placeholders('?')
-     * @param parsedSql the parsed sql which named parameters must be replaced
+     * @param ps         the PreparedStatement which named parameters must be replaced with JDBC placeholders('?')
+     * @param parsedSql  the parsed sql which named parameters must be replaced
      * @param parameters the source for named parameters
      */
     public static void setParams( PreparedStatement ps, ParsedSql parsedSql, SqlParams parameters ) {
@@ -1141,9 +1133,9 @@ public class OliveUtils {
     /**
      * Replace the named parameter defined at the given index with a JDBC placeholder('?') on the PreparedStatement.
      *
-     * @param ps the PreparedStatement which named parameter must be replaced with a JDBC placeholder('?')
+     * @param ps            the PreparedStatement which named parameter must be replaced with a JDBC placeholder('?')
      * @param indexPosition the index where the named parameter is defined in the PreparedStatement
-     * @param parameter the parameter value that must replace the named parameter
+     * @param parameter     the parameter value that must replace the named parameter
      */
     public static void setParam( PreparedStatement ps, int indexPosition, SqlParam parameter ) {
 
@@ -1178,7 +1170,7 @@ public class OliveUtils {
      * Truncate the string at the given maximum width. If the string length does not exceed the maximum width, the original string is
      * returned, otherwise the string is truncated to the maximum width.
      *
-     * @param str the string to truncate
+     * @param str      the string to truncate
      * @param maxWidth the maximum width of the string
      * @return the truncated string
      */
@@ -1241,7 +1233,7 @@ public class OliveUtils {
      * Should replace all calls to <code>Class.getResourceAsString</code> when the resource might come from a different classloader.
      * (e.g. a webapp).
      *
-     * @param cls Class to use when getting the System classloader (used if no Thread Context classloader available or fails to get resource).
+     * @param cls  Class to use when getting the System classloader (used if no Thread Context classloader available or fails to get resource).
      * @param name name of the resource
      * @return InputStream for the resource.
      */
@@ -1332,7 +1324,7 @@ public class OliveUtils {
      * <pre class="prettyprint">
      * INSERT INTO PERSON (name, age) VALUES (:name, :age);
      * </pre>
-     *
+     * <p>
      * and given that the <code>PersonDao</code> exists in the same package" <code>com.mycorp.dao.person.PersonDao</code>, create an absolute
      * filename to the insert_person.sql file as follows:
      *
@@ -1341,7 +1333,7 @@ public class OliveUtils {
      * String filename = OliveUtils.normalize(PersonDao.class, "insert_product.sql");
      * System.out.println(filename);
      * </pre>
-     *
+     * <p>
      * The result of the above <code>println</code> statement will be: <code>/com/mycorp/dao/person/insert_person.sql</code>.
      *
      * @param relative the class to create an absolute filename from
@@ -1428,13 +1420,13 @@ public class OliveUtils {
      * Return a new XML Document for the given input stream and XML entity
      * resolver.
      *
-     * @param inputStream the input stream
+     * @param inputStream    the input stream
      * @param entityResolver the XML entity resolver
      * @return new XML Document
      * @throws RuntimeException if a parsing error occurs
      */
     public static Document buildDocument( InputStream inputStream,
-        EntityResolver entityResolver ) {
+                                          EntityResolver entityResolver ) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -1456,7 +1448,7 @@ public class OliveUtils {
      * Element name.
      *
      * @param parent the parent element to get the child from
-     * @param name the name of the child element
+     * @param name   the name of the child element
      * @return the first child element for the given name and parent
      */
     public static Element getChild( Element parent, String name ) {
@@ -1465,7 +1457,7 @@ public class OliveUtils {
             Node node = nodeList.item( i );
             if ( node instanceof Element ) {
                 if ( node.getNodeName().equals( name ) ) {
-                    return (Element) node;
+                    return ( Element ) node;
                 }
             }
         }
@@ -1477,7 +1469,7 @@ public class OliveUtils {
      * the given parent Element.
      *
      * @param parent the parent element to get the child from
-     * @param name the name of the child element
+     * @param name   the name of the child element
      * @return the list of XML child elements for the given name
      */
     public static List<Element> getChildren( Element parent, String name ) {
@@ -1487,7 +1479,7 @@ public class OliveUtils {
             Node node = nodeList.item( i );
             if ( node instanceof Element ) {
                 if ( node.getNodeName().equals( name ) ) {
-                    list.add( (Element) node );
+                    list.add( ( Element ) node );
                 }
             }
         }
@@ -1597,7 +1589,7 @@ public class OliveUtils {
             Object arrayItem = java.lang.reflect.Array.get( array, i );
 
             if ( isObjectArray( arrayItem ) ) {
-                list.add( (Object[]) arrayItem );
+                list.add( ( Object[] ) arrayItem );
 
             } else if ( isPrimitiveArray( arrayItem ) ) {
 
@@ -1617,7 +1609,7 @@ public class OliveUtils {
      * Adds the given suppressedException to the mainException and returns the mainException, unless it is null, in which case the suppressedException is
      * returned.
      *
-     * @param mainException the main exception on which to add the suppressedException
+     * @param mainException      the main exception on which to add the suppressedException
      * @param supressedException the exception to add to the mainException
      * @return the mainException or supresesdException if mainException is null
      */
@@ -1651,7 +1643,7 @@ public class OliveUtils {
         }
 
         if ( exception instanceof RuntimeException ) {
-            throw (RuntimeException) exception;
+            throw ( RuntimeException ) exception;
         }
 
         throw new RuntimeException( exception );
@@ -1662,7 +1654,7 @@ public class OliveUtils {
             return;
         }
 
-        throw (X) exception;
+        throw ( X ) exception;
     }
 
     public static RuntimeException toRuntimeException( Exception exception ) {
@@ -1671,7 +1663,7 @@ public class OliveUtils {
         }
 
         if ( exception instanceof RuntimeException ) {
-            return (RuntimeException) exception;
+            return ( RuntimeException ) exception;
         }
         return new RuntimeException( exception );
 
@@ -1683,7 +1675,7 @@ public class OliveUtils {
      * <p/>
      * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
      * <p/>
-     *
+     * <p>
      * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
      * <p/>
      * This method is null safe, so C;loseables can be null.
@@ -1774,7 +1766,7 @@ public class OliveUtils {
      * <p/>
      * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
      * <p/>
-     *
+     * <p>
      * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
      * <p/>
      * This method is null safe, so Closeables can be null.
@@ -1798,7 +1790,7 @@ public class OliveUtils {
             }
 
             if ( closeable instanceof Connection ) {
-                Connection conn = (Connection) closeable;
+                Connection conn = ( Connection ) closeable;
 
                 try {
                     conn.setAutoCommit( autoCommit );
@@ -1825,7 +1817,7 @@ public class OliveUtils {
      * <p/>
      * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
      * <p/>
-     *
+     * <p>
      * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
      * <p/>
      * This method is null safe, so Closeables can be null.
@@ -1848,7 +1840,7 @@ public class OliveUtils {
      * <p/>
      * <b>Note:</b> exceptions thrown by the autoClosable objects will be chained using Throwable#addSuppressed(Throwable).
      * <p/>
-     *
+     * <p>
      * If an exception is thrown by one or more of the autoClosables, a RuntimeException is thrown wrapping the exceptions.
      * <p/>
      * This method is null safe, so Closeables can be null.
@@ -1872,7 +1864,7 @@ public class OliveUtils {
 
             for ( final AutoCloseable closeable : closeables ) {
                 if ( closeable instanceof Connection ) {
-                    return (Connection) closeable;
+                    return ( Connection ) closeable;
                 }
 
             }
@@ -1889,7 +1881,7 @@ public class OliveUtils {
             for ( final AutoCloseable closeable : closeables ) {
 
                 if ( closeable instanceof Connection ) {
-                    connections.add( (Connection) closeable );
+                    connections.add( ( Connection ) closeable );
                 }
             }
         }
@@ -1952,8 +1944,8 @@ public class OliveUtils {
     /**
      * Internal method to perform the normalization.
      *
-     * @param filename the filename
-     * @param separator The separator character to use
+     * @param filename      the filename
+     * @param separator     The separator character to use
      * @param keepSeparator true to keep the final separator
      * @return the normalized filename
      */
@@ -2076,7 +2068,7 @@ public class OliveUtils {
      * <p>
      * The output will be the same irrespective of the machine that the code is running on.
      * ie. both Unix and Windows prefixes are matched regardless.
-     *
+     * <p>
      * Note that a leading // (or \\) is used to indicate a UNC name on Windows.
      * These must be followed by a server name, so double-slashes are not collapsed
      * to a single slash at the start of the filename.
@@ -2182,7 +2174,7 @@ public class OliveUtils {
         if ( count > Integer.MAX_VALUE ) {
             return -1;
         }
-        return (int) count;
+        return ( int ) count;
     }
 
     public static void main( String[] args ) {
@@ -2197,7 +2189,7 @@ public class OliveUtils {
         Document document = buildDocument( is );
         Element rootElm = document.getDocumentElement();
         System.out.println( "root nodename: " + rootElm.getNodeName() );
-        List< Element> queries = getChildren( rootElm, "query" );
+        List<Element> queries = getChildren( rootElm, "query" );
         for ( Element query : queries ) {
             System.out.println( "name: " + query.getAttribute( "name" ) );
             String sql = query.getTextContent();
@@ -2254,7 +2246,7 @@ public class OliveUtils {
         return null;
     }
 
-//    public static boolean execute( PreparedStatement ps ) {
+    //    public static boolean execute( PreparedStatement ps ) {
 //
 //        //StatementContainer stContainer = getStatementContainer( conn, ps );
 //
@@ -2321,43 +2313,43 @@ public class OliveUtils {
 
                 if ( cls == int.class || cls == Integer.class ) {
                     Integer value = rs.getInt( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == long.class || cls == Long.class ) {
                     Long value = rs.getLong( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == byte.class || cls == Byte.class ) {
                     Byte value = rs.getByte( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == boolean.class || cls == Boolean.class ) {
                     Boolean value = rs.getBoolean( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == double.class || cls == Double.class ) {
                     Double value = rs.getDouble( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == float.class || cls == Float.class ) {
                     Float value = rs.getFloat( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == short.class || cls == Short.class ) {
                     Short value = rs.getShort( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == String.class ) {
                     String value = rs.getString( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == java.util.Date.class ) {
                     java.util.Date value = rs.getTimestamp( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else if ( cls == BigDecimal.class ) {
                     BigDecimal value = rs.getBigDecimal( 1 );
-                    return (T) value;
+                    return ( T ) value;
 
                 } else {
                     throw new IllegalArgumentException( cls + " is not a supported type" );
@@ -2401,4 +2393,35 @@ public class OliveUtils {
         return e;
     }
 
+    public static void setReadOnly( Connection conn, boolean value ) {
+        try {
+            conn.setReadOnly( value );
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static boolean isClosed( ResultSet rs ) {
+        try {
+            return rs.isClosed();
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static boolean isClosed( Statement stmt ) {
+        try {
+            return stmt.isClosed();
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static boolean isClosed( Connection conn ) {
+        try {
+            return conn.isClosed();
+        } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
 }

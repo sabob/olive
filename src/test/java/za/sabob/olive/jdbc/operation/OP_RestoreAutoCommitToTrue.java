@@ -23,9 +23,6 @@ public class OP_RestoreAutoCommitToTrue extends PostgresBaseTest {
         conn.setAutoCommit( true );
         conn.close();
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty();
-        Assert.assertTrue( isEmpty );
-
         JDBCContext ctx = JDBC.beginOperation( ds );
         Assert.assertTrue( ctx.getConnection().getAutoCommit() );
 

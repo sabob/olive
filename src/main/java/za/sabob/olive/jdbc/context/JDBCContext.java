@@ -6,7 +6,6 @@ import java.util.logging.*;
 
 import za.sabob.olive.util.*;
 
-import static za.sabob.olive.util.OliveUtils.toRuntimeException;
 
 public class JDBCContext implements AutoCloseable {
 
@@ -85,12 +84,10 @@ public class JDBCContext implements AutoCloseable {
      * @return true if the connection is closed, false otherwise
      */
     public boolean isConnectionClosed() {
-
-        try {
-            return connection.isClosed();
-        } catch ( SQLException ex ) {
-            throw new RuntimeException( ex );
+        if (connection == null) {
+            return true;
         }
+        return OliveUtils.isClosed( connection );
     }
 
     public Connection getConnection() {
@@ -176,7 +173,7 @@ public class JDBCContext implements AutoCloseable {
     public void closeExcludingConnection() {
         List<AutoCloseable> closeables = gatherResources();
 
-        // Dont close the connection since we aren't referencing the root connection
+        // Dont close the connection
         closeables.remove( connection );
 
         RuntimeException exception = OliveUtils.closeQuietly( closeables );

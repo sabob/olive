@@ -1,12 +1,14 @@
 package za.sabob.olive.jdbc.postgres.multiple;
 
 import java.util.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
 import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
+import za.sabob.olive.util.OliveUtils;
 
 public class MultiPGTransactionTest extends PostgresBaseTest {
 
@@ -42,13 +44,12 @@ public class MultiPGTransactionTest extends PostgresBaseTest {
             throw JDBC.rollbackTransaction( parent, ex );
 
         } finally {
-            boolean isAtRoot = parent.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( parent.isOpen() );
 
             JDBC.cleanupTransaction( parent );
 
-            isAtRoot = parent.isRootContext();
-            Assert.assertTrue( isAtRoot );
+            Assert.assertTrue( parent.isClosed() );
+            Assert.assertFalse( OliveUtils.getAutoCommit( parent.getConnection() ) );
         }
     }
 

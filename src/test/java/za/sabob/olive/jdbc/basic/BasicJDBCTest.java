@@ -1,18 +1,24 @@
 package za.sabob.olive.jdbc.basic;
 
-import java.sql.*;
-import javax.sql.*;
-import org.testng.*;
-import org.testng.annotations.*;
-import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.context.*;
-import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
-import za.sabob.olive.util.*;
+import java.sql.Connection;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.postgres.PostgresBaseTest;
+import za.sabob.olive.postgres.PostgresTestUtils;
+import za.sabob.olive.ps.SqlParams;
+import za.sabob.olive.util.OliveUtils;
+
+import javax.sql.DataSource;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class BasicJDBCTest extends PostgresBaseTest {
 
-    @BeforeClass(alwaysRun = true)
+    @BeforeClass( alwaysRun = true )
     public void beforeThisClass() {
         PostgresTestUtils.populateDatabase( ds );
     }
@@ -40,18 +46,17 @@ public class BasicJDBCTest extends PostgresBaseTest {
                 Assert.assertEquals( name, "bob" );
             }
 
+            Connection conn = ctx.getConnection();
+            JDBC.cleanupOperation( ctx );
+            Assert.assertTrue( ctx.isClosed() );
+            Assert.assertTrue( rs.isClosed() );
+            Assert.assertTrue( ps.isClosed() );
+            Assert.assertTrue( conn.isClosed() );
+
         } catch ( Exception e ) {
             throw e;
 
         } finally {
-
-            Assert.assertTrue( ctx.isRootContext() );
-            JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( rs.isClosed() );
-            Assert.assertTrue( ps.isClosed() );
-
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
 
         }
     }
@@ -72,12 +77,12 @@ public class BasicJDBCTest extends PostgresBaseTest {
 
         } finally {
 
-            Assert.assertTrue( ctx.isRootContext() );
+            Connection conn = ctx.getConnection();
+
             JDBC.cleanupOperation( ctx );
             Assert.assertTrue( ctx.isClosed() );
+            Assert.assertTrue( OliveUtils.isClosed( conn ) );
             Assert.assertTrue( ctx.getStatements().get( 0 ).isClosed() );
-            boolean isAtRoot = ctx.isRootContext();
-            Assert.assertTrue( isAtRoot, "cleanupTransaction should remove all datasources in the JDBC Operation" );
 
         }
     }
@@ -104,9 +109,10 @@ public class BasicJDBCTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-            Assert.assertFalse( ctx.isRootContext() );
+            Connection conn = ctx.getConnection();
             JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( ctx.isRootContext() );
+            Assert.assertTrue( ctx.isClosed() );
+            Assert.assertTrue( OliveUtils.isClosed( conn ) );
         }
 
     }

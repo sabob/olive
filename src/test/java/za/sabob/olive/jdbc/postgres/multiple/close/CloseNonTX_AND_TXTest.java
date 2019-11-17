@@ -12,42 +12,26 @@ public class CloseNonTX_AND_TXTest extends PostgresBaseTest {
     @Test
     public void closeConnectionTest() throws SQLException {
 
-        boolean isEmpty = DSF.getDataSourceContainer().isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        JDBCContext firtTX = JDBC.beginTransaction( ds );
+        Assert.assertFalse( firtTX.getConnection().getAutoCommit() );
 
-        JDBCContext parentTX = JDBC.beginTransaction( ds );
-        Assert.assertFalse( parentTX.getConnection().getAutoCommit() );
-        Assert.assertTrue( parentTX.isRootTransactionContext() );
-        Assert.assertTrue( parentTX.canCommit() );
-        Assert.assertTrue( parentTX.isRootConnectionHolder() );
+        JDBCContext secondTX = JDBC.beginTransaction( ds );
 
-        JDBCContext child1TX = JDBC.beginTransaction( ds );
-        Assert.assertFalse( child1TX.isRootTransactionContext() );
-        Assert.assertFalse( child1TX.canCommit() );
+        JDBCContext firstOP = JDBC.beginOperation( ds );
 
-        JDBCContext parentOP = JDBC.beginOperation( ds );
-        Assert.assertFalse( parentOP.isRootConnectionHolder() );
+        Assert.assertFalse( firtTX.getConnection().isClosed() );
 
-        Assert.assertFalse( parentTX.getConnection().isClosed() );
+        JDBC.cleanupTransaction( firstOP );
+        Assert.assertFalse( firtTX.getConnection().isClosed() );
+        Assert.assertFalse( firtTX.getConnection().getAutoCommit() );
 
-        JDBC.cleanupTransaction( parentOP );
-        Assert.assertFalse( parentTX.getConnection().isClosed() );
-        Assert.assertFalse( parentTX.getConnection().getAutoCommit() );
+        JDBC.cleanupTransaction( secondTX );
+        Assert.assertFalse( firtTX.getConnection().isClosed() );
 
-        DataSourceContainer container = DSF.getDataSourceContainer();
-        isEmpty = container.isEmpty( ds );
-        Assert.assertFalse( isEmpty );
+        Assert.assertFalse( firtTX.getConnection().getAutoCommit() );
+        JDBC.cleanupTransaction( firtTX );
 
-        JDBC.cleanupTransaction( child1TX );
-        Assert.assertFalse( parentTX.getConnection().isClosed() );
-
-        Assert.assertFalse( parentTX.getConnection().getAutoCommit() );
-        JDBC.cleanupTransaction( parentTX );
-
-        Assert.assertTrue( parentTX.isConnectionClosed() );
-
-        isEmpty = container.isEmpty( ds );
-        Assert.assertTrue( isEmpty );
+        Assert.assertTrue( firtTX.isConnectionClosed() );
     }
 
 }
