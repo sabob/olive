@@ -38,9 +38,9 @@ public class JDBCSuite {
         List<XmlSuite> xmlSuites = new ArrayList<>();
         xmlSuites.add( suite );
 
-        testNG.setXmlSuites( xmlSuites );
+        //testNG.setXmlSuites( xmlSuites );
 
-        //runClasses( testNG );
+        runClasses( testNG );
 
         testNG.addListener( tla );
         testNG.run();

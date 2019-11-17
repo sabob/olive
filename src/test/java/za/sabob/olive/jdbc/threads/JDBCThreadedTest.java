@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
@@ -15,19 +16,16 @@ import za.sabob.olive.util.*;
 
 public class JDBCThreadedTest {
 
-    DataSource ds;
+    ComboPooledDataSource ds;
 
     int personsCount = 0;
 
     @BeforeClass( alwaysRun = true )
     public void beforeClass() {
-        //ds = new JdbcDataSource();
-        //ds = DBTestUtils.createDataSource( DBTestUtils.H2 );
-        ds = PostgresTestUtils.createDS();
+        ds = PostgresTestUtils.createDS( 20 );
+        System.out.println( "Postgres created" );
         PostgresTestUtils.createPersonTable( ds );
-        //ds.setURL( "jdbc:h2:~/test" );
-
-        //DBTestUtils.createPersonTable( ds, DBTestUtils.H2 );
+        ds.setCheckoutTimeout( 2000 ); // There should be no deadlocks because Olive uses only 1 connection per thread.
     }
 
     @AfterClass( alwaysRun = true )
@@ -64,7 +62,8 @@ public class JDBCThreadedTest {
             List<Person> persons = getPersons( ctx );
 
             personsCount = persons.size();
-            //System.out.println( "PERSONS: " + personsCount );
+
+            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
 
         } catch ( Throwable e ) {
             throw new RuntimeException( e );
@@ -73,7 +72,11 @@ public class JDBCThreadedTest {
 
             JDBC.cleanupOperation( ctx );
 
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            if ( ctx != null ) {
+                Assert.assertTrue( ctx.isClosed() );
+            }
+
+
         }
     }
 
@@ -88,9 +91,14 @@ public class JDBCThreadedTest {
             List<Person> persons = getPersons( ctx );
 
         } finally {
-            Assert.assertTrue( ctx.isOpen() );
+
             JDBC.cleanupOperation( ctx );
-            Assert.assertTrue( ctx.isConnectionClosed() );
+
+            if ( ctx != null ) {
+                Assert.assertTrue( ctx.isConnectionClosed() );
+                Assert.assertTrue( ctx.isClosed() );
+
+            }
         }
 
     }

@@ -1,8 +1,10 @@
 package za.sabob.olive.jdbc.threads;
 
 import za.sabob.olive.jdbc.context.JDBCContext;
+
 import java.sql.*;
 import javax.sql.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.JDBC;
@@ -12,7 +14,15 @@ import za.sabob.olive.util.*;
 
 public class ThreadJDBCTest extends PostgresBaseTest {
 
-    @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
+    @BeforeClass( alwaysRun = true )
+    public void beforeClass() {
+        ds = PostgresTestUtils.createDS( 20 );
+        System.out.println( "Postgres created" );
+        PostgresTestUtils.createPersonTable( ds );
+        ds.setCheckoutTimeout( 2000 ); // There should be no deadlocks because Olive uses only 1 connection per thread.
+    }
+
+        @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     //@Test(successPercentage = 100, threadPoolSize = 2, invocationCount = 3, timeOut = 1110000)
     public void basicThreadTest() {
 
@@ -37,10 +47,11 @@ public class ThreadJDBCTest extends PostgresBaseTest {
 
         } finally {
 
-            JDBC.cleanupOperation( ctx );
+            if ( ctx != null ) {
+                JDBC.cleanupOperation( ctx );
+                Assert.assertTrue( ctx.isClosed() );
+            }
 
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
-            Assert.assertTrue( ctx.isClosed() );
         }
 
     }
@@ -68,13 +79,17 @@ public class ThreadJDBCTest extends PostgresBaseTest {
             throw new RuntimeException( e );
 
         } finally {
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
-            Assert.assertTrue( ctx.isOpen() );
+
+            if ( ctx != null ) {
+                Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+                Assert.assertTrue( ctx.isOpen() );
+            }
 
             JDBC.cleanupOperation( ctx );
 
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
-            Assert.assertTrue( ctx.isClosed() );
+            if ( ctx != null ) {
+                Assert.assertTrue( ctx.isClosed() );
+            }
         }
 
     }

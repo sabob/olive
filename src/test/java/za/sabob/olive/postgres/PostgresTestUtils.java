@@ -4,6 +4,7 @@ import com.mchange.v2.c3p0.*;
 import com.opentable.db.postgres.embedded.*;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres.Builder;
 
+import java.io.File;
 import java.net.*;
 import java.nio.file.*;
 import java.sql.*;
@@ -44,9 +45,12 @@ public class PostgresTestUtils {
 
         try {
 
-            Builder builder = EmbeddedPostgres.builder();
-            builder.setPort( 45678 );
+            Builder builder = EmbeddedPostgres.builder()
+            .setPort( 45678 )
+            .setCleanDataDirectory( true );
+            //builder.setDataDirectory(new File( "c:/applogs/postgres/olive"));
             pg = builder.start();
+
 
             //String url = pg.getJdbcUrl( "postgres", "postgres" );
 //            DataSource ds = pg.getPostgresDatabase();

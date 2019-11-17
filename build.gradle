@@ -13,7 +13,10 @@ dependencies {
     testImplementation  "org.testng:testng:6.14.2"
     testImplementation  "com.mchange:c3p0:0.9.5.2"
     testImplementation "org.hsqldb:hsqldb:2.4.0"
-    testImplementation "com.opentable.components:otj-pg-embedded:0.11.4"
+    testImplementation "com.opentable.components:otj-pg-embedded:0.13.3"
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    testImplementation  "org.slf4j:slf4j-api:1.7.29"
+    testImplementation  "org.slf4j:slf4j-simple:1.7.29"
 }
 
 sourceSets.test.resources.srcDirs = [ "src/test/java", "src/test/resources"]

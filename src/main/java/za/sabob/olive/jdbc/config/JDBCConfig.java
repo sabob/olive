@@ -1,6 +1,7 @@
 package za.sabob.olive.jdbc.config;
 
 import javax.sql.DataSource;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JDBCConfig {
@@ -17,8 +18,9 @@ public class JDBCConfig {
     public static void setDefaultDataSource( DataSource defaultDataSource ) {
 
         if ( hasDefaultDataSource() ) {
-            LOGGER.warning( "You are calling JDBCConfig.setDefaultDataSource()  while there is already a defaultDataSource set. Current dataSource overwritten by new dataSource" );
-
+            Throwable t = new Throwable(
+                    "You are calling JDBCConfig.setDefaultDataSource()  while there is already a defaultDataSource set. Current dataSource overwritten by new dataSource" );
+            LOGGER.log( Level.FINE, t.getMessage(), t );
         }
 
         JDBCConfig.defaultDataSource = defaultDataSource;

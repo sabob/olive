@@ -13,6 +13,14 @@ import za.sabob.olive.util.*;
 
 public class ThreadTXTest extends PostgresBaseTest {
 
+    @BeforeClass( alwaysRun = true )
+    public void beforeClass() {
+        ds = PostgresTestUtils.createDS( 20 );
+        System.out.println( "Postgres created" );
+        PostgresTestUtils.createPersonTable( ds );
+        ds.setCheckoutTimeout( 2000 ); // There should be no deadlocks because Olive uses only 1 connection per thread.
+    }
+
     @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     public void basicThreadTest() {
 
@@ -56,13 +64,14 @@ public class ThreadTXTest extends PostgresBaseTest {
                 //Assert.assertEquals( name, "TEST" );
             }
 
+            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( ctx.isOpen() );
+
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
 
         } finally {
 
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
-            Assert.assertTrue( ctx.isOpen() );
             JDBC.cleanupTransaction( ctx );
             Assert.assertTrue( ctx.isClosed() );
             Assert.assertTrue( ctx.isConnectionClosed() );

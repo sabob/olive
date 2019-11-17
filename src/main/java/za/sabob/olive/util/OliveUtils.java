@@ -782,9 +782,6 @@ public class OliveUtils {
     public static boolean getAutoCommit( Connection conn ) {
 
         try {
-            if ( conn == null ) {
-                return false;
-            }
 
             return conn.getAutoCommit();
 

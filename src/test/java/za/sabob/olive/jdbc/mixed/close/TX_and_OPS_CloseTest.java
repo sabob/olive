@@ -24,7 +24,7 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
         Assert.assertEquals( personsCount, 2 );
     }
 
-    @Test
+    //@Test
     public void closeRootContextTest() {
 
         JDBCContext ctx = null;
@@ -66,13 +66,11 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
             List<Person> persons = getPersons( childTXCtx );
             personsCount = persons.size();
 
-            Assert.assertFalse( childTXCtx.getConnection().getAutoCommit() );
 
             JDBC.cleanupTransaction( childTXCtx );
 
             Assert.assertTrue( childTXCtx.isClosed() );
-            Assert.assertFalse( childTXCtx.getConnection().isClosed() );
-            Assert.assertTrue( childTXCtx.getConnection().getAutoCommit() );
+            Assert.assertTrue( childTXCtx.isConnectionClosed() );
 
             JDBC.cleanupTransaction( childTXCtx ); // calling cleanup on TCX should not make a difference too root, because root is non TX
             //JDBC.cleanupTransaction( rootCtx ); // calling cleanup on TCX should not make a difference too root, because root is non TX
@@ -84,7 +82,7 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
 
             JDBC.cleanupOperation( rootOperationCtx ); // now cleanup should occur because we use cleanup operation instead of TX
 
-            Assert.assertTrue( rootOperationCtx.getConnection().isClosed() );
+            Assert.assertTrue( rootOperationCtx.isConnectionClosed() );
             Assert.assertTrue( rootOperationCtx.isClosed() );
 
         } catch ( SQLException e ) {

@@ -1,23 +1,35 @@
 package za.sabob.olive.jdbc.threads;
 
-import java.sql.*;
-import java.util.*;
-import javax.sql.*;
-import org.testng.*;
-import org.testng.annotations.*;
-import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.config.*;
-import za.sabob.olive.jdbc.context.*;
-import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
-import za.sabob.olive.query.*;
-import za.sabob.olive.util.*;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.postgres.PostgresBaseTest;
+import za.sabob.olive.postgres.PostgresTestUtils;
+import za.sabob.olive.ps.SqlParams;
+import za.sabob.olive.query.RowMapper;
+import za.sabob.olive.util.OliveUtils;
+
+import javax.sql.DataSource;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
 public class JDBCThreadedTXTest extends PostgresBaseTest {
 
     int personsCount = 0;
 
-    @Test(successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000)
+    @BeforeClass( alwaysRun = true )
+    public void beforeClass() {
+        ds = PostgresTestUtils.createDS( 20 );
+        System.out.println( "Postgres created" );
+        PostgresTestUtils.createPersonTable( ds );
+        ds.setCheckoutTimeout( 2000 ); // There should be no deadlocks because Olive uses only 1 connection per thread.
+    }
+
+    @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     public void threadTest() {
 
         JDBCContext ctx = JDBC.beginTransaction( ds );
@@ -49,7 +61,6 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
             JDBC.cleanupTransaction( ctx );
 
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isClosed() );
         }
     }
@@ -62,11 +73,11 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
             List<Person> persons = getPersons( ctx );
 
-        } finally {
             Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isOpen() );
+
+        } finally {
             JDBC.cleanupTransaction( ctx );
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isClosed() );
         }
 
@@ -76,15 +87,15 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
         PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans(ps, new RowMapper<Person>() {
-                                                 @Override
-                                                 public Person map( ResultSet rs, int rowNum ) throws SQLException {
-                                                     Person person = new Person();
-                                                     person.id = rs.getLong( "id" );
-                                                     person.name = rs.getString( "name" );
-                                                     return person;
-                                                 }
-                                             } );
+        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+            @Override
+            public Person map( ResultSet rs, int rowNum ) throws SQLException {
+                Person person = new Person();
+                person.id = rs.getLong( "id" );
+                person.name = rs.getString( "name" );
+                return person;
+            }
+        } );
 
         return persons;
 

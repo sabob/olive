@@ -44,7 +44,7 @@ public class JDBCInsertTest extends PostgresBaseTest {
         Assert.assertTrue( ctx.isClosed() );
         Assert.assertTrue(  ps.isClosed() );
         Assert.assertTrue( ps.isClosed());
-        Assert.assertTrue( ctx.getConnection().isClosed() );
+        Assert.assertTrue( ctx.isConnectionClosed() );
     }
 
     public void nested( DataSource ds ) {
