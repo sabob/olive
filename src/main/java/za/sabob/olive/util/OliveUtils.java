@@ -25,7 +25,7 @@ import javax.xml.parsers.*;
 
 import org.w3c.dom.*;
 import org.xml.sax.*;
-import za.sabob.olive.jdbc.context.*;
+import za.sabob.olive.jdbc.JDBCContext;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 
@@ -81,8 +81,6 @@ public class OliveUtils {
 
     /**
      * The default buffer size ({@value}) to use for
-     * {@link #copyLarge(InputStream, OutputStream)}
-     * and
      * {@link #copyLarge(Reader, Writer)}
      */
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
@@ -174,31 +172,6 @@ public class OliveUtils {
             return ds.getConnection();
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
-        }
-    }
-
-    /**
-     * Returns the connection for the given DataSource and set the connection#setAutoCommit to the given value. Any SQLExceptions are wrapped and thrown as
-     * RuntimeExcepions.
-     *
-     * @param ds         the DataSource to get a Connection from
-     * @param autoCommit the autoCommit value to set
-     * @return the DataSource Connection
-     */
-    public static Connection getConnection( DataSource ds, boolean autoCommit ) {
-        try {
-            if ( ds == null ) {
-                throw new IllegalStateException( "DataSource cannot be null" );
-            }
-
-            Connection conn = ds.getConnection();
-
-            setAutoCommit( conn, autoCommit );
-
-            return conn;
-
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
         }
     }
 
@@ -787,6 +760,37 @@ public class OliveUtils {
 
         } catch ( SQLException ex ) {
             throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Returns the connection for the given DataSource and set the connection#setAutoCommit to the given value. Any SQLExceptions are wrapped and thrown as
+     * RuntimeExcepions.
+     *
+     * @param ds         the DataSource to get a Connection from
+     * @param beginTransaction if true, sets autoCommit to false, false otherwise
+     * @return the DataSource Connection
+     */
+    public static Connection getConnection( DataSource ds, boolean beginTransaction ) {
+
+        if ( ds == null ) {
+            throw new IllegalStateException( "DataSource cannot be null" );
+        }
+
+        Connection conn = null;
+        boolean currentAutoCommit = true;
+
+        try {
+            conn = OliveUtils.getConnection( ds );
+            currentAutoCommit = conn.getAutoCommit();
+            boolean autoCommit = !beginTransaction;
+            OliveUtils.setAutoCommit( conn, autoCommit );
+            return conn;
+
+        } catch ( Exception e ) {
+            // Restore autoCommit to previous value
+            RuntimeException re = OliveUtils.closeQuietly( currentAutoCommit, e, conn );
+            throw re;
         }
     }
 

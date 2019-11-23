@@ -3,7 +3,7 @@ package za.sabob.olive.jdbc.basic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.jdbc.JDBCContext;
 import za.sabob.olive.postgres.PostgresBaseTest;
 
 import java.sql.SQLException;

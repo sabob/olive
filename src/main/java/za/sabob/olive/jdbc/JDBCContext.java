@@ -1,15 +1,20 @@
-package za.sabob.olive.jdbc.context;
+package za.sabob.olive.jdbc;
 
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
+import za.sabob.olive.jdbc.config.JDBCConfig;
 import za.sabob.olive.util.*;
+
+import javax.sql.DataSource;
 
 
 public class JDBCContext implements AutoCloseable {
 
     private static final Logger LOGGER = Logger.getLogger( JDBCContext.class.getName() );
+
+    private DataSource dataSource;
 
     private Connection connection;
 
@@ -21,13 +26,40 @@ public class JDBCContext implements AutoCloseable {
 
     private final List<ResultSet> resultSets = new ArrayList<>();
 
-    public JDBCContext( Connection conn ) {
-        this.connection = conn;
+    public JDBCContext() {
+        this( JDBCConfig.getDefaultDataSource() );
     }
 
-    public JDBCContext( Connection conn, boolean transaction ) {
+    public JDBCContext( boolean beginTransaction) {
+        this( JDBCConfig.getDefaultDataSource() , beginTransaction);
+    }
+
+    public JDBCContext( Connection conn ) {
         this.connection = conn;
-        this.transaction = transaction;
+        this.transaction = false;
+    }
+
+    public JDBCContext( Connection conn, boolean beginTransaction ) {
+        this.connection = conn;
+        this.transaction = beginTransaction;
+        boolean autoCommit = !beginTransaction;
+        OliveUtils.setAutoCommit( conn, autoCommit );
+    }
+
+    public JDBCContext( DataSource ds ) {
+        this( ds, false );
+    }
+
+    public JDBCContext( DataSource ds, boolean beginTransaction ) {
+        this.connection = OliveUtils.getConnection( ds, beginTransaction );
+        this.dataSource = ds;
+        this.transaction = beginTransaction;
+
+        if ( beginTransaction ) {
+            JDBC.transactionStarted( ds );
+        } else {
+            JDBC.operationStarted( ds );
+        }
     }
 
     public List<Statement> getStatements() {
@@ -84,7 +116,7 @@ public class JDBCContext implements AutoCloseable {
      * @return true if the connection is closed, false otherwise
      */
     public boolean isConnectionClosed() {
-        if (connection == null) {
+        if ( connection == null ) {
             return true;
         }
         return OliveUtils.isClosed( connection );
@@ -123,6 +155,7 @@ public class JDBCContext implements AutoCloseable {
         this.resultSets.clear();
         this.statements.clear();
         this.connection = null;
+        this.dataSource = null;
     }
 
     public boolean isOpen() {
@@ -157,8 +190,17 @@ public class JDBCContext implements AutoCloseable {
 
         closeIncludingConnection();
         // TODO should we nullify connection here to prevent leaks?
-        connection = null;
+        this.connection = null;
         setClosed( true );
+
+        if ( this.transaction ) {
+            JDBC.transactionFinished( this.dataSource );
+
+        } else {
+            JDBC.operationFinished( this.dataSource );
+
+        }
+        this.dataSource = null;
     }
 
     private void closeIncludingConnection() {

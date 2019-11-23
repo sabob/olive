@@ -4,7 +4,6 @@ import com.mchange.v2.c3p0.*;
 import com.opentable.db.postgres.embedded.*;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres.Builder;
 
-import java.io.File;
 import java.net.*;
 import java.nio.file.*;
 import java.sql.*;
@@ -15,7 +14,6 @@ import static org.testng.Assert.assertTrue;
 
 import za.sabob.olive.jdbc.*;
 import za.sabob.olive.jdbc.config.JDBCConfig;
-import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 

@@ -1,6 +1,6 @@
 package za.sabob.olive.jdbc.operation;
 
-import za.sabob.olive.jdbc.context.*;
+import za.sabob.olive.jdbc.JDBCContext;
 
 public interface Operation<X extends Exception> {
 

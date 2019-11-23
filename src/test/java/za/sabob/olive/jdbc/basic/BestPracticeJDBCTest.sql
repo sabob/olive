@@ -1,0 +1,1 @@
+select name from person p where p.name = :name

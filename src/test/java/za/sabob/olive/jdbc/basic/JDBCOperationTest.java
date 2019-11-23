@@ -1,6 +1,6 @@
 package za.sabob.olive.jdbc.basic;
 
-import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.jdbc.JDBCContext;
 
 import java.sql.*;
 

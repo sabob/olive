@@ -10,6 +10,15 @@ public class JDBCConfig {
 
     private static DataSource defaultDataSource;
 
+    private static boolean allowNestingOperations = true;
+
+    public static boolean isAllowNestingOperations() {
+        return allowNestingOperations;
+    }
+
+    public static void setAllowNestingOperations( boolean allowNestingOperations ) {
+        JDBCConfig.allowNestingOperations = allowNestingOperations;
+    }
 
     public static boolean hasDefaultDataSource() {
         return defaultDataSource != null;

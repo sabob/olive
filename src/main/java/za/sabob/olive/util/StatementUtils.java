@@ -109,37 +109,34 @@ class StatementUtils {
      * of the parameter and we can handle complex types like arrays and LOBs.
      * @param ps the prepared statement or callable statement
      * @param paramIndex index of the parameter we are setting
-     * @param sqlType the SQL type of the parameter
-     * @param typeName the type name of the parameter
      * (optional, only used for SQL NULL and SqlTypeValue)
-     * @param scale the number of digits after the decimal point
      * (for DECIMAL and NUMERIC types)
-     * @param inValue the value to set (plain value or a SqlTypeValue)
+     * @param sqlParam the value to set (plain value or a SqlTypeValue)
      * @throws SQLException if thrown by PreparedStatement methods
-     * @see SqlTypeValue
+     * @see SqlValue
      */
-    private static void setParameterValueInternal(PreparedStatement ps, int paramIndex, SqlParam inValue) throws SQLException {
+    private static void setParameterValueInternal(PreparedStatement ps, int paramIndex, SqlParam sqlParam) throws SQLException {
 
-        String typeNameToUse = inValue.getTypeName();
-        int sqlTypeToUse = inValue.getSqlType();
-        Object inValueToUse = inValue.getValue();
-        Integer scale = inValue.getScale();
+        String typeNameToUse = sqlParam.getTypeName();
+        int sqlTypeToUse = sqlParam.getSqlType();
+        Object inValueToUse = sqlParam.getValue();
+        Integer scale = sqlParam.getScale();
 
         // override type info?
         if (Olive.getMode() == Mode.TRACE) {
-            LOGGER.info("Overriding type info with runtime info from SqlParam: name [" + inValue.getName() + "], column index " + paramIndex + ", SQL type "
-                + inValue.getSqlType() + ", type name " + inValue.getTypeName());
+            LOGGER.info("Overriding type info with runtime info from SqlParam: name [" + sqlParam.getName() + "], column index " + paramIndex + ", SQL type "
+                + sqlParam.getSqlType() + ", type name " + sqlParam.getTypeName());
         }
         if (sqlTypeToUse != OliveUtils.TYPE_UNKNOWN) {
-            sqlTypeToUse = inValue.getSqlType();
+            sqlTypeToUse = sqlParam.getSqlType();
         }
 
-         if (inValue.getTypeName() != null) {
-         typeNameToUse = inValue.getTypeName();
+         if (sqlParam.getTypeName() != null) {
+         typeNameToUse = sqlParam.getTypeName();
          }
 
         if (Olive.getMode() == Mode.TRACE) {
-            LOGGER.info("Setting SQL statement parameter value: name [" + inValue.getName() + "], column index " + paramIndex + ", parameter value [" + inValueToUse
+            LOGGER.info("Setting SQL statement parameter value: name [" + sqlParam.getName() + "], column index " + paramIndex + ", parameter value [" + inValueToUse
                 + "], value class [" + (inValueToUse != null ? inValueToUse.getClass().getName() : "null") + "], SQL type " + (sqlTypeToUse
                 == OliveUtils.TYPE_UNKNOWN ? "unknown" : Integer.toString(sqlTypeToUse)));
         }

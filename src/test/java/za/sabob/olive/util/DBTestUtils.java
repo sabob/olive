@@ -1,10 +1,8 @@
 package za.sabob.olive.util;
 
 import org.testng.Assert;
-import za.sabob.olive.jdbc.config.JDBCConfig;
-import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.jdbc.JDBCContext;
 
-import java.io.Closeable;
 import java.sql.ResultSet;
 import java.sql.Statement;
 

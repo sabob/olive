@@ -5,7 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.jdbc.context.JDBCContext;
+import za.sabob.olive.jdbc.JDBCContext;
 import za.sabob.olive.postgres.PostgresBaseTest;
 import za.sabob.olive.postgres.PostgresTestUtils;
 import za.sabob.olive.ps.SqlParams;

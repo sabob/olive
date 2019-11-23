@@ -6,7 +6,7 @@ import java.util.*;
 import javax.sql.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
-import za.sabob.olive.jdbc.context.*;
+import za.sabob.olive.jdbc.JDBCContext;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;

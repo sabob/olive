@@ -20,6 +20,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
+
+import za.sabob.olive.jdbc.JDBCContext;
 import za.sabob.olive.loader.*;
 import za.sabob.olive.mustache.*;
 import za.sabob.olive.ps.*;
@@ -415,6 +417,13 @@ public class Olive {
         int resultSetHoldability ) {
         PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params, resultSetType, resultSetConcurrency, resultSetHoldability );
         return ps;
+    }
+
+    public PreparedStatement prepareStatementFromFile( JDBCContext ctx, String filename, SqlParams params ) {
+
+        Connection conn = ctx.getConnection();
+
+        return prepareStatementFromFile( conn, filename, params  );
     }
 
     /**

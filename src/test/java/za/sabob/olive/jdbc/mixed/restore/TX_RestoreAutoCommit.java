@@ -3,7 +3,6 @@ package za.sabob.olive.jdbc.mixed.restore;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 
 public class TX_RestoreAutoCommit extends PostgresBaseTest {

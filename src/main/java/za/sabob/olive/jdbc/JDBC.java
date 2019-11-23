@@ -1,7 +1,6 @@
 package za.sabob.olive.jdbc;
 
 import za.sabob.olive.jdbc.config.JDBCConfig;
-import za.sabob.olive.jdbc.context.JDBCContext;
 import za.sabob.olive.jdbc.operation.Operation;
 import za.sabob.olive.jdbc.operation.Query;
 import za.sabob.olive.jdbc.transaction.TransactionalOperation;
@@ -9,11 +8,20 @@ import za.sabob.olive.jdbc.transaction.TransactionalQuery;
 import za.sabob.olive.util.OliveUtils;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class JDBC {
 
+    private static final Logger LOGGER = Logger.getLogger( JDBC.class.getName() );
+
+    static final ThreadLocal<Map<DataSource, Integer>> OPERATION_STARTED_COUNT = ThreadLocal.withInitial( HashMap::new );
+
+    static final ThreadLocal<Map<DataSource, Integer>> TRANSACTION_STARTED_COUNT = ThreadLocal.withInitial( HashMap::new );
 
     public static JDBCContext createJDBCContext( boolean beginTransaction ) {
         DataSource ds = JDBCConfig.getDefaultDataSource();
@@ -23,35 +31,13 @@ public class JDBC {
 
     public static JDBCContext createJDBCContext( DataSource ds, boolean beginTransaction ) {
 
-        JDBCContext ctx = null;
-
-        boolean autoCommit = !beginTransaction;
-
-        Connection conn = getNewConnection( ds, autoCommit );
-
-        ctx = new JDBCContext( conn, beginTransaction );
+        JDBCContext ctx = new JDBCContext( ds, beginTransaction );
         return ctx;
     }
 
-    private static Connection getNewConnection( DataSource ds, boolean autoCommit ) {
-
-        Connection conn = null;
-        boolean currentAutoCommit = true;
-
-        try {
-            conn = OliveUtils.getConnection( ds );
-            currentAutoCommit = conn.getAutoCommit();
-            OliveUtils.setAutoCommit( conn, autoCommit );
-            return conn;
-
-        } catch ( Exception e ) {
-            // Restore autoCommit to previous value
-            RuntimeException re = OliveUtils.closeQuietly( currentAutoCommit, e, conn );
-            throw re;
-        }
-    }
-
     public static JDBCContext beginOperation( DataSource ds ) {
+
+        //operationStarted( ds );
 
         JDBCContext ctx = createJDBCContext( ds, false );
         return ctx;
@@ -59,7 +45,8 @@ public class JDBC {
 
     public static JDBCContext beginTransaction( DataSource ds ) {
 
-        JDBCContext ctx = createJDBCContext( ds, true );
+        boolean beginTransaction = true;
+        JDBCContext ctx = createJDBCContext( ds, beginTransaction );
         return ctx;
     }
 
@@ -120,18 +107,22 @@ public class JDBC {
     }
 
     public static void commitTransaction( JDBCContext ctx ) {
+        Objects.requireNonNull( ctx );
         ctx.commit();
     }
 
     public static void rollbackTransaction( JDBCContext ctx ) {
+        Objects.requireNonNull( ctx );
         ctx.rollback();
     }
 
     public static RuntimeException rollbackTransaction( JDBCContext ctx, Exception e ) {
+        Objects.requireNonNull( ctx );
         return ctx.rollback( e );
     }
 
     public static RuntimeException rollbackTransactionQuietly( JDBCContext ctx, Exception e ) {
+        Objects.requireNonNull( ctx );
         return ctx.rollbackQuietly( e );
     }
 
@@ -154,7 +145,12 @@ public class JDBC {
                 ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
-            exception = rollbackTransactionQuietly( ctx, ex );
+            if ( ctx == null ) {
+                exception = ex;
+            } else {
+                exception = rollbackTransactionQuietly( ctx, ex );
+
+            }
 
         } finally {
             exception = cleanupTransactionQuietly( ctx, exception );
@@ -175,6 +171,7 @@ public class JDBC {
     }
 
     public static <R, X extends Exception> R inTransaction( DataSource ds, TransactionalQuery<R, X> query ) {
+
 
         JDBCContext ctx = null;
         RuntimeException exception = null;
@@ -308,5 +305,121 @@ public class JDBC {
             exception = cleanupOperationQuietly( ctx, exception );
             OliveUtils.throwAsRuntimeIfException( exception );
         }
+    }
+
+//    public static int getOperationStartedCount( DataSource ds ) {
+//        Map<DataSource, Integer> countMap = OPERATION_STARTED_COUNT.get();
+//        Integer count = countMap.get( ds );
+//    if ( count == null ) {
+//        count = 0;
+//    }
+//        return count;
+//    }
+
+    static void operationFinished( DataSource ds ) {
+
+        if ( ds == null ) {
+            return;
+        }
+
+        Map<DataSource, Integer> countMap = OPERATION_STARTED_COUNT.get();
+        Integer count = countMap.get( ds );
+        if ( count == null ) {
+            count = 0;
+        }
+
+        if ( count <= 0 ) {
+            count = 0;
+
+            //if ( Olive.getMode() == Mode.DEVELOPMENT ) {
+            Throwable t = new Throwable( "Operation already finished. This likely means you called JDBCContext.close() or JDBC.cleanupOperation() twice or without starting an operation" );
+            LOGGER.log( Level.WARNING, t.getMessage(), t );
+            //}
+
+        } else {
+            count--;
+
+            if ( count == 0 ) {
+                LOGGER.info( "Operation finished. Currently active operations: 0" );
+            }
+        }
+
+        countMap.put( ds, count );
+
+    }
+
+    static void operationStarted( DataSource ds ) {
+
+        if ( ds == null ) {
+            return;
+        }
+
+        Map<DataSource, Integer> countMap = OPERATION_STARTED_COUNT.get();
+        Integer count = countMap.get( ds );
+        if ( count == null ) {
+            count = 0;
+        }
+
+        if ( count >= 1 && !JDBCConfig.isAllowNestingOperations() ) {
+            throw new IllegalStateException( "Nested operations for DataSource " + ds + " are not allowed. Cannot begin a new operation. Close the current active operation before starting a new operation." );
+        }
+
+        count++;
+        countMap.put( ds, count );
+
+        LOGGER.info( "Operation started. Currently active operations: " + count );
+    }
+
+    static void transactionFinished( DataSource ds ) {
+
+        if ( ds == null ) {
+            return;
+        }
+
+        Map<DataSource, Integer> countMap = TRANSACTION_STARTED_COUNT.get();
+        Integer count = countMap.get( ds );
+        if ( count == null ) {
+            count = 0;
+        }
+
+        if ( count <= 0 ) {
+            count = 0;
+
+            //if ( Olive.getMode() == Mode.DEVELOPMENT ) {
+            Throwable t = new Throwable( "Transaction already finished. This likely means you called JDBCContext.close() or JDBC.cleanupTransaction() twice or without starting an transaction" );
+            LOGGER.log( Level.WARNING, t.getMessage(), t );
+            //}
+
+        } else {
+            count--;
+
+            if ( count == 0 ) {
+                LOGGER.info( "Transaction finished. Currently active transactions: 0" );
+            }
+        }
+        countMap.put( ds, count );
+    }
+
+    static void transactionStarted( DataSource ds ) {
+
+        if ( ds == null ) {
+            return;
+        }
+
+        Map<DataSource, Integer> countMap = TRANSACTION_STARTED_COUNT.get();
+
+        Integer count = countMap.get( ds );
+        if ( count == null ) {
+            count = 0;
+        }
+
+        if ( count >= 1 && !JDBCConfig.isAllowNestingOperations() ) {
+            throw new IllegalStateException( "Nested transaction for DataSource " + ds + " are not allowed. Cannot begin a new transaction. Close the current active transaction before starting a new transaction." );
+        }
+
+        count++;
+        countMap.put( ds, count );
+
+        LOGGER.info( "Operation started. Currently active transactions: " + count );
     }
 }

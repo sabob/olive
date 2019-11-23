@@ -8,7 +8,6 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.context.*;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.query.*;
