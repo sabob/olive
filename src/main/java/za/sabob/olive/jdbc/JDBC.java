@@ -21,8 +21,6 @@ public class JDBC {
 
     static final ThreadLocal<Map<DataSource, Integer>> OPERATION_STARTED_COUNT = ThreadLocal.withInitial( HashMap::new );
 
-    static final ThreadLocal<Map<DataSource, Integer>> TRANSACTION_STARTED_COUNT = ThreadLocal.withInitial( HashMap::new );
-
     public static JDBCContext createJDBCContext( boolean beginTransaction ) {
         DataSource ds = JDBCConfig.getDefaultDataSource();
         JDBCContext ctx = createJDBCContext( ds, beginTransaction );
@@ -361,7 +359,7 @@ public class JDBC {
         }
 
         if ( count >= 1 && !JDBCConfig.isAllowNestingOperations() ) {
-            throw new IllegalStateException( "Nested operations for DataSource " + ds + " are not allowed. Cannot begin a new operation. Close the current active operation before starting a new operation." );
+            throw new IllegalStateException( "Nested operations for DataSource " + ds + " are not allowed. Cannot begin a new operation. Close the current active operation or transaction before starting a new operation." );
         }
 
         count++;
@@ -376,7 +374,7 @@ public class JDBC {
             return;
         }
 
-        Map<DataSource, Integer> countMap = TRANSACTION_STARTED_COUNT.get();
+        Map<DataSource, Integer> countMap = OPERATION_STARTED_COUNT.get();
         Integer count = countMap.get( ds );
         if ( count == null ) {
             count = 0;
@@ -406,7 +404,7 @@ public class JDBC {
             return;
         }
 
-        Map<DataSource, Integer> countMap = TRANSACTION_STARTED_COUNT.get();
+        Map<DataSource, Integer> countMap = OPERATION_STARTED_COUNT.get();
 
         Integer count = countMap.get( ds );
         if ( count == null ) {
@@ -414,7 +412,7 @@ public class JDBC {
         }
 
         if ( count >= 1 && !JDBCConfig.isAllowNestingOperations() ) {
-            throw new IllegalStateException( "Nested transaction for DataSource " + ds + " are not allowed. Cannot begin a new transaction. Close the current active transaction before starting a new transaction." );
+            throw new IllegalStateException( "Nested transaction for DataSource " + ds + " are not allowed. Cannot begin a new transaction. Close the current active transaction or operation before starting a new transaction." );
         }
 
         count++;

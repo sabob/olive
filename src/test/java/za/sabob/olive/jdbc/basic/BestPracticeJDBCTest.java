@@ -23,7 +23,9 @@ public class BestPracticeJDBCTest extends PostgresBaseTest {
 
     @Test
     public void bestPracticeTest() {
-        JDBCConfig.setAllowNestingOperations( false );
+
+        // This test shows how to load a SQL statement from a file and perform the SQL operation.
+        // No Exception handling or try/catch logic need to be declared. The Connection, Statement and ResultSet will be closed automatically
 
         Olive olive = new Olive( Mode.DEVELOPMENT );
 
