@@ -17,6 +17,8 @@ package za.sabob.olive.util;
 
 import java.io.*;
 import java.math.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
@@ -767,7 +769,7 @@ public class OliveUtils {
      * Returns the connection for the given DataSource and set the connection#setAutoCommit to the given value. Any SQLExceptions are wrapped and thrown as
      * RuntimeExcepions.
      *
-     * @param ds         the DataSource to get a Connection from
+     * @param ds               the DataSource to get a Connection from
      * @param beginTransaction if true, sets autoCommit to false, false otherwise
      * @return the DataSource Connection
      */
@@ -1252,9 +1254,13 @@ public class OliveUtils {
 
         if ( classLoader == null ) {
             classLoader = cls.getClassLoader();
+            //result = getResource( classLoader, name );
             result = classLoader.getResourceAsStream( name );
         } else {
+
             result = classLoader.getResourceAsStream( name );
+            //result = getResource( classLoader, name );
+
 
             /**
              * for compatibility with texen / ant tasks, fall back to
@@ -1263,6 +1269,7 @@ public class OliveUtils {
             if ( result == null ) {
                 classLoader = cls.getClassLoader();
                 if ( classLoader != null ) {
+                    //result = getResource( classLoader, name );
                     result = classLoader.getResourceAsStream( name );
                 }
             }
@@ -2422,6 +2429,24 @@ public class OliveUtils {
         try {
             return conn.isClosed();
         } catch ( SQLException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static InputStream getResource( ClassLoader classLoader, String name ) {
+
+        InputStream is = null;
+
+        try {
+            URL res = classLoader.getResource( name );
+            if ( res != null ) {
+                URLConnection resConn = res.openConnection();
+                resConn.setUseCaches( false );
+                is = resConn.getInputStream();
+            }
+            return is;
+
+        } catch ( Exception ex ) {
             throw new RuntimeException( ex );
         }
     }
