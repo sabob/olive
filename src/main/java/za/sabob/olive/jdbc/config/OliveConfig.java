@@ -1,12 +1,20 @@
 package za.sabob.olive.jdbc.config;
 
+import za.sabob.olive.Mode;
+import za.sabob.olive.Olive;
+
 import javax.sql.DataSource;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JDBCConfig {
+public class OliveConfig {
 
-    private static final Logger LOGGER = Logger.getLogger( JDBCConfig.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger( OliveConfig.class.getName() );
+
+    /**
+     * Specifies the mode in which Olive is running. The default mode is {@link Mode#PRODUCTION}.
+     */
+    private static Mode mode = Mode.PRODUCTION;
 
     private static DataSource defaultDataSource;
 
@@ -17,7 +25,7 @@ public class JDBCConfig {
     }
 
     public static void setAllowNestingOperations( boolean allowNestingOperations ) {
-        JDBCConfig.allowNestingOperations = allowNestingOperations;
+        OliveConfig.allowNestingOperations = allowNestingOperations;
     }
 
     public static boolean hasDefaultDataSource() {
@@ -32,17 +40,35 @@ public class JDBCConfig {
             LOGGER.log( Level.FINE, t.getMessage(), t );
         }
 
-        JDBCConfig.defaultDataSource = defaultDataSource;
+        OliveConfig.defaultDataSource = defaultDataSource;
     }
 
     public static DataSource getDefaultDataSource() {
 
-        if ( JDBCConfig.defaultDataSource == null ) {
+        if ( OliveConfig.defaultDataSource == null ) {
             throw new IllegalStateException(
                     "No default DataSource have been set. Set a default "
                             + "DataSource with JDBCConfig.setDefaultDataSource() or provide a DataSource to the JDBC methods." );
         }
 
         return defaultDataSource;
+    }
+
+    /**
+     * Returns the {@link za.sabob.olive.Mode} Olive is running in.
+     *
+     * @return the mode Olive is running in
+     */
+    public static Mode getMode() {
+        return mode;
+    }
+
+    /**
+     * Set the {@link za.sabob.olive.Mode} for Olive to run in.
+     *
+     * @param mode the mode Olive must Run in
+     */
+    public static void setMode( Mode mode ) {
+        OliveConfig.mode = mode;
     }
 }

@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import za.sabob.olive.jdbc.config.JDBCConfig;
+import za.sabob.olive.jdbc.config.OliveConfig;
 import za.sabob.olive.util.*;
 
 import javax.sql.DataSource;
@@ -27,11 +27,11 @@ public class JDBCContext implements AutoCloseable {
     private final List<ResultSet> resultSets = new ArrayList<>();
 
     public JDBCContext() {
-        this( JDBCConfig.getDefaultDataSource() );
+        this( OliveConfig.getDefaultDataSource() );
     }
 
     public JDBCContext( boolean beginTransaction) {
-        this( JDBCConfig.getDefaultDataSource() , beginTransaction);
+        this( OliveConfig.getDefaultDataSource() , beginTransaction);
     }
 
     public JDBCContext( Connection conn ) {

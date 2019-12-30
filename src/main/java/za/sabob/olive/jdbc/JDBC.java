@@ -1,6 +1,6 @@
 package za.sabob.olive.jdbc;
 
-import za.sabob.olive.jdbc.config.JDBCConfig;
+import za.sabob.olive.jdbc.config.OliveConfig;
 import za.sabob.olive.jdbc.operation.Operation;
 import za.sabob.olive.jdbc.operation.Query;
 import za.sabob.olive.jdbc.transaction.TransactionalOperation;
@@ -22,7 +22,7 @@ public class JDBC {
     static final ThreadLocal<Map<DataSource, Integer>> OPERATION_STARTED_COUNT = ThreadLocal.withInitial( HashMap::new );
 
     public static JDBCContext createJDBCContext( boolean beginTransaction ) {
-        DataSource ds = JDBCConfig.getDefaultDataSource();
+        DataSource ds = OliveConfig.getDefaultDataSource();
         JDBCContext ctx = createJDBCContext( ds, beginTransaction );
         return ctx;
     }
@@ -158,13 +158,13 @@ public class JDBC {
 
     public static <X extends Exception> void inTransaction( TransactionalOperation<X> operation ) {
 
-        DataSource ds = JDBCConfig.getDefaultDataSource();
+        DataSource ds = OliveConfig.getDefaultDataSource();
         inTransaction( ds, operation );
     }
 
     public static <R, X extends Exception> R inTransaction( TransactionalQuery<R, X> query ) {
 
-        DataSource ds = JDBCConfig.getDefaultDataSource();
+        DataSource ds = OliveConfig.getDefaultDataSource();
         return inTransaction( ds, query );
     }
 
@@ -201,7 +201,7 @@ public class JDBC {
     }
 
     public static <R, X extends Exception> R inOperation( Query<R, X> query ) {
-        DataSource ds = JDBCConfig.getDefaultDataSource();
+        DataSource ds = OliveConfig.getDefaultDataSource();
         return JDBC.inOperation( ds, query );
     }
 
@@ -358,7 +358,7 @@ public class JDBC {
             count = 0;
         }
 
-        if ( count >= 1 && !JDBCConfig.isAllowNestingOperations() ) {
+        if ( count >= 1 && !OliveConfig.isAllowNestingOperations() ) {
             throw new IllegalStateException( "Nested operations for DataSource " + ds + " are not allowed. Cannot begin a new operation. Close the current active operation or transaction before starting a new operation." );
         }
 
@@ -411,7 +411,7 @@ public class JDBC {
             count = 0;
         }
 
-        if ( count >= 1 && !JDBCConfig.isAllowNestingOperations() ) {
+        if ( count >= 1 && !OliveConfig.isAllowNestingOperations() ) {
             throw new IllegalStateException( "Nested transaction for DataSource " + ds + " are not allowed. Cannot begin a new transaction. Close the current active transaction or operation before starting a new transaction." );
         }
 
