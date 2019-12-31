@@ -13,7 +13,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.config.JDBCConfig;
+import za.sabob.olive.jdbc.config.OliveConfig;
 import za.sabob.olive.ps.*;
 import za.sabob.olive.util.*;
 
@@ -77,10 +77,9 @@ public class PostgresTestUtils {
             ds.setMinPoolSize( poolSize );
             ds.setMaxPoolSize( poolSize );
 
-
             //ds.getConnection().close();
 
-            JDBCConfig.setDefaultDataSource( ds );
+            OliveConfig.setDefaultDataSource( ds );
 
             return ds;
 
