@@ -5,9 +5,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import za.sabob.olive.jdbc.JDBC;
 import za.sabob.olive.jdbc.JDBCContext;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.PostgresBaseTest;
 import za.sabob.olive.postgres.PostgresTestUtils;
-import za.sabob.olive.ps.SqlParams;
+import za.sabob.olive.jdbc.ps.SqlParams;
 import za.sabob.olive.query.RowMapper;
 import za.sabob.olive.util.OliveUtils;
 
@@ -38,7 +39,7 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
             SqlParams params = new SqlParams();
             params.set( "name", "bob" );
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -52,11 +53,11 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
             personsCount = persons.size();
 
         } catch ( Exception e ) {
-            throw JDBC.rollbackTransaction( ctx, e );
+            JDBC.rollbackTransactionAndThrow( ctx, e );
 
         } finally {
 
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertFalse( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertFalse( ctx.isClosed() );
 
             JDBC.cleanupTransaction( ctx );
@@ -73,7 +74,7 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
             List<Person> persons = getPersons( ctx );
 
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertFalse( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isOpen() );
 
         } finally {
@@ -85,9 +86,9 @@ public class JDBCThreadedTXTest extends PostgresBaseTest {
 
     public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+        List<Person> persons = JDBCUtils.mapToBeans( ps, new RowMapper<Person>() {
             @Override
             public Person map( ResultSet rs, int rowNum ) throws SQLException {
                 Person person = new Person();

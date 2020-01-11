@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.ps;
+package za.sabob.olive.jdbc.ps;
 
 import java.util.*;
 
@@ -22,16 +22,16 @@ import java.util.*;
  * <p/>
  * You can retrieve the {@link #originalSql original SQL string}, find {@link #getParameterNames() named parameters} and other useful
  * information about the named parameters.
- * 
+ *
  * <pre class="prettyprint">
  * SqlParams params = new SqlParams();
  * params.setString("name", "Steve");
  * params.setInt("age", 21);
- * 
+ *
  * ParsedSql parsedSql = olive.loadParsedSql("/sql/person/insert-person.sql");
- * 
+ *
  * int namedParameterCount = parsedSql.getNamedParameterCount();
- * 
+ *
  * // We check if the number of named parameters in the SQL string matches our input SqlParams.
  * if (params.size() != namedParameterCount) {
  *  throw new IllegalStateException("The named parameters in the SQL statement does not match the number of input parameters!");
@@ -100,7 +100,7 @@ public class ParsedSql {
 
     /**
      * Return all the named parameter indexes in the parsed SQL string.
-     * 
+     *
      * @return all the named parameter indexes in the parsed SQL string
      */
     public List<int[]> getParameterIndexes() {
@@ -111,9 +111,9 @@ public class ParsedSql {
      * Return the count of named parameters in the SQL statement.
      * <p/>
      * Each parameter name counts once; repeated occurrences do not count here.
-     * 
-     * @see #getUnnamedParameterCount() 
-     * @see #getTotalParameterCount() 
+     *
+     * @see #getUnnamedParameterCount()
+     * @see #getTotalParameterCount()
      *
      * @return the number of named parameters found in the SQL statement
      */
@@ -123,7 +123,7 @@ public class ParsedSql {
 
     /**
      * Return the count of all of the unnamed parameters (question marks '?') in the SQL statement.
-     * 
+     *
      * @see #getNamedParameterCount()
      * @see #getTotalParameterCount()
      *
@@ -137,9 +137,9 @@ public class ParsedSql {
      * Return the total count of all of the parameters in the SQL statement.
      * <p/>
      * Repeated occurrences of the same parameter name do count here.
-     * 
+     *
      * @see #getNamedParameterCount()
-     * @see #getUnnamedParameterCount() 
+     * @see #getUnnamedParameterCount()
      *
      * @return the total number of all parameters found in the SQL statement
      */
@@ -182,7 +182,7 @@ public class ParsedSql {
      * Set the total count of all of the parameters in the SQL statement.
      * <p/>
      * Repeated occurrences of the same parameter name do count here.
-     * 
+     *
      * @param totalParameterCount the total count of all of the parameters in the SQL statement
      */
     public void setTotalParameterCount(int totalParameterCount) {

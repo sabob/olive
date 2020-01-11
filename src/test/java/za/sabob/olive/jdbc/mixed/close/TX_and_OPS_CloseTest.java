@@ -8,6 +8,7 @@ import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
@@ -41,7 +42,7 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
         } finally {
 
             Assert.assertTrue( ctx.isOpen() );
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
 
             JDBC.cleanupOperation( ctx );
 
@@ -53,14 +54,14 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
     public void closeEachChildContextIndividuallyTest() {
 
         JDBCContext rootOperationCtx = JDBC.beginOperation( ds );
-        Assert.assertTrue( OliveUtils.getAutoCommit( rootOperationCtx.getConnection() ) );
+        Assert.assertTrue( JDBCUtils.getAutoCommit( rootOperationCtx.getConnection() ) );
 
         try {
 
             insertPersons( rootOperationCtx );
 
             JDBCContext childTXCtx = JDBC.beginTransaction( ds );
-            Assert.assertFalse( OliveUtils.getAutoCommit( childTXCtx.getConnection() ) );
+            Assert.assertFalse( JDBCUtils.getAutoCommit( childTXCtx.getConnection() ) );
 
             List<Person> persons = getPersons( childTXCtx );
             personsCount = persons.size();
@@ -77,7 +78,7 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
             Assert.assertFalse( rootOperationCtx.getConnection().isClosed() );
             Assert.assertTrue( rootOperationCtx.isOpen() );
 
-            Assert.assertTrue( OliveUtils.getAutoCommit( rootOperationCtx.getConnection() ) );
+            Assert.assertTrue( JDBCUtils.getAutoCommit( rootOperationCtx.getConnection() ) );
 
             JDBC.cleanupOperation( rootOperationCtx ); // now cleanup should occur because we use cleanup operation instead of TX
 
@@ -97,7 +98,7 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
 //    private void insertPersons( JDBCContext ctx ) throws SQLException {
 //        SqlParams params = new SqlParams();
 //        params.set( "name", "bob" );
-//        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+//        PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 //
 //        ctx.add( ps );
 //
@@ -151,9 +152,9 @@ public class TX_and_OPS_CloseTest extends PostgresBaseTest {
 
     public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+        List<Person> persons = JDBCUtils.mapToBeans( ps, new RowMapper<Person>() {
                                                       @Override
                                                       public Person map( ResultSet rs, int rowNum ) throws SQLException {
                                                           Person person = new Person();

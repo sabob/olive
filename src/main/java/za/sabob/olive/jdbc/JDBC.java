@@ -1,17 +1,17 @@
 package za.sabob.olive.jdbc;
 
-import za.sabob.olive.jdbc.config.OliveConfig;
+import za.sabob.olive.config.OliveConfig;
 import za.sabob.olive.jdbc.operation.Operation;
 import za.sabob.olive.jdbc.operation.Query;
 import za.sabob.olive.jdbc.transaction.TransactionalOperation;
 import za.sabob.olive.jdbc.transaction.TransactionalQuery;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.util.OliveUtils;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -105,23 +105,38 @@ public class JDBC {
     }
 
     public static void commitTransaction( JDBCContext ctx ) {
-        Objects.requireNonNull( ctx );
+
+        if ( ctx == null ) {
+            return;
+        }
+
         ctx.commit();
     }
 
     public static void rollbackTransaction( JDBCContext ctx ) {
-        Objects.requireNonNull( ctx );
+
+        if ( ctx == null ) {
+            return;
+        }
+
         ctx.rollback();
     }
 
-    public static RuntimeException rollbackTransaction( JDBCContext ctx, Exception e ) {
-        Objects.requireNonNull( ctx );
-        return ctx.rollback( e );
+    public static void rollbackTransactionAndThrow( JDBCContext ctx, Exception ex ) {
+
+        if ( ctx == null ) {
+            OliveUtils.throwAsRuntimeIfException( ex );
+        }
+        ctx.rollbackAndThrow( ex );
     }
 
-    public static RuntimeException rollbackTransactionQuietly( JDBCContext ctx, Exception e ) {
-        Objects.requireNonNull( ctx );
-        return ctx.rollbackQuietly( e );
+    public static RuntimeException rollbackTransactionQuietly( JDBCContext ctx, Exception ex ) {
+
+        if ( ctx == null ) {
+            return OliveUtils.toRuntimeException( ex );
+        }
+
+        return ctx.rollbackQuietly( ex );
     }
 
     public static <X extends Exception> void inTransaction( DataSource ds, TransactionalOperation<X> operation ) {
@@ -140,7 +155,7 @@ public class JDBC {
 
             if ( ex instanceof SQLException ) {
                 SQLException sqle = ( SQLException ) ex;
-                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
+                ex = JDBCUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             if ( ctx == null ) {
@@ -188,7 +203,7 @@ public class JDBC {
             if ( ex instanceof SQLException ) {
 
                 SQLException sqle = ( SQLException ) ex;
-                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
+                ex = JDBCUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             exception = rollbackTransactionQuietly( ctx, ex );
@@ -263,7 +278,7 @@ public class JDBC {
 
             if ( ex instanceof SQLException ) {
                 SQLException sqle = ( SQLException ) ex;
-                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
+                ex = JDBCUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             exception = ex;
@@ -293,7 +308,7 @@ public class JDBC {
         } catch ( Exception ex ) {
             if ( ex instanceof SQLException ) {
                 SQLException sqle = ( SQLException ) ex;
-                ex = OliveUtils.convertSqlExceptionToSuppressed( sqle );
+                ex = JDBCUtils.convertSqlExceptionToSuppressed( sqle );
             }
 
             exception = ex;

@@ -8,8 +8,9 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
@@ -34,7 +35,7 @@ public class TX_JDBCTest extends PostgresBaseTest {
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -54,7 +55,7 @@ public class TX_JDBCTest extends PostgresBaseTest {
 
             JDBC.cleanupOperation( ctx );
             Assert.assertTrue( ctx.isClosed() );
-            Assert.assertTrue( OliveUtils.isClosed( ps ) );
+            Assert.assertTrue( JDBCUtils.isClosed( ps ) );
             Assert.assertTrue( ctx.isConnectionClosed() );
 
         }
@@ -101,9 +102,9 @@ public class TX_JDBCTest extends PostgresBaseTest {
 
     public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+        List<Person> persons = JDBCUtils.mapToBeans( ps, new RowMapper<Person>() {
             @Override
             public Person map( ResultSet rs, int rowNum ) throws SQLException {
                 Person person = new Person();

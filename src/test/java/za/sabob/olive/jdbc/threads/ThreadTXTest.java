@@ -6,8 +6,9 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.util.*;
 
 public class ThreadTXTest extends PostgresBaseTest {
@@ -30,14 +31,14 @@ public class ThreadTXTest extends PostgresBaseTest {
 
             nested( ds );
             SqlParams params = new SqlParams();
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person p", params );
-            String name = OliveUtils.mapToPrimitive( String.class, ps );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person p", params );
+            String name = JDBCUtils.mapToPrimitive( String.class, ps );
 
         } catch ( Exception e ) {
             throw new RuntimeException( e );
 
         } finally {
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertFalse( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isOpen() );
             JDBC.cleanupTransaction( ctx );
             Assert.assertTrue( ctx.isClosed() );
@@ -52,7 +53,7 @@ public class ThreadTXTest extends PostgresBaseTest {
         try {
 
             SqlParams params = new SqlParams();
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
             ctx.add( ps );
 
             ResultSet rs = ps.executeQuery();
@@ -63,7 +64,7 @@ public class ThreadTXTest extends PostgresBaseTest {
                 //Assert.assertEquals( name, "TEST" );
             }
 
-            Assert.assertFalse( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertFalse( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isOpen() );
 
         } catch ( SQLException e ) {

@@ -39,7 +39,7 @@ public class MultiPGRollbackTransactionTest extends PostgresBaseTest {
 
         } catch ( Exception ex ) {
 
-            throw JDBC.rollbackTransaction( parent, ex );
+            JDBC.rollbackTransactionAndThrow( parent, ex );
 
         } finally {
             Assert.assertFalse( parent.isConnectionClosed() );

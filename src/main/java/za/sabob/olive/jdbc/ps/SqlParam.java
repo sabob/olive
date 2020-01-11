@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.ps;
+package za.sabob.olive.jdbc.ps;
 
 import java.io.*;
 import za.sabob.olive.util.*;
@@ -138,7 +138,7 @@ public class SqlParam implements Serializable {
      * <p/>
      * typeName is the named parameter fully-qualified name of an SQL user-defined type; ignored if the parameter is not a user-defined type
      * or {@link java.sql.Types#REF}.
-     * 
+     *
      * @param name the name of the SqlParam
      * @param value the value of the SqlParam
      * @param sqlType the {@link java.sql.Types type} of the value
@@ -153,7 +153,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Return the name of the SqlParam.
-     * 
+     *
      * @return the name of the SqlParam
      */
     public String getName() {
@@ -162,7 +162,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Set the name of the SqlParam.
-     * 
+     *
      * @param name the name of the SqlParam
      */
     public void setName(String name) {
@@ -171,7 +171,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Return the value of the SqlParam.
-     * 
+     *
      * @return the value of the SqlParam
      */
     public Object getValue() {
@@ -180,7 +180,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Set the value of the SqlParam.
-     * 
+     *
      * @param value the value of the SqlParam
      */
     public void setValue(Object value) {
@@ -191,7 +191,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Return the {@link java.sql.Types sql type} of the SqlParam.
-     * 
+     *
      * @return the sqlType of the SqlParam
      */
     public int getSqlType() {
@@ -200,7 +200,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Set the {@link java.sql.Types sql type} of the SqlParam.
-     * 
+     *
      * @param sqlType the sqlType of the SqlParam
      */
     public void setSqlType(int sqlType) {
@@ -209,7 +209,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Return the scale of the SqlParam. Scale is the number of digits after the decimal point.
-     * 
+     *
      * @return the scale of the SqlParam
      */
     public Integer getScale() {
@@ -218,7 +218,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Set the scale of the SqlParam.
-     * 
+     *
      * @param scale the scale of the SqlParam
      */
     public void setScale(Integer scale) {
@@ -227,7 +227,7 @@ public class SqlParam implements Serializable {
 
     /**
      * Return the typeName of the SqlParam.
-     * 
+     *
      * @return the typeName the type name of the SqlParam
      */
     public String getTypeName() {
@@ -236,16 +236,16 @@ public class SqlParam implements Serializable {
 
     /**
      * Set the typeName of the SqlParam.
-     * 
+     *
      * @param typeName the typeName of the SqlParam
      */
     public void setTypeName(String typeName) {
         this.typeName = typeName;
     }
-    
+
     /**
      * Set the value of the SqlParam and convert the value to a list if it is an array.
-     * 
+     *
      * @param value the value of the SqlParam
      */
     private void setValueAndConvertArrayToList(Object value) {

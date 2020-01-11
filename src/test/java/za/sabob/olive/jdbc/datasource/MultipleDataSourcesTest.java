@@ -8,8 +8,9 @@ import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.hsqldb.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.util.*;
 
 public class MultipleDataSourcesTest {
@@ -43,7 +44,7 @@ public class MultipleDataSourcesTest {
         //insertPersons( hsqlDS);
         insertPersons( postgresDS ); // populate persons in Postgres, NOT HSQL
 
-        //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
+        //Connection conn = JDBCUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         Connection conn;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -69,7 +70,7 @@ public class MultipleDataSourcesTest {
 
             SqlParams params = new SqlParams();
             params.set( "name", "bob" );
-            ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             ctx.add( ps );
 
@@ -79,7 +80,7 @@ public class MultipleDataSourcesTest {
             count = ps.executeUpdate();
 
         } catch ( Exception e ) {
-            throw JDBC.rollbackTransaction( ctx, e );
+            JDBC.rollbackTransactionAndThrow( ctx, e );
 //            if ( DBTestUtils.isTimeout( e ) ) {
 //                return;
 //            }
@@ -116,9 +117,9 @@ public class MultipleDataSourcesTest {
 
     public List<Person> getLatestPersons( DataSource ds, JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, ( ResultSet rs, int rowNum ) -> {
+        List<Person> persons = JDBCUtils.mapToBeans( ps, ( ResultSet rs, int rowNum ) -> {
             Person person = new Person();
             person.id = rs.getLong( "id" );
             person.name = rs.getString( "name" );

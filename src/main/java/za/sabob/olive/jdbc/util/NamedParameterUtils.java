@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.util;
+package za.sabob.olive.jdbc.util;
 
 import java.util.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
+import za.sabob.olive.util.OliveUtils;
 
 /**
  * Helper methods for named parameter parsing.
@@ -302,7 +303,7 @@ class NamedParameterUtils {
         actualSql.append(originalSql, lastIndex, originalSql.length());
         return actualSql.toString();
     }
-    
+
     public static SqlParam createSqlParam(Object value, String name) {
         SqlParam param;
         if (value instanceof SqlParam) {
@@ -333,7 +334,7 @@ class NamedParameterUtils {
     public static void addSqlParams(List<SqlParam> paramList, Collection<?> values, SqlParam parent) {
 
         for (Object value : values) {
-            
+
             if (value instanceof Collection) {
                 Collection innerValues = (Collection) value;
                 for (Object innerValue : innerValues) {

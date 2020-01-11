@@ -7,10 +7,10 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.query.*;
-import za.sabob.olive.util.*;
 
 public class JDBCInsertTest extends PostgresBaseTest {
 
@@ -22,7 +22,7 @@ public class JDBCInsertTest extends PostgresBaseTest {
         SqlParams params = new SqlParams();
         params.set( "name", "bob" );
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
         int count = ps.executeUpdate();
 
@@ -58,9 +58,9 @@ public class JDBCInsertTest extends PostgresBaseTest {
 
     public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToList( ps, new RowMapper<Person>() {
+        List<Person> persons = JDBCUtils.mapToList( ps, new RowMapper<Person>() {
                                                  @Override
                                                  public Person map( ResultSet rs, int rowNum ) throws SQLException {
                                                      Person person = new Person();

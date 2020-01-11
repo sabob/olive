@@ -4,7 +4,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import za.sabob.olive.jdbc.config.OliveConfig;
+import za.sabob.olive.config.OliveConfig;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.util.*;
 
 import javax.sql.DataSource;
@@ -30,8 +31,8 @@ public class JDBCContext implements AutoCloseable {
         this( OliveConfig.getDefaultDataSource() );
     }
 
-    public JDBCContext( boolean beginTransaction) {
-        this( OliveConfig.getDefaultDataSource() , beginTransaction);
+    public JDBCContext( boolean beginTransaction ) {
+        this( OliveConfig.getDefaultDataSource(), beginTransaction );
     }
 
     public JDBCContext( Connection conn ) {
@@ -43,7 +44,7 @@ public class JDBCContext implements AutoCloseable {
         this.connection = conn;
         this.transaction = beginTransaction;
         boolean autoCommit = !beginTransaction;
-        OliveUtils.setAutoCommit( conn, autoCommit );
+        JDBCUtils.setAutoCommit( conn, autoCommit );
     }
 
     public JDBCContext( DataSource ds ) {
@@ -51,7 +52,7 @@ public class JDBCContext implements AutoCloseable {
     }
 
     public JDBCContext( DataSource ds, boolean beginTransaction ) {
-        this.connection = OliveUtils.getConnection( ds, beginTransaction );
+        this.connection = JDBCUtils.getConnection( ds, beginTransaction );
         this.dataSource = ds;
         this.transaction = beginTransaction;
 
@@ -73,37 +74,38 @@ public class JDBCContext implements AutoCloseable {
     public void commit() {
 
         Connection conn = getConnection();
-        OliveUtils.commit( conn );
+        JDBCUtils.commit( conn );
 
 
     }
 
     public RuntimeException commitQuietly() {
         Connection conn = getConnection();
-        return OliveUtils.commitQuietly( conn );
+        return JDBCUtils.commitQuietly( conn );
     }
 
     public void rollback() {
         Connection conn = getConnection();
-        OliveUtils.rollback( conn );
+        JDBCUtils.rollback( conn );
     }
 
     public RuntimeException rollbackQuietly() {
         Connection conn = getConnection();
-        return OliveUtils.rollbackQuietly( conn );
+        return JDBCUtils.rollbackQuietly( conn );
     }
 
-    public RuntimeException rollback( Exception ex ) {
+    public RuntimeException rollbackQuietly( Exception ex ) {
         if ( ex == null ) {
             throw new IllegalArgumentException( "exception cannot be null as rollback is expected to return a RuntimeException which wraps the given exception." );
         }
 
         Connection conn = getConnection();
-        return OliveUtils.rollback( conn, ex );
+        return JDBCUtils.rollbackQuietly( conn, ex );
     }
 
-    public RuntimeException rollbackQuietly( Exception e ) {
-        return rollback( e );
+    public void rollbackAndThrow( Exception ex ) {
+        RuntimeException exception = rollbackQuietly( ex );
+        OliveUtils.throwAsRuntimeIfException( exception );
     }
 
     public boolean hasConnection() {
@@ -119,7 +121,7 @@ public class JDBCContext implements AutoCloseable {
         if ( connection == null ) {
             return true;
         }
-        return OliveUtils.isClosed( connection );
+        return JDBCUtils.isClosed( connection );
     }
 
     public Connection getConnection() {
@@ -181,6 +183,17 @@ public class JDBCContext implements AutoCloseable {
         }
     }
 
+    public void closeAndThrow( Exception ex ) {
+        RuntimeException exception = closeQuietly( ex );
+        OliveUtils.throwAsRuntimeIfException( exception );
+    }
+
+    public RuntimeException closeQuietly( Exception exception ) {
+        RuntimeException ex = closeQuietly();
+        exception = OliveUtils.addSuppressed( ex, exception );
+        return OliveUtils.toRuntimeException( exception );
+    }
+
     @Override
     public void close() {
 
@@ -207,7 +220,7 @@ public class JDBCContext implements AutoCloseable {
 
         List<AutoCloseable> closeables = gatherResources();
         boolean autoCommit = true;
-        RuntimeException exception = OliveUtils.closeQuietly( autoCommit, closeables );
+        RuntimeException exception = JDBCUtils.closeQuietly( autoCommit, closeables );
 
         OliveUtils.throwAsRuntimeIfException( exception );
     }
@@ -221,7 +234,7 @@ public class JDBCContext implements AutoCloseable {
         RuntimeException exception = OliveUtils.closeQuietly( closeables );
 
         boolean autoCommit = true;
-        OliveUtils.setAutoCommit( connection, autoCommit );
+        JDBCUtils.setAutoCommit( connection, autoCommit );
 
         OliveUtils.throwAsRuntimeIfException( exception );
     }

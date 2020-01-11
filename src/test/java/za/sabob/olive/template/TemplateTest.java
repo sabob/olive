@@ -4,8 +4,9 @@ import java.io.*;
 import java.util.*;
 import org.testng.annotations.*;
 import za.sabob.olive.*;
+import za.sabob.olive.loader.ResourceService;
 import za.sabob.olive.mustache.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import static za.sabob.olive.util.OliveUtils.path;
 
 public class TemplateTest {
@@ -53,7 +54,12 @@ public class TemplateTest {
         data.put( "batch", batch );
 
 String path = path( this, "sql/template.sql");
-        String result = olive.executeTemplateFile( path, data );
+
+        ResourceService resourceService = new ResourceService();
+        String content = resourceService.loadContent( path );
+
+        TemplateService templateService = new TemplateService();
+        String result = templateService.execute( content, data );
 
         System.out.println(
             "Result: " + result );

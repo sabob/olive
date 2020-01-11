@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.util;
+package za.sabob.olive.jdbc.util;
 
 import java.io.*;
 import java.math.*;
@@ -22,7 +22,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import za.sabob.olive.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.config.OliveConfig;
+import za.sabob.olive.jdbc.ps.*;
+import za.sabob.olive.util.OliveUtils;
 
 /**
  * Utility methods for setting the values of a {@link java.sql.PreparedStatement}.
@@ -123,7 +125,7 @@ class StatementUtils {
         Integer scale = sqlParam.getScale();
 
         // override type info?
-        if (Olive.getMode() == Mode.TRACE) {
+        if ( OliveConfig.getMode() == Mode.TRACE) {
             LOGGER.info("Overriding type info with runtime info from SqlParam: name [" + sqlParam.getName() + "], column index " + paramIndex + ", SQL type "
                 + sqlParam.getSqlType() + ", type name " + sqlParam.getTypeName());
         }
@@ -135,7 +137,7 @@ class StatementUtils {
          typeNameToUse = sqlParam.getTypeName();
          }
 
-        if (Olive.getMode() == Mode.TRACE) {
+        if (OliveConfig.getMode() == Mode.TRACE) {
             LOGGER.info("Setting SQL statement parameter value: name [" + sqlParam.getName() + "], column index " + paramIndex + ", parameter value [" + inValueToUse
                 + "], value class [" + (inValueToUse != null ? inValueToUse.getClass().getName() : "null") + "], SQL type " + (sqlTypeToUse
                 == OliveUtils.TYPE_UNKNOWN ? "unknown" : Integer.toString(sqlTypeToUse)));
@@ -172,7 +174,7 @@ class StatementUtils {
                 try {
                     sqlTypeToUse = ps.getParameterMetaData().getParameterType(paramIndex);
                 } catch (Throwable ex) {
-                    if (Olive.getMode() == Mode.TRACE) {
+                    if (OliveConfig.getMode() == Mode.TRACE) {
                         LOGGER.log(Level.INFO, "JDBC 3.0 getParameterType call not supported - using fallback method instead: ", ex);
                     }
                 }
@@ -322,7 +324,7 @@ class StatementUtils {
     public static void cleanupParameters(Collection<?> paramValues) {
         if (paramValues != null) {
             for (Object inValue : paramValues) {
-                if (inValue instanceof DisposableSqlValue) {
+                if (inValue instanceof DisposableSqlValue ) {
                     ((DisposableSqlValue) inValue).cleanup();
                 }
             }

@@ -6,6 +6,7 @@ import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.util.*;
 
@@ -17,7 +18,7 @@ public class SinglePGRollbackTransactionTest extends PostgresBaseTest {
 
         try {
 
-            OliveUtils.setTransactionIsolation( ctx.getConnection(), Connection.TRANSACTION_READ_COMMITTED );
+            JDBCUtils.setTransactionIsolation( ctx.getConnection(), Connection.TRANSACTION_READ_COMMITTED );
             System.out.println( "Conn isolation level: " + ctx.getConnection().getTransactionIsolation() + ", autocommit: "
                 + ctx.getConnection().getAutoCommit() );
 
@@ -35,7 +36,7 @@ public class SinglePGRollbackTransactionTest extends PostgresBaseTest {
 
         } catch ( Exception ex ) {
 
-            throw JDBC.rollbackTransaction( ctx, ex );
+            JDBC.rollbackTransactionAndThrow( ctx, ex );
         } finally {
 
             JDBC.cleanupTransaction( ctx );

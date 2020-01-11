@@ -9,8 +9,9 @@ import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.query.*;
 
 import static za.sabob.olive.util.DBTestUtils.isTimeout;
@@ -43,7 +44,7 @@ public class DeadlockTest extends PostgresBaseTest {
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            ps = OliveUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
+            ps = JDBCUtils.prepareStatement( ctx.getConnection(), "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -159,9 +160,9 @@ public class DeadlockTest extends PostgresBaseTest {
     public List<Person> getPersons( JDBCContext ctx ) {
 
         try {
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person" );
 
-            List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+            List<Person> persons = JDBCUtils.mapToBeans( ps, new RowMapper<Person>() {
                 @Override
                 public Person map( ResultSet rs, int rowNum ) throws SQLException {
                     Person person = new Person();
@@ -179,7 +180,7 @@ public class DeadlockTest extends PostgresBaseTest {
 
     public List<Person> getJDBCPersons( JDBCContext ctx ) {
 
-        boolean isAutoCommit = OliveUtils.getAutoCommit( ctx.getConnection() );
+        boolean isAutoCommit = JDBCUtils.getAutoCommit( ctx.getConnection() );
         Assert.assertTrue( isAutoCommit, " Connection should not be a transactional connection." );
 
         return getPersons( ctx );
@@ -187,7 +188,7 @@ public class DeadlockTest extends PostgresBaseTest {
     }
 
     public List<Person> getTXPersons( JDBCContext ctx ) {
-        boolean isTransaction = !OliveUtils.getAutoCommit( ctx.getConnection() );
+        boolean isTransaction = !JDBCUtils.getAutoCommit( ctx.getConnection() );
         Assert.assertTrue( isTransaction, " Connection should be a transactional connection." );
 
         return getPersons( ctx );

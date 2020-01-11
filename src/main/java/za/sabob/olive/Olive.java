@@ -15,24 +15,23 @@
  */
 package za.sabob.olive;
 
-import java.io.*;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.logging.*;
 
-import za.sabob.olive.jdbc.JDBCContext;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.loader.*;
 import za.sabob.olive.mustache.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.template.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.util.OliveUtils;
 
 /**
  * Provides the main entry point for using Olive.
  * <p/>
  * <h4>Load SQL files</h4>
- * Olive provides the method {@link #loadSql(java.lang.String)} for loading and caching external SQL files. For example:
+ * Olive provides the method {@link ResourceService#loadContent(java.lang.String)} for loading and caching external SQL files. For example:
  * <pre class="prettyprint">
  * Olive olive = new Olive(Mode.DEVELOPMENT);
  * String filename = OliveUtils.normalize(PersonDao.class, "select-person.sql");
@@ -56,7 +55,7 @@ import za.sabob.olive.util.*;
  * olive = new Olive(Mode.TRACE); </pre>
  *
  * <h4>Named parameters</h4>
- * Use {@link #loadParsedSql(java.lang.String)} to load SQL files and then parse the result to locate named parameters. This method returns
+ * Use {@link ResourceService#loadContent(java.lang.String)} and {@link JDBCUtils#parseSql(String, String)}. This method returns
  * a {@link ParsedSql ParsedSql} instance which contains information about the named parameters such as their names and location.
  *
  * <pre class="prettyprint">
@@ -70,8 +69,8 @@ import za.sabob.olive.util.*;
  * In production mode the ParsedSql is cached so future requests do not have to reparse the SQL string.
  *
  * <h4>PreparedStatements</h4>
- * Olive provides the {@link #prepareStatement(java.sql.Connection, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)} and
- * {@link #prepareStatementFromFile(java.sql.Connection, java.lang.String, za.sabob.olive.ps.SqlParams)} methods for creating PreparedStatements
+ * Olive provides the {@link #prepareStatement(java.sql.Connection, za.sabob.olive.jdbc.ps.ParsedSql, za.sabob.olive.jdbc.ps.SqlParams)} and
+ * JDBCUtils{@link #prepareStatement(Connection, String, SqlParams)} methods for creating PreparedStatements
  * which uses convenient named parameters instead of indexes.
  * <p/>
  * <code>select-person.sql:</code>
@@ -96,11 +95,13 @@ public class Olive {
      */
     private static final Logger LOGGER = Logger.getLogger( Olive.class.getName() );
 
-    private static Map<String, String> fileMap = new ConcurrentHashMap<>();
+    //private static Map<String, String> fileMap = new ConcurrentHashMap<>();
 
-    private static Map<String, ParsedSql> parsedMap = new ConcurrentHashMap<>();
+    //private static Map<String, ParsedSql> parsedMap = new ConcurrentHashMap<>();
 
     //private static Map<String, Template> templateMap = new ConcurrentHashMap<>();
+    private ResourceService resourceService;
+
     private ResourceLoader resourceLoader;
 
     /**
@@ -170,6 +171,13 @@ public class Olive {
         return resourceLoader;
     }
 
+    private ResourceService getResourceService() {
+        if (this.resourceService == null) {
+            this.resourceService = new ResourceService(getResourceLoader());
+        }
+        return this.resourceService;
+    }
+
     /**
      * Sets this olive instance resource loader where SQL files will be loaded from.
      *
@@ -184,89 +192,75 @@ public class Olive {
      *
      * @return the mode Olive is running in
      */
-    public static Mode getMode() {
-        return mode;
-    }
+//    public static Mode getMode() {
+//        return mode;
+//    }
 
     /**
      * Set the {@link za.sabob.olive.Mode} for Olive to run in.
      *
      * @param mode the mode Olive must Run in
      */
-    public void setMode( Mode mode ) {
-        Olive.mode = mode;
-    }
+//    public void setMode( Mode mode ) {
+//        Olive.mode = mode;
+//    }
 
     /**
      * Clear Olive's internal cache containing previously loaded SQL files and parsed SQL statements.
      */
-    public void clearCache() {
-        fileMap.clear();
-        parsedMap.clear();
-    }
+//    public void clearCache() {
+//        fileMap.clear();
+//        parsedMap.clear();
+//    }
 
-    /**
-     * Parse the given SQL statement and find any named parameters contained therein. The parsed SQL is cached under the given name.
-     *
-     * @param name the name under which to cache the parsed sql
-     * @param sqlStr the SQL statement which named parameters is to be parsed
-     * @return a {@link ParsedSql} instance
-     */
-    public static ParsedSql parseSql( String name, String sqlStr ) {
-
-        if ( name == null ) {
-            throw new IllegalArgumentException( "name cannot be null!" );
-        }
-
-        if ( getMode() == Mode.PRODUCTION ) {
-            ParsedSql parsedSql = parsedMap.get( name );
-
-            if ( parsedSql != null ) {
-                return parsedSql;
-            }
-        }
-
-        ParsedSql parsedSql = OliveUtils.parseSql( sqlStr );
-
-        if ( getMode() == Mode.PRODUCTION ) {
-            parsedMap.put( name, parsedSql );
-        }
-
-        return parsedSql;
-    }
-
-    /**
-     * Loads the content for the given filename.
-     *
-     * <pre class="prettyprint">
-     * Olive olive = new Olive();
-     * String filename = OliveUtils.normalize(PersonDao.class, "data.txt");
-     * String content = olive.loadContent(filename); </pre>
-     *
-     * @param filename the name of the content file to load
-     * @return the content of the filename as a string
-     * @throws IllegalStateException if the file could not be found
-     */
+//    /**
+//     * Parse the given SQL statement and find any named parameters contained therein. The parsed SQL is cached under the given name.
+//     *
+//     * @param name the name under which to cache the parsed sql
+//     * @param sqlStr the SQL statement which named parameters is to be parsed
+//     * @return a {@link ParsedSql} instance
+//     */
+//    public static ParsedSql parseSql( String name, String sqlStr ) {
+//
+//        if ( name == null ) {
+//            throw new IllegalArgumentException( "name cannot be null!" );
+//        }
+//
+//        if ( getMode() == Mode.PRODUCTION ) {
+//            ParsedSql parsedSql = parsedMap.get( name );
+//
+//            if ( parsedSql != null ) {
+//                return parsedSql;
+//            }
+//        }
+//
+//        ParsedSql parsedSql = JDBCUtils.parseSql( sqlStr );
+//
+//        if ( getMode() == Mode.PRODUCTION ) {
+//            parsedMap.put( name, parsedSql );
+//        }
+//
+//        return parsedSql;
+//    }
+//
+//    /**
+//     * Loads the content for the given filename.
+//     *
+//     * <pre class="prettyprint">
+//     * Olive olive = new Olive();
+//     * String filename = OliveUtils.normalize(PersonDao.class, "data.txt");
+//     * String content = olive.loadContent(filename); </pre>
+//     *
+//     * @param filename the name of the content file to load
+//     * @return the content of the filename as a string
+//     * @throws IllegalStateException if the file could not be found
+//     */
     public String loadContent( String filename ) {
         if ( filename == null ) {
             throw new IllegalArgumentException( "filename cannot be null!" );
         }
 
-        if ( getMode() == Mode.PRODUCTION ) {
-            String file = fileMap.get( filename );
-            if ( file != null ) {
-                return file;
-            }
-        }
-
-        InputStream is = getResourceLoader().getResourceStream( filename );
-
-        String file = OliveUtils.toString( is );
-
-        if ( getMode() == Mode.PRODUCTION ) {
-            fileMap.put( filename, file );
-        }
-        return file;
+        return getResourceService().loadContent( filename );
     }
 
     /**
@@ -281,9 +275,9 @@ public class Olive {
      * @return the content of the SQL filename as a string
      * @throws IllegalStateException if the SQL file could not be found
      */
-    public String loadSql( String filename ) {
-        return loadContent( filename );
-    }
+//    public String loadSql( String filename ) {
+//        return loadContent( filename );
+//    }
 
     /**
      * Loads and parse the SQL file for the given filename.
@@ -299,28 +293,28 @@ public class Olive {
      * @param filename the name of the SQL file to load and parse
      * @return the content of the SQL filename as a {@link ParsedSql} instance
      */
-    public ParsedSql loadParsedSql( String filename ) {
-        if ( filename == null ) {
-            throw new IllegalArgumentException( "filename cannot be null!" );
-        }
-
-        if ( getMode() == Mode.PRODUCTION ) {
-            ParsedSql parsedSql = parsedMap.get( filename );
-
-            if ( parsedSql != null ) {
-                return parsedSql;
-            }
-        }
-
-        String sql = loadSql( filename );
-        ParsedSql parsedSql = OliveUtils.parseSql( sql );
-
-        if ( getMode() == Mode.PRODUCTION ) {
-            parsedMap.put( filename, parsedSql );
-        }
-
-        return parsedSql;
-    }
+//    public ParsedSql loadParsedSql( String filename ) {
+//        if ( filename == null ) {
+//            throw new IllegalArgumentException( "filename cannot be null!" );
+//        }
+//
+//        if ( getMode() == Mode.PRODUCTION ) {
+//            ParsedSql parsedSql = parsedMap.get( filename );
+//
+//            if ( parsedSql != null ) {
+//                return parsedSql;
+//            }
+//        }
+//
+//        String sql = loadSql( filename );
+//        ParsedSql parsedSql = JDBCUtils.parseSql( sql );
+//
+//        if ( getMode() == Mode.PRODUCTION ) {
+//            parsedMap.put( filename, parsedSql );
+//        }
+//
+//        return parsedSql;
+//    }
 
     /**
      * Creates a PreparedStatement for the given arguments. The named parameters specified in the {@link ParsedSql} will be
@@ -348,7 +342,7 @@ public class Olive {
      * @return the PreparedStatement for the given arguments
      */
     public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params ) {
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params );
+        PreparedStatement ps = JDBCUtils.prepareStatement( conn, parsedSql, params );
         return ps;
     }
 
@@ -380,7 +374,7 @@ public class Olive {
      * @return the PreparedStatement for the given arguments
      */
     public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params, int autoGeneratedKeys ) {
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params, autoGeneratedKeys );
+        PreparedStatement ps = JDBCUtils.prepareStatement( conn, parsedSql, params, autoGeneratedKeys );
         return ps;
     }
 
@@ -415,82 +409,82 @@ public class Olive {
      */
     public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params, int resultSetType, int resultSetConcurrency,
         int resultSetHoldability ) {
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, parsedSql, params, resultSetType, resultSetConcurrency, resultSetHoldability );
+        PreparedStatement ps = JDBCUtils.prepareStatement( conn, parsedSql, params, resultSetType, resultSetConcurrency, resultSetHoldability );
         return ps;
     }
 
-    public PreparedStatement prepareStatementFromFile( JDBCContext ctx, String filename, SqlParams params ) {
+//    public PreparedStatement prepareStatementFromFile( JDBCContext ctx, String filename, SqlParams params ) {
+//
+//        Connection conn = ctx.getConnection();
+//
+//        return prepareStatementFromFile( conn, filename, params  );
+//    }
 
-        Connection conn = ctx.getConnection();
-
-        return prepareStatementFromFile( conn, filename, params  );
-    }
-
-    /**
-     * Creates a PreparedStatement for the given filename. The named parameters in SQL file specified through the filename will be
-     * substituted with given {@link SqlParams}. For example:
-     *
-     * <code>select-person.sql:</code>
-     * <pre class="prettyprint">
-     * SELECT * FROM person p WHERE p.name = :name and p.age = :age </pre>
-     * <p/>
-     * <code>Example.java:</code>
-     * <pre class="prettyprint">
-     * Olive olive = new Olive();
-     * Connection conn = DriverManager.getConnection("jdbc:...", "username", "password");
-     * Olive olive = new Olive(Mode.DEVELOPMENT);
-     * String filename = OliveUtils.normalize(Persondao.class, "select-person.sql");
-     * SqlParams params = new SqlParams();
-     * * params.setString("name", "Bob");
-     * params.setInt("age", 21);
-     * PreparedStatement ps = olive.prepareStatement(conn, filename, params); </pre>
-     *
-     * @param conn the connection for creating the PreparedStatement with
-     * @param filename the name of the SQL file to load and use for creating the PreparedStatement with
-     * @param params the params for creating the PreparedStatement with
-     * @return the PreparedStatement for the given arguments
-     */
-    public PreparedStatement prepareStatementFromFile( Connection conn, String filename, SqlParams params ) {
-        ParsedSql parsedSql = loadParsedSql( filename );
-        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
-        return ps;
-    }
+//    /**
+//     * Creates a PreparedStatement for the given filename. The named parameters in SQL file specified through the filename will be
+//     * substituted with given {@link SqlParams}. For example:
+//     *
+//     * <code>select-person.sql:</code>
+//     * <pre class="prettyprint">
+//     * SELECT * FROM person p WHERE p.name = :name and p.age = :age </pre>
+//     * <p/>
+//     * <code>Example.java:</code>
+//     * <pre class="prettyprint">
+//     * Olive olive = new Olive();
+//     * Connection conn = DriverManager.getConnection("jdbc:...", "username", "password");
+//     * Olive olive = new Olive(Mode.DEVELOPMENT);
+//     * String filename = OliveUtils.normalize(Persondao.class, "select-person.sql");
+//     * SqlParams params = new SqlParams();
+//     * * params.setString("name", "Bob");
+//     * params.setInt("age", 21);
+//     * PreparedStatement ps = olive.prepareStatement(conn, filename, params); </pre>
+//     *
+//     * @param conn the connection for creating the PreparedStatement with
+//     * @param filename the name of the SQL file to load and use for creating the PreparedStatement with
+//     * @param params the params for creating the PreparedStatement with
+//     * @return the PreparedStatement for the given arguments
+//     */
+//    public PreparedStatement prepareStatementFromFile( Connection conn, String filename, SqlParams params ) {
+//        ParsedSql parsedSql = loadParsedSql( filename );
+//        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
+//        return ps;
+//    }
 
     public PreparedStatement prepareStatement( Connection conn, String content, SqlParams params ) {
-        ParsedSql parsedSql = OliveUtils.parseSql( content );
+        ParsedSql parsedSql = JDBCUtils.parseSql( content );
         PreparedStatement ps = prepareStatement( conn, parsedSql, params );
         return ps;
     }
 
-    public PreparedStatement prepareStatementFromTemplateFile( Connection conn, String filename, SqlParams params ) {
-        // TODO load map from SqlParams
-        Map data = params.toMap();
-        String result = executeTemplateFile( filename, data );
-        ParsedSql parsedSql = OliveUtils.parseSql( result );
-        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
-        return ps;
-    }
+//    public PreparedStatement prepareStatementFromTemplateFile( Connection conn, String filename, SqlParams params ) {
+//        // TODO load map from SqlParams
+//        Map data = params.toMap();
+//        String result = executeTemplateFile( filename, data );
+//        ParsedSql parsedSql = JDBCUtils.parseSql( result );
+//        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
+//        return ps;
+//    }
+//
+//    public PreparedStatement prepareStatementFromTemplate( Connection conn, String content, SqlParams params, Map data ) {
+//        String result = executeTemplate( content, data );
+//        ParsedSql parsedSql = JDBCUtils.parseSql( result );
+//        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
+//        return ps;
+//    }
+//
+//    public PreparedStatement prepareStatementFromTemplateFile( Connection conn, String filename, SqlParams params, Map data ) {
+//
+//        String result = executeTemplateFile( filename, data );
+//        ParsedSql parsedSql = JDBCUtils.parseSql( result );
+//        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
+//        return ps;
+//    }
 
-    public PreparedStatement prepareStatementFromTemplate( Connection conn, String content, SqlParams params, Map data ) {
-        String result = executeTemplate( content, data );
-        ParsedSql parsedSql = OliveUtils.parseSql( result );
-        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
-        return ps;
-    }
-
-    public PreparedStatement prepareStatementFromTemplateFile( Connection conn, String filename, SqlParams params, Map data ) {
-
-        String result = executeTemplateFile( filename, data );
-        ParsedSql parsedSql = OliveUtils.parseSql( result );
-        PreparedStatement ps = prepareStatement( conn, parsedSql, params );
-        return ps;
-    }
-
-    public String executeTemplateFile( String filename, Map data ) {
-        Template template = loadCompiledTemplate( filename, data );
-        String result = executeTemplate( template, data );
-        return result;
-    }
+//    public String executeTemplateFile( String filename, Map data ) {
+//        Template template = loadCompiledTemplate( filename, data );
+//        String result = executeTemplate( template, data );
+//        return result;
+//    }
 
 //    public String executeTemplateFromFile( String filename, Map data ) {
 //        String result = executeTemplateFile( filename, data );
@@ -504,29 +498,29 @@ public class Olive {
 //    }
 
     public String executeTemplate( String content, Map data ) {
-        Template template = getTemplateService().compileTemplate( content, data );
+        Template template = getTemplateService().compile( content, data );
 
         String result = executeTemplate( template, data );
         return result;
     }
 
     public String executeTemplate( Template template, Map data ) {
-        String result = getTemplateService().executeTemplate( template, data );
+        String result = getTemplateService().execute( template, data );
         return result;
     }
 
-    public Template loadCompiledTemplate( String filename ) {
+//    public Template loadCompiledTemplate( String filename ) {
+//
+//        Map data = new HashMap();
+//        return loadCompiledTemplate( filename, data );
+//    }
 
-        Map data = new HashMap();
-        return loadCompiledTemplate( filename, data );
-    }
-
-    public Template loadCompiledTemplate( String filename, Map data ) {
-
-        String content = loadContent( filename );
-        Template template = getTemplateService().compileTemplate( content, data );
-        return template;
-    }
+//    public Template loadCompiledTemplate( String filename, Map data ) {
+//
+//        String content = loadContent( filename );
+//        Template template = getTemplateService().compileTemplate( content, data );
+//        return template;
+//    }
 
 //    public Template compileTemplate( String name, String content ) {
 //
@@ -555,7 +549,7 @@ public class Olive {
 
     public Template compileTemplate( String content ) {
         Map data = new HashMap();
-        Template template = getTemplateService().compileTemplate( content, data );
+        Template template = getTemplateService().compile( content, data );
         return template;
     }
 

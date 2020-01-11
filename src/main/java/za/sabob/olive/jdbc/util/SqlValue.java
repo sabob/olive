@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package za.sabob.olive.util;
+package za.sabob.olive.jdbc.util;
 
 import java.sql.*;
 
@@ -26,11 +26,11 @@ import java.sql.*;
  * that will be caught and translated by the calling code. This callback method has
  * access to the underlying Connection via the given PreparedStatement object, if that
  * should be needed to create any database-specific objects.
- * 
+ *
  * <pre class="prettyprint">
  * SqlParams params = new SqlParams();
  * params.set("name", new SqlValue() {
- * 
+ *
  *     {@literal @}Override
  *     public void setValue(PreparedStatement ps, int paramIndex) throws SQLException {
  *
@@ -38,7 +38,7 @@ import java.sql.*;
  *         ps.setString(paramIndex, "Steve");
  *     }
  * });
- * 
+ *
  * try {
  *     Connection conn = DriverManager.getConnection(...);
  *     PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);

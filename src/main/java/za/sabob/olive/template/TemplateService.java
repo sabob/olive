@@ -27,20 +27,20 @@ public class TemplateService {
 //        return result;
 //    }
 
-    public String executeTemplate( String name, String content, Map data ) {
-        Template template = compileTemplate( name, content );
-        String result = executeTemplate( template, data );
+    public String execute( String name, String content, Map data ) {
+        Template template = compile( name, content );
+        String result = execute( template, data );
         return result;
     }
 
-    public String executeTemplate( String content, Map data ) {
-        Template template = compileTemplate( content, data );
+    public String execute( String content, Map data ) {
+        Template template = compile( content, data );
 
-        String result = executeTemplate( template, data );
+        String result = execute( template, data );
         return result;
     }
 
-    public String executeTemplate( Template template, Map data ) {
+    public String execute( Template template, Map data ) {
         String result = template.execute( data );
         return result;
 
@@ -59,14 +59,14 @@ public class TemplateService {
 //        return template;
 //    }
 
-    public Template compileTemplate( String name, String content ) {
+    public Template compile( String name, String content ) {
 
         Map data = new HashMap();
-        Template template = compileTemplate( name, content, data );
+        Template template = compile( name, content, data );
         return template;
     }
 
-    public Template compileTemplate( String name, String content, Map data ) {
+    public Template compile( String name, String content, Map data ) {
         // Bercause of partials, DONT cache
 //        if ( getMode() == Mode.PRODUCTION ) {
 //            Template template = templateMap.get( name );
@@ -76,20 +76,20 @@ public class TemplateService {
 //            }
 //        }
 
-        Template template = compileTemplate( content, data );
+        Template template = compile( content, data );
 
 //        if ( getMode() == Mode.PRODUCTION ) {
-//            templateMap.put( name, template );
+//            Cache.getInstance().putTemplate( name, template );
 //        }
         return template;
     }
 
-    public Template compileTemplate( String content ) {
+    public Template compile( String content ) {
         Map data = new HashMap();
-        return compileTemplate( content, data );
+        return compile( content, data );
     }
 
-    public Template compileTemplate( String content, Map data ) {
+    public Template compile( String content, Map data ) {
 
         Mustache.Compiler activeCompiler = getTemplateCompiler();
         Mustache.TemplateLoader activeTemplateLoader = getTemplateLoader();

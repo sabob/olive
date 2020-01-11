@@ -242,8 +242,8 @@ Above we create a SqlValue and set it as value of the named parameter "money". I
 
 * <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#close(java.sql.Connection)" target="_blank">closing</a> resources without _try/catch_ and _null_ checking logic neccessary.
 * <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#normalize(java.lang.Class, java.lang.String)" target="_blank">normalize</a> paths to SQL files
-* create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement(java.sql.Connection, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)" target="_blank">prepareStatements</a> from SQL files containing named parameters
-* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParams(java.sql.PreparedStatement, za.sabob.olive.ps.ParsedSql, za.sabob.olive.ps.SqlParams)" target="_blank">set named parameter values</a> on existing PreparedStatements
+* create <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#prepareStatement(java.sql.Connection, za.sabob.olive.jdbc.ps.ParsedSql, za.sabob.olive.jdbc.ps.SqlParams)" target="_blank">prepareStatements</a> from SQL files containing named parameters
+* <a href="http://sabob.github.io/olive/javadocs/api/za/sabob/olive/util/OliveUtils.html#setParams(java.sql.PreparedStatement, za.sabob.olive.jdbc.ps.ParsedSql, za.sabob.olive.jdbc.ps.SqlParams)" target="_blank">set named parameter values</a> on existing PreparedStatements
 
 
 ## <a id="usage"></a>Usage

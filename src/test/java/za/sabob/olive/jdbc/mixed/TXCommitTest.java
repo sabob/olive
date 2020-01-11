@@ -8,8 +8,9 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
@@ -19,7 +20,7 @@ public class TXCommitTest extends PostgresBaseTest {
 
     @Test
     public void threadTest() {
-        //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
+        //Connection conn = JDBCUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         JDBCContext ctx = JDBC.beginOperation( ds );
         Assert.assertFalse( ctx.isConnectionClosed() );
 
@@ -74,11 +75,11 @@ public class TXCommitTest extends PostgresBaseTest {
 
             //conn.setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED);
             //System.out.println( "In Transaction? " + !conn.getAutoCommit() );
-            //System.out.println( "Isolation level? " + OliveUtils.getTransactionIsolation( conn ) );
+            //System.out.println( "Isolation level? " + JDBCUtils.getTransactionIsolation( conn ) );
 
             SqlParams params = new SqlParams();
             params.set( "name", "Bob" );
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
             Assert.assertEquals( count, 1 );
@@ -116,9 +117,9 @@ public class TXCommitTest extends PostgresBaseTest {
     public List<Person> getPersons( Connection conn ) {
 
         //Connection conn = JDBC.beginOperation( ds );
-        PreparedStatement ps = OliveUtils.prepareStatement( conn, "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( conn, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+        List<Person> persons = JDBCUtils.mapToBeans( ps, new RowMapper<Person>() {
             @Override
             public Person map( ResultSet rs, int rowNum ) throws SQLException {
                 Person person = new Person();

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.ps;
+package za.sabob.olive.jdbc.ps;
 
 import java.io.*;
 import java.math.*;
@@ -1238,7 +1238,7 @@ public class SqlParams {
     }
 
     /**
-     * Converts the SqlParams to a {@link java.util.Map} where the {@link za.sabob.olive.ps.SqlParam#name} is the key and {@link za.sabob.olive.ps.SqlParam#value}
+     * Converts the SqlParams to a {@link java.util.Map} where the {@link za.sabob.olive.jdbc.ps.SqlParam#name} is the key and {@link za.sabob.olive.jdbc.ps.SqlParam#value}
      * is the value.
      *
      * @return the SqlParams as a map

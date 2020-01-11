@@ -5,7 +5,6 @@ import java.util.logging.*;
 import org.testng.*;
 import org.testng.xml.*;
 import za.sabob.olive.jdbc.basic.*;
-import za.sabob.olive.jdbc.config.*;
 import za.sabob.olive.jdbc.threads.*;
 
 public class JDBCSuite {

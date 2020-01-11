@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.util;
+package za.sabob.olive.jdbc.util;
 
 /**
  * Provides a mechanism for a {@link SqlValue} to cleanup it's resources.
  */
 public interface DisposableSqlValue extends SqlValue {
-        
+
 	/**
 	 * Clean up resources held by this SqlValue object.
 	 */

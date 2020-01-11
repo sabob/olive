@@ -13,8 +13,9 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.config.OliveConfig;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.config.OliveConfig;
+import za.sabob.olive.jdbc.ps.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.util.*;
 
 public class PostgresTestUtils {
@@ -96,7 +97,7 @@ public class PostgresTestUtils {
             String ddl = new String( Files.readAllBytes( Paths.get( uri ) ) );
             //System.out.println( "DDL: " + ddl );
 
-            Statement stmnt = OliveUtils.createStatement( ctx );
+            Statement stmnt = JDBCUtils.createStatement( ctx );
             stmnt.executeUpdate( ddl );
         } );
 
@@ -111,7 +112,7 @@ public class PostgresTestUtils {
             SqlParams params = new SqlParams();
             params.set( "name", "bob" );
 
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count;
             count = ps.executeUpdate();

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.util;
+package za.sabob.olive.jdbc.util;
 
 import java.sql.*;
 import java.util.logging.*;
-import za.sabob.olive.ps.*;
-import za.sabob.olive.util.*;
+
+import za.sabob.olive.jdbc.ps.*;
+import za.sabob.olive.util.OliveUtils;
 
 /**
  *
@@ -45,7 +46,7 @@ public class SqlValueTest {
         try {
             Connection conn = DriverManager.getConnection("jdbc:h2:~/test", "sa", "sa");
 
-            PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);
+            PreparedStatement ps = JDBCUtils.prepareStatement(conn, parsedSql, params);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 System.out.println("Row:" + rs.getString("CATALOG_NAME"));

@@ -6,6 +6,7 @@ import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.domain.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
 import za.sabob.olive.util.OliveUtils;
 
@@ -40,7 +41,7 @@ public class MultiPGTransactionTest extends PostgresBaseTest {
 
         } catch ( Exception ex ) {
 
-            throw JDBC.rollbackTransaction( parent, ex );
+            JDBC.rollbackTransactionAndThrow( parent, ex );
 
         } finally {
             Assert.assertTrue( parent.isOpen() );
@@ -48,7 +49,7 @@ public class MultiPGTransactionTest extends PostgresBaseTest {
             JDBC.cleanupTransaction( parent );
 
             Assert.assertTrue( parent.isClosed() );
-            Assert.assertFalse( OliveUtils.getAutoCommit( parent.getConnection() ) );
+            Assert.assertFalse( JDBCUtils.getAutoCommit( parent.getConnection() ) );
         }
     }
 

@@ -4,7 +4,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import za.sabob.olive.jdbc.JDBC;
-import za.sabob.olive.jdbc.config.JDBCConfig;
+import za.sabob.olive.config.OliveConfig;
 import za.sabob.olive.postgres.PostgresBaseTest;
 import za.sabob.olive.postgres.PostgresTestUtils;
 
@@ -17,7 +17,7 @@ public class NestedJDBCTest extends PostgresBaseTest {
 
     @Test
     public void noNestedOperationTest() {
-        JDBCConfig.setAllowNestingOperations( false );
+        OliveConfig.setAllowNestingOperations( false );
 
         JDBC.inOperation( ds, ( ctx ) -> {
 
@@ -38,7 +38,7 @@ public class NestedJDBCTest extends PostgresBaseTest {
 
     @Test
     public void noNestedTransactionTest() {
-        JDBCConfig.setAllowNestingOperations( false );
+        OliveConfig.setAllowNestingOperations( false );
 
         JDBC.inTransaction( ds, ( ctx ) -> {
 
@@ -59,7 +59,7 @@ public class NestedJDBCTest extends PostgresBaseTest {
 
     @Test
     public void noNestedMixedTest() {
-        JDBCConfig.setAllowNestingOperations( false );
+        OliveConfig.setAllowNestingOperations( false );
 
         JDBC.inOperation( ds, ( ctx ) -> {
 

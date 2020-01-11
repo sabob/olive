@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.sabob.olive.util;
+package za.sabob.olive.jdbc.util;
 
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
-import za.sabob.olive.ps.*;
-import za.sabob.olive.util.*;
+
+import za.sabob.olive.jdbc.ps.*;
+import za.sabob.olive.util.OliveUtils;
 
 /**
  *
  */
-public class OliveTest {
+public class JDBCTest {
 
     public static void main(String[] args) {
         ParsedSql parsedSql = NamedParameterUtils.parseSqlStatement("select * from information_schema.catalogs c where c.CATALOG_NAME = :name and c.CATALOG_NAME in (:names)");
@@ -46,14 +47,14 @@ public class OliveTest {
 
         try {
             Connection conn = DriverManager.getConnection("jdbc:h2:~/test", "sa", "sa");
-            
-            PreparedStatement ps = OliveUtils.prepareStatement(conn, parsedSql, params);
+
+            PreparedStatement ps = JDBCUtils.prepareStatement(conn, parsedSql, params);
             ResultSet rs = ps.executeQuery();
             while(rs.next()) {
                 System.out.println("Row:" + rs.getString("CATALOG_NAME"));
             }
         } catch (SQLException ex) {
-            Logger.getLogger(OliveTest.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger( JDBCTest.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

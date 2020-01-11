@@ -8,8 +8,9 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.*;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.query.*;
 import za.sabob.olive.util.*;
 
@@ -37,7 +38,7 @@ public class JDBCThreadedTest {
 
     @Test( successPercentage = 100, threadPoolSize = 20, invocationCount = 100, timeOut = 1110000 )
     public void threadTest() {
-        //Connection conn = OliveUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
+        //Connection conn = JDBCUtils.getConnection( "jdbc:h2:~/test", "sa", "sa" );
         JDBCContext ctx = null;
 
         try {
@@ -46,10 +47,10 @@ public class JDBCThreadedTest {
 
             SqlParams params = new SqlParams();
 
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
 
             params.set( "name", "bob" );
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "insert into person (name) values(:name)", params );
 
             int count = ps.executeUpdate();
 
@@ -62,7 +63,7 @@ public class JDBCThreadedTest {
 
             personsCount = persons.size();
 
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
 
         } catch ( Throwable e ) {
             throw new RuntimeException( e );
@@ -104,9 +105,9 @@ public class JDBCThreadedTest {
 
     public List<Person> getPersons( JDBCContext ctx ) {
 
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person" );
 
-        List<Person> persons = OliveUtils.mapToBeans( ps, new RowMapper<Person>() {
+        List<Person> persons = JDBCUtils.mapToBeans( ps, new RowMapper<Person>() {
             @Override
             public Person map( ResultSet rs, int rowNum ) throws SQLException {
                 Person person = new Person();

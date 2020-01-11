@@ -4,9 +4,9 @@ import java.sql.*;
 import javax.sql.*;
 
 import org.hsqldb.jdbc.*;
-import org.testng.*;
 import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.config.JDBCConfig;
+import za.sabob.olive.config.OliveConfig;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.util.*;
 
 public class HSQLDBTestUtils {
@@ -29,7 +29,7 @@ public class HSQLDBTestUtils {
             throw new RuntimeException( ex );
         }
 
-        JDBCConfig.setDefaultDataSource( ds );
+        OliveConfig.setDefaultDataSource( ds );
         return ds;
     }
 
@@ -37,7 +37,7 @@ public class HSQLDBTestUtils {
 
         JDBC.inTransaction( ds, ( ctx ) -> {
             String ddl = "create table if not exists person (id bigint IDENTITY, name varchar(100), primary key (id));";
-            Statement stmnt = OliveUtils.createStatement( ctx );
+            Statement stmnt = JDBCUtils.createStatement( ctx );
             stmnt.executeUpdate( ddl );
         } );
     }

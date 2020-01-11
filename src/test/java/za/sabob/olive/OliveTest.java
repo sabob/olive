@@ -5,56 +5,50 @@
  */
 package za.sabob.olive;
 
-import java.io.*;
-import za.sabob.olive.*;
-import za.sabob.olive.loader.*;
-import za.sabob.olive.util.*;
+import za.sabob.olive.loader.LoadTest;
+import za.sabob.olive.util.OliveUtils;
+
+import java.io.InputStream;
 
 /**
  *
  */
 public class OliveTest {
-    
-    public void testLoadSql() {
-        
-    }
-    
+
     public void testResourceLoader() {
-         ClasspathResourceLoader loader = new ClasspathResourceLoader();
-        Olive olive = new Olive(Mode.DEVELOPMENT, loader);
+        Olive olive = new Olive(Mode.DEVELOPMENT);
 
         String source = OliveUtils.normalize(LoadTest.class, "../loader/test.sql");
-        System.out.println(olive.loadSql(source));
+        System.out.println(olive.loadContent(source));
 
         source = OliveUtils.normalize(LoadTest.class, "test.sql");
         System.out.println(source);
-        System.out.println(olive.loadSql(OliveUtils.normalize(LoadTest.class, "test.sql")));
+        System.out.println(olive.loadContent(OliveUtils.normalize(LoadTest.class, "test.sql")));
 
         source = OliveUtils.normalize(LoadTest.class, "../loader/test.sql");
-        System.out.println(olive.loadSql(source));
+        System.out.println(olive.loadContent(source));
     }
 
     public static void main(String[] args) {
         OliveTest test = new OliveTest();
-        test.testLoadSql();
         test.testResourceLoader();
 
          InputStream is = OliveUtils.getResourceAsStream(OliveTest.class, "za/sabob/olive/loader/test.sql");
          System.out.println("is:" + is);
-        
+
          Olive olive = new Olive(Mode.PRODUCTION);
          String source = OliveUtils.normalize(OliveTest.class, "../olive/loader/test.sql");
          //System.out.println(olive.loadFile("../olive/loader/test.sql"));
-         System.out.println(olive.loadSql(source));
+         System.out.println(olive.loadContent(source));
 
          //loader.setClassLoader(Pok.class);
          source = OliveUtils.normalize(LoadTest.class, "test.sql");
          //System.out.println(olive.loadFile(LoadTest.class, "test.sql"));
-         System.out.println(olive.loadSql(source));
+         System.out.println(olive.loadContent(source));
 
          try {
          Thread.sleep(10000);
-         System.out.println(olive.loadSql(OliveUtils.normalize(LoadTest.class, "test.sql")));
+         System.out.println(olive.loadContent(OliveUtils.normalize(LoadTest.class, "test.sql")));
          //System.out.println(olive.loadFile(LoadTest.class, "test.sql"));
          } catch (InterruptedException ex) {
          ex.printStackTrace();

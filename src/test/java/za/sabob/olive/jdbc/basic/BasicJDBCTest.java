@@ -6,10 +6,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import za.sabob.olive.jdbc.JDBC;
 import za.sabob.olive.jdbc.JDBCContext;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.PostgresBaseTest;
 import za.sabob.olive.postgres.PostgresTestUtils;
-import za.sabob.olive.ps.SqlParams;
-import za.sabob.olive.util.OliveUtils;
+import za.sabob.olive.jdbc.ps.SqlParams;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
@@ -35,7 +35,7 @@ public class BasicJDBCTest extends PostgresBaseTest {
             nested( ds );
 
             SqlParams params = new SqlParams();
-            ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
+            ps = JDBCUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
             ctx.add( ps );
 
             rs = ps.executeQuery();
@@ -71,8 +71,8 @@ public class BasicJDBCTest extends PostgresBaseTest {
             nested( ds );
 
             SqlParams params = new SqlParams();
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select name from person p", params ); // PreparedStatement is added to JDBCContext to close automatically
-            String name = OliveUtils.mapToPrimitive( String.class, ps ); // The underlying ResultSet will be clsoed automatically
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select name from person p", params ); // PreparedStatement is added to JDBCContext to close automatically
+            String name = JDBCUtils.mapToPrimitive( String.class, ps ); // The underlying ResultSet will be clsoed automatically
             Assert.assertEquals( name, "bob" );
 
         } finally {
@@ -81,7 +81,7 @@ public class BasicJDBCTest extends PostgresBaseTest {
 
             JDBC.cleanupOperation( ctx );
             Assert.assertTrue( ctx.isClosed() );
-            Assert.assertTrue( OliveUtils.isClosed( conn ) );
+            Assert.assertTrue( JDBCUtils.isClosed( conn ) );
             Assert.assertTrue( ctx.getStatements().get( 0 ).isClosed() );
 
         }
@@ -94,7 +94,7 @@ public class BasicJDBCTest extends PostgresBaseTest {
         try {
 
             SqlParams params = new SqlParams();
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
             ctx.add( ps );
 
             ResultSet rs = ps.executeQuery();
@@ -112,7 +112,7 @@ public class BasicJDBCTest extends PostgresBaseTest {
             Connection conn = ctx.getConnection();
             JDBC.cleanupOperation( ctx );
             Assert.assertTrue( ctx.isClosed() );
-            Assert.assertTrue( OliveUtils.isClosed( conn ) );
+            Assert.assertTrue( JDBCUtils.isClosed( conn ) );
         }
 
     }

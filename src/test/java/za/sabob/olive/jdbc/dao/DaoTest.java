@@ -1,15 +1,17 @@
 package za.sabob.olive.jdbc.dao;
 
-import java.io.*;
-import java.sql.*;
-import javax.sql.*;
-import org.testng.*;
-import org.testng.annotations.*;
-import za.sabob.olive.domain.*;
-import za.sabob.olive.jdbc.*;
-import za.sabob.olive.jdbc.config.JDBCConfig;
-import za.sabob.olive.postgres.*;
-import za.sabob.olive.util.*;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import za.sabob.olive.config.OliveConfig;
+import za.sabob.olive.domain.Person;
+import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.JDBCContext;
+import za.sabob.olive.jdbc.util.JDBCUtils;
+import za.sabob.olive.postgres.PostgresBaseTest;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.PreparedStatement;
 
 public class DaoTest extends PostgresBaseTest {
 
@@ -51,7 +53,7 @@ public class DaoTest extends PostgresBaseTest {
 
     public void saveInService( Object entity ) {
 
-        DataSource ds = JDBCConfig.getDefaultDataSource();
+        DataSource ds = OliveConfig.getDefaultDataSource();
         JDBC.inOperation( ds, ctx -> {
             saveInDao( new Person(), ctx );
                       return null;
@@ -61,7 +63,7 @@ public class DaoTest extends PostgresBaseTest {
 
     public void saveWithException( Object entity ) {
 
-        DataSource ds = JDBCConfig.getDefaultDataSource();
+        DataSource ds = OliveConfig.getDefaultDataSource();
 
         JDBC.inOperation( ds, ctx -> {
             if (true) throw new IOException( "BAD IO" );
@@ -69,7 +71,7 @@ public class DaoTest extends PostgresBaseTest {
     }
 
     public void saveInDao( Object o, JDBCContext ctx ) throws IOException {
-        PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "update blah" );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "update blah" );
 
         ctx.add( ps );
 

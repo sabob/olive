@@ -1,7 +1,6 @@
-package za.sabob.olive.jdbc.config;
+package za.sabob.olive.config;
 
 import za.sabob.olive.Mode;
-import za.sabob.olive.Olive;
 
 import javax.sql.DataSource;
 import java.util.logging.Level;

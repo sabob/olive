@@ -8,8 +8,9 @@ import javax.sql.*;
 import org.testng.*;
 import org.testng.annotations.*;
 import za.sabob.olive.jdbc.JDBC;
+import za.sabob.olive.jdbc.util.JDBCUtils;
 import za.sabob.olive.postgres.*;
-import za.sabob.olive.ps.*;
+import za.sabob.olive.jdbc.ps.*;
 import za.sabob.olive.util.*;
 
 public class ThreadJDBCTest extends PostgresBaseTest {
@@ -30,17 +31,17 @@ public class ThreadJDBCTest extends PostgresBaseTest {
 
         try {
             ctx = JDBC.beginOperation( ds );
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isOpen() );
 
             nested( ds );
 
-            Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+            Assert.assertTrue( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
             Assert.assertTrue( ctx.isOpen() );
 
             SqlParams params = new SqlParams();
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx, "select * from person p", params );
-            String name = OliveUtils.mapToPrimitive( String.class, ps );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, "select * from person p", params );
+            String name = JDBCUtils.mapToPrimitive( String.class, ps );
 
         } catch ( Exception e ) {
             throw new RuntimeException( e );
@@ -64,7 +65,7 @@ public class ThreadJDBCTest extends PostgresBaseTest {
             ctx = JDBC.beginOperation( ds );
 
             SqlParams params = new SqlParams();
-            PreparedStatement ps = OliveUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx.getConnection(), "select * from person p", params );
             ctx.add( ps );
 
             ResultSet rs = ps.executeQuery();
@@ -81,7 +82,7 @@ public class ThreadJDBCTest extends PostgresBaseTest {
         } finally {
 
             if ( ctx != null ) {
-                Assert.assertTrue( OliveUtils.getAutoCommit( ctx.getConnection() ) );
+                Assert.assertTrue( JDBCUtils.getAutoCommit( ctx.getConnection() ) );
                 Assert.assertTrue( ctx.isOpen() );
             }
 
