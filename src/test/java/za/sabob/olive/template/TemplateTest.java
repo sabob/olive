@@ -7,7 +7,7 @@ import za.sabob.olive.*;
 import za.sabob.olive.loader.ResourceService;
 import za.sabob.olive.mustache.*;
 import za.sabob.olive.jdbc.ps.*;
-import static za.sabob.olive.util.OliveUtils.path;
+import za.sabob.olive.util.OliveUtils;
 
 public class TemplateTest {
 
@@ -53,7 +53,7 @@ public class TemplateTest {
 
         data.put( "batch", batch );
 
-String path = path( this, "sql/template.sql");
+String path = OliveUtils.normalize( "sql/template.sql", this);
 
         ResourceService resourceService = new ResourceService();
         String content = resourceService.loadContent( path );

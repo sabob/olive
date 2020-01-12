@@ -16,6 +16,7 @@ import za.sabob.olive.loader.ResourceLoader;
 import za.sabob.olive.loader.ResourceService;
 import za.sabob.olive.postgres.PostgresBaseTest;
 import za.sabob.olive.postgres.PostgresTestUtils;
+import za.sabob.olive.query.RowMapper;
 import za.sabob.olive.template.TemplateService;
 import za.sabob.olive.util.OliveUtils;
 
@@ -41,11 +42,11 @@ public class BestPracticeJDBCTest extends PostgresBaseTest {
         ResourceLoader loader = new ClasspathResourceLoader();
         ResourceService resourceService = new ResourceService( loader );
 
-        String path = "filename.txt";
-        String sql = resourceService.loadContent( path );
+        String path = "BestPracticeJDBCTest.sql";
+        String normalizedPath = OliveUtils.normalize( path, getClass() );
 
-        String normalizedPath = OliveUtils.normalize( path );
-        sql = resourceService.loadContent( normalizedPath );
+
+        String sql = resourceService.loadContent( normalizedPath );
         //String sql = resourceService.loadFile();
         //String sql = resourceService.loadAndParseSql(); // BAD we dont want to do two things in one go at such low level
         ParsedSql parsedSql = JDBCUtils.parseSql( sql );
@@ -71,11 +72,11 @@ public class BestPracticeJDBCTest extends PostgresBaseTest {
         JDBCContext ctx1 = null;
         try {
 
-        } catch (Exception ex) {
+        } catch ( Exception ex ) {
             ctx1.rollback();
-            ctx1.rollbackAndThrow(ex);
+            JDBC.rollbackTransactionAndThrow( ctx1, ex );
         } finally {
-            ctx1.close();
+            JDBC.cleanupTransaction( ctx1 );
         }
 
         JDBC.inOperation( ds, ( ctx ) -> {
@@ -83,7 +84,29 @@ public class BestPracticeJDBCTest extends PostgresBaseTest {
             SqlParams params = new SqlParams();
             params.set( "name", "bob" );
 
-            String path2 = OliveUtils.path( getClass(), "BestPracticeJDBCTest.sql" );
+            String filename = "BestPracticeJDBCTest.sql";
+            String testContent = Olive.loadContent( filename );
+
+            RowMapper<String> mapper = ( rs1, rowNum ) -> rs1.getString( 0 );
+            String str = Olive.executeFileToBean( ctx, filename, params, data, mapper );
+
+            PreparedStatement ps = JDBCUtils.prepareStatement( ctx, testContent, params ); // PreparedStatement is added to JDBCContext to close automatically
+            String name = JDBCUtils.mapToPrimitive( String.class, ps ); // The underlying ResultSet will be closed automatically
+
+            String path2 = OliveUtils.normalize( "BestPracticeJDBCTest.sql", getClass() );
+            String sql2 = resourceService.loadContent( path );
+            ParsedSql parsed = JDBCUtils.parseSql( sql2 );
+            ps = JDBCUtils.prepareStatement( ctx, parsed, params ); // PreparedStatement is added to JDBCContext to close automatically
+            name = JDBCUtils.mapToPrimitive( String.class, ps ); // The underlying ResultSet will be closed automatically
+            Assert.assertEquals( name, "bob" );
+        } );
+
+        JDBC.inOperation( ds, ( ctx ) -> {
+
+            SqlParams params = new SqlParams();
+            params.set( "name", "bob" );
+
+            String path2 = OliveUtils.normalize( "BestPracticeJDBCTest.sql", getClass() );
             String sql2 = resourceService.loadContent( path );
             ParsedSql parsed = JDBCUtils.parseSql( sql2 );
             PreparedStatement ps = JDBCUtils.prepareStatement( ctx, parsed, params ); // PreparedStatement is added to JDBCContext to close automatically
@@ -108,7 +131,7 @@ public class BestPracticeJDBCTest extends PostgresBaseTest {
 
             SqlParams params = new SqlParams();
             params.set( "name", "bob" );
-            String path = OliveUtils.path( getClass(), "BestPracticeJDBCTest.sql" );
+            String path = OliveUtils.normalize( "BestPracticeJDBCTest.sql", getClass() );
             resourceService.loadContent( path );
             PreparedStatement ps = JDBCUtils.prepareStatement( ctx, path, params ); // PreparedStatement is added to JDBCContext to close automatically
             String name = JDBCUtils.mapToPrimitive( String.class, ps ); // The underlying ResultSet will be closed automatically

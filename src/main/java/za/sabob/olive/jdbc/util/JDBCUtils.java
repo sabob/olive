@@ -874,7 +874,7 @@ public class JDBCUtils {
         return parsedSql;
     }
 
-    public ParsedSql parseSql( String name, String sqlStr ) {
+    public static ParsedSql parseSql( String name, String sqlStr ) {
 
         if ( name == null ) {
             throw new IllegalArgumentException( "name cannot be null!" );

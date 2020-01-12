@@ -15,17 +15,24 @@
  */
 package za.sabob.olive;
 
-import java.io.InputStream;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.*;
-
+import za.sabob.olive.jdbc.JDBCContext;
+import za.sabob.olive.jdbc.ps.ParsedSql;
+import za.sabob.olive.jdbc.ps.SqlParams;
 import za.sabob.olive.jdbc.util.JDBCUtils;
-import za.sabob.olive.loader.*;
-import za.sabob.olive.mustache.*;
-import za.sabob.olive.jdbc.ps.*;
-import za.sabob.olive.template.*;
+import za.sabob.olive.loader.ClasspathResourceLoader;
+import za.sabob.olive.loader.ResourceLoader;
+import za.sabob.olive.loader.ResourceService;
+import za.sabob.olive.mustache.Mustache;
+import za.sabob.olive.mustache.Template;
+import za.sabob.olive.query.RowMapper;
+import za.sabob.olive.template.TemplateService;
 import za.sabob.olive.util.OliveUtils;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Provides the main entry point for using Olive.
@@ -65,7 +72,7 @@ import za.sabob.olive.util.OliveUtils;
  * List&lt;int[]&gt; namedParameterIndexes = parsedSql.getParameterIndexes();
  * int totalParameterCount = parsedSql.getTotalParameterCount();
  * String originalSql = parsedSql.getOriginalSql(); </pre>
- *
+ * <p>
  * In production mode the ParsedSql is cached so future requests do not have to reparse the SQL string.
  *
  * <h4>PreparedStatements</h4>
@@ -86,7 +93,6 @@ import za.sabob.olive.util.OliveUtils;
  * * params.setString("name", "Bob");
  * params.setInt("age", 21);
  * PreparedStatement ps = olive.prepareStatement(conn, filename, params); </pre>
- *
  */
 public class Olive {
 
@@ -136,7 +142,7 @@ public class Olive {
      * @param mode the mode for this olive instance
      */
     public Olive( Mode mode ) {
-        this( mode, (ResourceLoader) null );
+        this( mode, ( ResourceLoader ) null );
     }
 
     /**
@@ -151,7 +157,7 @@ public class Olive {
     /**
      * Create a new Olive instance for the given ResourceLoader and Mode.
      *
-     * @param mode the mode for this olive instance
+     * @param mode           the mode for this olive instance
      * @param resourceLoader the ResourceLoader for this olive instance
      */
     public Olive( Mode mode, ResourceLoader resourceLoader ) {
@@ -172,8 +178,8 @@ public class Olive {
     }
 
     private ResourceService getResourceService() {
-        if (this.resourceService == null) {
-            this.resourceService = new ResourceService(getResourceLoader());
+        if ( this.resourceService == null ) {
+            this.resourceService = new ResourceService( getResourceLoader() );
         }
         return this.resourceService;
     }
@@ -255,12 +261,28 @@ public class Olive {
 //     * @return the content of the filename as a string
 //     * @throws IllegalStateException if the file could not be found
 //     */
-    public String loadContent( String filename ) {
+//    public String loadContent( String filename ) {
+//        if ( filename == null ) {
+//            throw new IllegalArgumentException( "filename cannot be null!" );
+//        }
+//
+//        return getResourceService().loadContent( filename );
+//    }
+    public static String loadContent( String filename, Class relativeTo ) {
+        String path = OliveUtils.normalize( filename, relativeTo );
+
+        String content = loadContent( path );
+        return content;
+    }
+
+    public static String loadContent( String filename ) {
         if ( filename == null ) {
             throw new IllegalArgumentException( "filename cannot be null!" );
         }
 
-        return getResourceService().loadContent( filename );
+        ResourceService rs = new ResourceService();
+        String content = rs.loadContent( filename );
+        return content;
     }
 
     /**
@@ -336,9 +358,9 @@ public class Olive {
      * params.setInt("age", 21);
      * PreparedStatement ps = olive.prepareStatement(conn, parsedSql, params); </pre>
      *
-     * @param conn the connection for creating the PreparedStatement with
+     * @param conn      the connection for creating the PreparedStatement with
      * @param parsedSql the ParsedSql for creating the PreparedStatement with
-     * @param params the params for creating the PreparedStatement with
+     * @param params    the params for creating the PreparedStatement with
      * @return the PreparedStatement for the given arguments
      */
     public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params ) {
@@ -366,11 +388,10 @@ public class Olive {
      * params.setInt("age", 21);
      * PreparedStatement ps = olive.prepareStatement(conn, parsedSql, params); </pre>
      *
-     * @param conn the connection for creating the PreparedStatement with
-     * @param parsedSql the ParsedSql for creating the PreparedStatement with
-     * @param params the params for creating the PreparedStatement with
+     * @param conn              the connection for creating the PreparedStatement with
+     * @param parsedSql         the ParsedSql for creating the PreparedStatement with
+     * @param params            the params for creating the PreparedStatement with
      * @param autoGeneratedKeys specifies the autoGenerated keys value of: Statement.RETURN_GENERATED_KEYS or Statement.NO_GENERATED_KEYS
-     *
      * @return the PreparedStatement for the given arguments
      */
     public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params, int autoGeneratedKeys ) {
@@ -398,17 +419,16 @@ public class Olive {
      * params.setInt("age", 21);
      * PreparedStatement ps = olive.prepareStatement(conn, parsedSql, params); </pre>
      *
-     * @param conn the connection for creating the PreparedStatement with
-     * @param parsedSql the ParsedSql for creating the PreparedStatement with
-     * @param params the params for creating the PreparedStatement with
-     * @param resultSetType - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE
+     * @param conn                 the connection for creating the PreparedStatement with
+     * @param parsedSql            the ParsedSql for creating the PreparedStatement with
+     * @param params               the params for creating the PreparedStatement with
+     * @param resultSetType        - one of the following ResultSet constants: ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, or ResultSet.TYPE_SCROLL_SENSITIVE
      * @param resultSetConcurrency - one of the following ResultSet constants: ResultSet.CONCUR_READ_ONLY or ResultSet.CONCUR_UPDATABLE
      * @param resultSetHoldability - one of the following ResultSet constants: ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
-     *
      * @return the PreparedStatement for the given arguments
      */
     public PreparedStatement prepareStatement( Connection conn, ParsedSql parsedSql, SqlParams params, int resultSetType, int resultSetConcurrency,
-        int resultSetHoldability ) {
+                                               int resultSetHoldability ) {
         PreparedStatement ps = JDBCUtils.prepareStatement( conn, parsedSql, params, resultSetType, resultSetConcurrency, resultSetHoldability );
         return ps;
     }
@@ -453,6 +473,37 @@ public class Olive {
     public PreparedStatement prepareStatement( Connection conn, String content, SqlParams params ) {
         ParsedSql parsedSql = JDBCUtils.parseSql( content );
         PreparedStatement ps = prepareStatement( conn, parsedSql, params );
+        return ps;
+    }
+
+    public static <T> T executeFileToPrimitive( JDBCContext ctx, String filename, SqlParams params, Map data, Class<T> primitive ) {
+
+        PreparedStatement ps = prepareStatementFromTemplateFile( ctx, filename, params, data );
+        T result = JDBCUtils.mapToPrimitive( primitive, ps );
+
+        return result;
+    }
+
+    public static <T> T executeFileToBean( JDBCContext ctx, String filename, SqlParams params, Map data, RowMapper<T> mapper ) {
+
+        PreparedStatement ps = prepareStatementFromTemplateFile( ctx, filename, params, data );
+        T result = JDBCUtils.mapToBean( ps, mapper );
+
+        return result;
+    }
+
+    public static PreparedStatement prepareStatementFromTemplateFile( JDBCContext ctx, String filename, SqlParams params, Map data ) {
+        ResourceService rs = new ResourceService();
+        String template = rs.loadContent( filename );
+        PreparedStatement ps = prepareStatementFromTemplate( ctx, template, params, data );
+        return ps;
+    }
+
+    public static PreparedStatement prepareStatementFromTemplate( JDBCContext ctx, String content, SqlParams params, Map data ) {
+        TemplateService ts = new TemplateService();
+        String result = ts.execute( content, data );
+        ParsedSql parsedSql = JDBCUtils.parseSql( result );
+        PreparedStatement ps = JDBCUtils.prepareStatement( ctx, parsedSql, params );
         return ps;
     }
 

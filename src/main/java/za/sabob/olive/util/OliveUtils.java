@@ -252,11 +252,11 @@ public class OliveUtils {
      * <p>
      * The result of the above <code>println</code> statement will be: <code>/com/mycorp/dao/person/insert_person.sql</code>.
      *
-     * @param relative the class to create an absolute filename from
      * @param filename the filename to create an absolute filename relative to the class
+     * @param relative the class to create an absolute filename from
      * @return the absolute filenames relative to the given class
      */
-    public static String normalize( Class relative, String filename ) {
+    public static String normalize( String filename, Class relative ) {
         if ( relative == null ) {
             throw new IllegalArgumentException( "class is required!" );
         }
@@ -276,18 +276,18 @@ public class OliveUtils {
     /**
      * Create absolute filenames relative to the given object' class.
      * <p/>
-     * This method delegates to {@link #normalize(java.lang.Class, java.lang.String)}.
+     * This method delegates to {@link #normalize( java.lang.String, java.lang.Class)}.
      *
-     * @param relative the object which class to use to create an absolute filename from
      * @param filename the filename to create an absolute filename relative to the class
+     * @param relative the object which class to use to create an absolute filename from
      * @return the absolute filenames relative to the given class
      */
-    public static String normalize( Object relative, String filename ) {
+    public static String normalize( String filename, Object relative ) {
         if ( relative == null ) {
             throw new IllegalArgumentException( "relative object cannot be null" );
         }
 
-        String normalizedFilename = normalize( relative.getClass(), filename );
+        String normalizedFilename = normalize( filename, relative.getClass());
 
         return normalizedFilename;
 
@@ -296,30 +296,30 @@ public class OliveUtils {
     /**
      * Create absolute filenames relative to the given class.
      * <p/>
-     * This method delegates to {@link #normalize(java.lang.Class, java.lang.String)}.
+     * This method delegates to {@link #normalize(java.lang.String, java.lang.Class)}.
      *
-     * @param relative the class to create an absolute filename from
      * @param filename the filename to create an absolute filename relative to the class
+     * @param relative the class to create an absolute filename from
      * @return the absolute filenames relative to the given class
      */
-    public static String path( Class relative, String filename ) {
-        String normalizedFilename = normalize( relative, filename );
-        return normalizedFilename;
-    }
+//    public static String path( String filename, Class relative ) {
+//        String normalizedFilename = normalize( filename, relative );
+//        return normalizedFilename;
+//    }
 
     /**
      * Create absolute filenames relative to the given object' class.
      * <p/>
-     * This method delegates to {@link #normalize(java.lang.Object, java.lang.String)}.
+     * This method delegates to {@link #normalize(java.lang.String, java.lang.Object)}.
      *
-     * @param relative the object which class to use to create an absolute filename from
      * @param filename the filename to create an absolute filename relative to the class
+     * @param relative the object which class to use to create an absolute filename from
      * @return the absolute filenames relative to the given class
      */
-    public static String path( Object relative, String filename ) {
-        String normalizedFilename = normalize( relative, filename );
-        return normalizedFilename;
-    }
+//    public static String path( String filename, Object relative ) {
+//        String normalizedFilename = normalize( filename, relative );
+//        return normalizedFilename;
+//    }
 
     /**
      * Return a new XML Document for the given input stream.
@@ -936,7 +936,7 @@ public class OliveUtils {
 
     public static void main( String[] args ) {
 
-        String source = normalize( OliveUtils.class, "queries.xml" );
+        String source = normalize( "queries.xml", OliveUtils.class );
         InputStream is = getResourceAsStream( OliveUtils.class, source );
         System.out.println( "is" + is );
         Document document = buildDocument( is );
